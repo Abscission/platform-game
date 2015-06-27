@@ -98,6 +98,16 @@
     <ClInclude Include="..\..\src\include\RendererSoftware.h" />
     <ClInclude Include="..\..\src\include\Utility.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\.gitignore" />
+    <None Include="..\..\assets\ball.aaf" />
+    <None Include="..\..\LICENSE" />
+    <None Include="..\..\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\assets\Mario.png" />
+    <Image Include="..\..\assets\tile01.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
