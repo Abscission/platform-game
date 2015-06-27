@@ -18,3 +18,18 @@ bool InputManager::GetKeyDown(unsigned char Key){
 bool InputManager::GetKeyUp(unsigned char Key){
 	return ((KeyStatePrevious[Key] & 0xF0) &! (KeyStateCurrent[Key] & 0xF0));
 } 
+
+MouseState InputManager::GetMouseState(HWND Window){
+
+	POINT CursorPos;
+	//Mouse cursor pos
+	GetCursorPos(&CursorPos);
+	ScreenToClient(Window, &CursorPos);
+
+	//Are left or right mouse buttons beening pressed
+	bool btn1 = GetKeyState(VK_LBUTTON);
+	bool btn2 = GetKeyState(VK_RBUTTON);
+
+	MouseState _ret = { CursorPos.x, CursorPos.y, btn1, btn2 };
+	return _ret;
+}
