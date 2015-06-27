@@ -42,6 +42,9 @@
     <ClCompile Include="..\..\src\include\Utility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\MemoryManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\include\AssetManager.h">
@@ -77,6 +80,9 @@
     <ClInclude Include="..\..\src\include\Types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\include\MemoryManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\.gitignore">
@@ -90,6 +96,9 @@
     </None>
     <None Include="..\..\assets\ball.aaf">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\src\MemoryManager.asm">
+      <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

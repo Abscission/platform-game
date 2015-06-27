@@ -14,6 +14,8 @@ public:
 	Vector2 Velocity;
 	Vector2 Acceleration;
 
+	Vector2 TargetVelocity;
+
 	//Constructors for GameObject
 	GameObject();
 	GameObject(Vector2 position);

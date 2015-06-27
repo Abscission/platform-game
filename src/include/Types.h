@@ -22,6 +22,11 @@ struct IVec2 {
 	int Y;
 };
 
+struct V2_16 {
+	int16 X;
+	int16 Y;
+};
+
 struct Vector2 {
 	float X;
 	float Y;

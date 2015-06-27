@@ -21,6 +21,13 @@ inline float Abs(float x) {
 }
 
 
+inline int Sign(int X) {
+	return X > 0 ? 1 : -1;
+}
+
+inline float Sign(float X) {
+	return X > 0 ? 1 : -1;
+}
 
 //Checks for collisions between two axis aligned bounding boxes
 inline bool CheckCollisionAABB(Rect a, Rect b){

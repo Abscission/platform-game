@@ -5,8 +5,9 @@
 #include "PicoPNG.h"
 
 #include "Utility.h"
-#include "RendererSoftware.h"
 
+#include "RendererSoftware.h"
+#include "MemoryManager.h"
 #include "AssetManager.h"
 
 bool ShouldClose = false;
@@ -179,8 +180,8 @@ bool RendererWin32Software::OpenWindow(int Width, int Height, char* Title){
 }
 
 bool RendererWin32Software::Initialize() {
-	Config.ResX = 800;
-	Config.ResY = 600;
+	Config.ResX = 1024;
+	Config.ResY = 768;
 	Config.BPP = 4;
 
 	Instance = GetModuleHandle(NULL);
@@ -204,23 +205,19 @@ bool RendererWin32Software::Initialize() {
 	Buffer.Info.bmiHeader.biCompression = BI_RGB;
 
 	int MemorySize = Buffer.Width * Buffer.Height * Buffer.BytesPerPixel;
-	Buffer.Memory = (int*)VirtualAlloc(0, MemorySize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+
+	Buffer.Memory = (int*)MemoryManager::AllocateMemoryAligned(MemorySize, 16);
 
 	return 0;
 }
 
 bool RendererWin32Software::Refresh() {
-
-	static float test = 0;
-
 	//Now update the screen
 	StretchDIBits(DeviceContext, 0, 0, Buffer.Width, Buffer.Height, 0, 0, Buffer.Width, Buffer.Height, Buffer.Memory, &Buffer.Info, DIB_RGB_COLORS, SRCCOPY);
 
 	//Clear the backbuffer
-	memset(Buffer.Memory, 0, Buffer.Width * Buffer.Height * Buffer.BytesPerPixel);
+	ZeroMemory(Buffer.Memory, Buffer.Width * Buffer.Height * Buffer.BytesPerPixel);
 
-	//DrawRectangle(0, 0, Buffer.Width, Buffer.Height, 0x222222);
-	
 	return !ShouldClose;
 }
 

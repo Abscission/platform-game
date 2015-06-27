@@ -20,8 +20,8 @@ bool Win32PlatformLayer::Update(float DeltaTime) {
 		DispatchMessage(&Message);
 	}
 
-	Rect Level[] = { { 0, 300, 220, 32 }, { 200, 500, 300, 10 }, { 490, 450, 250, 10 }, { 400, 0, 10, 500 }, {0, 600 - 25, 800, 16} };
-	
+	Rect Level[] = { { 0, 300, 224, 64 }, { 320, 512, 320, 64 }, { 512, 0, 64, 512 }, { 0, 768 - 32, 1024, 64 } };
+
 	static Win32Sprite* Platform = new Win32Sprite();
 	if (!Platform->Data) {
 		Platform->Load("Assets/tile01.png");

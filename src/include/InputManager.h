@@ -5,12 +5,24 @@
 #pragma once
 
 #include "Types.h"
+
 //Mouse state struct provides the data structure containing mouse related variables 
 struct MouseState {
 	int x;
 	int y;
 	bool Btn1;
 	bool Btn2;
+};
+
+//Structure for accessing game controllers
+struct ControllerState {
+	V2_16 LeftStick;
+	V2_16 RightStick;
+
+	byte LeftTrigger;
+	byte RightTrigger;
+
+	u16  Buttons;
 };
 
 //The InputManager class provides the game with keyboard and mouse input
@@ -36,6 +48,8 @@ public:
 	bool GetKeyUp(unsigned char Key);
 	
 	bool IsControllerConnected();
+	
+	ControllerState GetControllerState();
 
 	///<summary>Find out where the mouse cursor is and if a mouse button is pressed</summary>
 	MouseState GetMouseState(HWND Window);

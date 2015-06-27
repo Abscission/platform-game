@@ -29,7 +29,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 	std::vector<GameObject> GameObjects;
 
-	GameObject Player({ 20, 20 });
+	GameObject Player({40, 40 });
 	Player.loadTexture("assets/Mario.png");
 	ResizeSprite((Win32Sprite*)Player.Sprite, 48);
 
@@ -82,38 +82,43 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 			char frametime[30];
 			sprintf_s(frametime, "%f ms/f \n", DeltaTime * 1000);
 			OutputDebugStringA(frametime);
-			
+
 			elapsedTime = 0;
 			Frames = 0;
 		}
-		
+
 		InputMgr.Update();
 
-		if (InputMgr.GetKeyState('D')) 
-			GameObjects[0].Velocity.X += (5000.f * DeltaTime);
+		ControllerState Controller = InputMgr.GetControllerState();
 
-		if (InputMgr.GetKeyState('A'))
-			GameObjects[0].Velocity.X -= (5000.f * DeltaTime);
 
-	
-		if (InputMgr.GetKeyState(VK_SPACE)) {
-			if (JumpTime == 0) {
-				if (GameObjects[0].isGrounded) {
-					GameObjects[0].isGrounded = false;
+		int MaxSpeed = 500;
 
-					JumpTime += DeltaTime;
-					if (JumpTime < 0.5f){
-						GameObjects[0].Velocity.Y -= 750 - JumpTime * DeltaTime;
-					}
-					else {
-
-					}
-				}
-			}
+		if (InputMgr.GetKeyState('D') || Controller.Buttons & 0x8) {
+			GameObjects[0].TargetVelocity.X = MaxSpeed;
+		}
+		else if (InputMgr.GetKeyState('A') || Controller.Buttons & 0x4) {
+			GameObjects[0].TargetVelocity.X = -MaxSpeed;
 		}
 		else {
-			JumpTime = 0;
+			GameObjects[0].TargetVelocity.X = (MaxSpeed / 32767.f) * Controller.LeftStick.X;
+
+//			GameObjects[0].TargetVelocity.X = 0;
 		}
+
+		if (InputMgr.GetKeyState(VK_SPACE) || Controller.Buttons & 0x1000) {
+			if (GameObjects[0].isGrounded) {
+				GameObjects[0].Velocity.Y = -750;
+			}
+		}
+
+		//GameObjects[0].Velocity.Y += JumpTime;
+
+		if (Controller.Buttons & 0x10) {
+			GameRunning = false;
+		}
+
+
 
 		//TODO: See if iterator approach is fast enough
 		for (auto & Object : GameObjects){

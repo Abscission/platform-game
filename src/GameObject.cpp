@@ -35,12 +35,41 @@ void GameObject::Update(double DeltaTime) {
 	//The Hitbox of the object
 	Rect Hitbox = { Position, { Sprite->Width, Sprite->Height } };
 
+	int friction = 4500;
+
+	if (Acceleration.X == 0) {
+		if (Velocity.X > 0) {
+			Velocity.X -= friction * DeltaTime;
+		}
+		else if (Velocity.X < 0) {
+			Velocity.X += friction * DeltaTime;
+		}
+	}
+
 	//Apply gravity 
-	Velocity.Y += 980 * DeltaTime;
+	if (isGrounded) {
+		TargetVelocity.Y = 5;
+	}
+	else {
+		TargetVelocity.Y += 2000;
+		if (TargetVelocity.Y > 10000) {
+			TargetVelocity.Y = 10000;
+		}
+	}
+
+	Vector2 Direction = Vector2{ Sign(TargetVelocity.X - Velocity.X), Sign(TargetVelocity.Y - Velocity.Y) };
+
+	Velocity.Y = Velocity.Y + (Direction.Y * 1000) * DeltaTime;
+Velocity.X = Velocity.X + (Direction.X * (isGrounded ? 10000 : 5500)) * DeltaTime;
 
 
-	Acceleration *= (0.9 * DeltaTime);
-	Velocity = Velocity + (Acceleration * DeltaTime);
+	if (Sign(TargetVelocity.X - Velocity.X) != Direction.X) {
+		Velocity.X = TargetVelocity.X;
+	}
+
+	if (Sign(TargetVelocity.Y - Velocity.Y) != Direction.Y) {
+		Velocity.Y = TargetVelocity.Y;
+	}
 
 	//Deltaposition is the ideal amount we should move
 	Vector2 DeltaPosition;
@@ -50,7 +79,9 @@ void GameObject::Update(double DeltaTime) {
 	//If an object isn't in here, it will not collide with the object.
 	Rect BroadPhase = GetBroadphaseRect(Hitbox, DeltaPosition);
 
-	Rect Level[] = { { 0, 300, 220, 10 }, { 200, 500, 300, 10 }, { 490, 450, 250, 10 }, { 400, 0, 10, 500 }, { 0, 600 - 25, 800, 16 } };
+	Rect Level[] = { { 0, 300, 224, 64 }, { 320, 512, 320, 64 }, { 512, 0, 64, 512 }, { 0, 768 - 32, 1024, 64 } };
+
+	isGrounded = false;
 
 	//For each Box in the level, first do a broad phase collision test (to see if we are near enough we could hit)
 	//Then do a more precise collision test to see weather we did.
@@ -64,30 +95,22 @@ void GameObject::Update(double DeltaTime) {
 			DeltaPosition *= CollisionTime;
 
 			if (CollisionTime < 1.0) {
-				DeltaPosition *= CollisionTime;
+				//DeltaPosition *= CollisionTime;
 
-				if (abs(Normal.X) > 0.000001f){
-					DeltaPosition.X = -DeltaPosition.X;
-					Velocity.X = -0.2 * Velocity.X;
+				if (abs(Normal.X) > 0){
+					Velocity.X = 0;
+					DeltaPosition.X = DeltaPosition.X * CollisionTime;
 				}
-				if (abs(Normal.Y) > 0.000001f) {
-					DeltaPosition.Y = -DeltaPosition.Y;
-					Velocity.Y = -0.2 * Velocity.Y;
-
-					if (Velocity.Y > -5.f) {
-						if (!isGrounded) {
-							isGrounded = true;
-							Velocity.Y = 0;
-						}
-						Velocity.X *= (0.99);
-					}
+				if (abs(Normal.Y) > 0) {
+					DeltaPosition.Y = DeltaPosition.Y * CollisionTime;
+					Velocity.Y = 0;
+					isGrounded = true;
 				}
 			}
 
 		}
 	}
-
-	Velocity.X *= (0.99);
+	
 
 	Position = Position + DeltaPosition;
 }

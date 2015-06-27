@@ -37,9 +37,22 @@ MouseState InputManager::GetMouseState(HWND Window){
 
 bool InputManager::IsControllerConnected() {
 	XINPUT_STATE ControllerState;
-	DWORD Success = XInputGetState(1, &ControllerState);
-
-	DisplayMessage(Success);
-
-	return Success == ERROR_SUCCESS;
+	return XInputGetState(0, &ControllerState) == ERROR_SUCCESS;
 }
+
+ControllerState InputManager::GetControllerState(){
+	XINPUT_STATE ControllerState;
+	if (XInputGetState(0, &ControllerState) == ERROR_SUCCESS) {
+		return{
+			{ ControllerState.Gamepad.sThumbLX, ControllerState.Gamepad.sThumbLY },
+			{ 0, 0 },
+			ControllerState.Gamepad.bLeftTrigger,
+			ControllerState.Gamepad.bRightTrigger,
+			ControllerState.Gamepad.wButtons
+		};
+	}
+	else {
+		return{};
+	}
+}
+
