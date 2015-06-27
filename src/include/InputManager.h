@@ -4,6 +4,7 @@
 
 #pragma once
 
+//Mouse state struct provides the data structure containing mouse related variables 
 struct MouseState {
 	int x;
 	int y;
@@ -20,20 +21,20 @@ public:
 	//This should be run once per frame to update the keyboard states
 	void Update();
 
-	///<summary>Fnd out the state of a key</summary>
+	///<summary>Find out the state of a key</summary>
 	///<param name="Key">The key to test</param>
 	///<returns>A boolean with the keys state</returns>
 	bool GetKeyState(unsigned char Key);
 
-	///<summary>Fnd out if a key has just been released</summary>
+	///<summary>Find out if a key has just been released</summary>
 	///<param name="Key">The key to test</param>
 	bool GetKeyDown(unsigned char Key);
 
-	///<summary>Fnd out if a key has just been released</summary>
+	///<summary>Find out if a key has just been released</summary>
 	///<param name="Key">The key to test</param>
 	bool GetKeyUp(unsigned char Key);
 	
-
+	///<summary>Find out where the mouse cursor is and if a mouse button is pressed</summary>
 	MouseState GetMouseState(HWND Window);
 };
 
