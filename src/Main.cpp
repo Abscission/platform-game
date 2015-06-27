@@ -54,6 +54,13 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	int Frames = 0;
 	double JumpTime = 0;
 
+	if (InputMgr.IsControllerConnected()) {
+		OutputDebugString("Controller Connected\n");
+	}
+	else {
+		OutputDebugString("Controller Not Connected\n");
+	}
+
 	bool GameRunning = true;
 	while (GameRunning) {
 		//High res timer stuff, will be abstracted later.

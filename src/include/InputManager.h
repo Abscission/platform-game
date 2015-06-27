@@ -33,6 +33,7 @@ public:
 	///<param name="Key">The key to test</param>
 	bool GetKeyUp(unsigned char Key);
 	
+	bool IsControllerConnected();
 
 	MouseState GetMouseState(HWND Window);
 };

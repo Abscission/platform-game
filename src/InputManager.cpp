@@ -1,6 +1,9 @@
 #include<Windows.h>
+#include <Xinput.h>
+
 #include"InputManager.h"
 
+#include "Utility.h"
 
 void InputManager::Update(){
 	memcpy(KeyStatePrevious, KeyStateCurrent, 255); //Copy previous frames keystate into KeyStatePrevious 
@@ -30,4 +33,13 @@ MouseState InputManager::GetMouseState(HWND Window){
 	bool btn2 = GetKeyState(VK_RBUTTON);
 
 	return { CursorPos.x, CursorPos.y, btn1, btn2 };
+}
+
+bool InputManager::IsControllerConnected() {
+	XINPUT_STATE ControllerState;
+	DWORD Success = XInputGetState(1, &ControllerState);
+
+	DisplayMessage(Success);
+
+	return Success == ERROR_SUCCESS;
 }
