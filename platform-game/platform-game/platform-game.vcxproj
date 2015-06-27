@@ -39,12 +39,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\jason_000\Documents\GitHub\platform-game\src\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\jason_000\Documents\GitHub\platform-game\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\..\src\include;$(IncludePath)</IncludePath>
+    <LibraryPath>..\..\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\Users\jason_000\Documents\GitHub\platform-game\src\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\jason_000\Documents\GitHub\platform-game\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\..\src\include;$(IncludePath)</IncludePath>
+    <LibraryPath>..\..\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -79,6 +79,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\AssetManager.cpp" />
     <ClCompile Include="..\..\src\GameObject.cpp" />
+    <ClCompile Include="..\..\src\include\Utility.cpp" />
     <ClCompile Include="..\..\src\InputManager.cpp" />
     <ClCompile Include="..\..\src\PicoPNG.cpp" />
     <ClCompile Include="..\..\src\Main.cpp" />

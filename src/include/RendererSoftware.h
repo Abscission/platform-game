@@ -24,25 +24,6 @@ public:
 bool ResizeSprite(Win32Sprite* Sprite, int W, int H);
 bool ResizeSprite(Win32Sprite* Sprite, int W);
 
-bool ResizeSpriteInterpolated(Win32Sprite* Sprite, int W, int H);
-
-struct Light {
-public:
-	IVec2 Position;
-	int Radius;
-};
-
-struct LightMap {
-public:
-	int Width;
-	int Height;
-
-	char *Buffer;
-
-	LightMap(int W, int H);
-	~LightMap();
-};
-
 class RendererWin32Software : public Renderer {
 private:
 	Win32Sprite BG;
@@ -50,7 +31,6 @@ private:
 	HINSTANCE Instance;
 	HDC DeviceContext;
 	Win32ScreenBuffer Buffer;
-	LightMap *RendererLightMap;
 public:
 	HWND Window;
 	bool OpenWindow(int Width, int Height, char* Title);

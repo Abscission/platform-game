@@ -4,6 +4,13 @@
 
 #pragma once
 
+struct MouseState {
+	int x;
+	int y;
+	bool Btn1;
+	bool Btn2;
+};
+
 //The InputManager class provides the game with keyboard and mouse input
 class InputManager {
 private:
@@ -25,15 +32,8 @@ public:
 	///<summary>Fnd out if a key has just been released</summary>
 	///<param name="Key">The key to test</param>
 	bool GetKeyUp(unsigned char Key);
-
+	
 
 	MouseState GetMouseState(HWND Window);
 };
 
-struct MouseState
-{
-	int x;
-	int y;
-	bool Btn1;
-	bool Btn2;
-};

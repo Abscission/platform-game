@@ -3,6 +3,8 @@
 #include <vector>
 #include <Windows.h>
 
+#include "Utility.h"
+
 #include "Maths.h"
 
 #include "PlatformLayer.h"

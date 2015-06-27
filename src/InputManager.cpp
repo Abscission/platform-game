@@ -20,7 +20,6 @@ bool InputManager::GetKeyUp(unsigned char Key){
 } 
 
 MouseState InputManager::GetMouseState(HWND Window){
-
 	POINT CursorPos;
 	//Mouse cursor pos
 	GetCursorPos(&CursorPos);
@@ -30,6 +29,5 @@ MouseState InputManager::GetMouseState(HWND Window){
 	bool btn1 = GetKeyState(VK_LBUTTON);
 	bool btn2 = GetKeyState(VK_RBUTTON);
 
-	MouseState _ret = { CursorPos.x, CursorPos.y, btn1, btn2 };
-	return _ret;
+	return { CursorPos.x, CursorPos.y, btn1, btn2 };
 }

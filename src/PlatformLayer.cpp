@@ -9,7 +9,6 @@ void Win32PlatformLayer::Initialize(){
 	_Renderer->Initialize();
 	this->Window = &((RendererWin32Software*)_Renderer)->Window;
 
-	((RendererWin32Software*)_Renderer)->UpdateLighting();
 }
 
 bool Win32PlatformLayer::Update(float DeltaTime) {

@@ -36,45 +36,6 @@ LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPARAM lPa
 	}
 }
 
-//Takes a pixel X and lightens it by amount
-//Use negative values to darken
-inline void Lighten(int* Pixel, char Amount) {
-	//This is an optimization for later, when pixels may be lightened based on the lighting engine
-	//In this case there may be a light level of one on the object, therefore we can just return the color
-	if (Amount == 0)
-	{
-		return;
-	}
-	else {
-		//Get the channels from the colour.
-		//A isn't shifted down because we don't use it in processing, and it will just be shifted back up again
-		int A, R, G, B;
-		A = *Pixel & 0xFF000000;
-		R = (*Pixel & 0x00FF0000) >> 16;
-		G = (*Pixel & 0x0000FF00) >> 8;
-		B = *Pixel & 0x000000FF;
-		
-		//Add the amount to each channel, thereby lightening it
-		R += Amount;
-		G += Amount;
-		B += Amount;
-
-		//Prevent overflow problems
-		if (Amount > 0) {
-			R = MIN(R, 0xFF);
-			G = MIN(G, 0xFF);
-			B = MIN(B, 0xFF);
-		}
-		else {
-			R = MAX(R, 0);
-			G = MAX(G, 0);
-			B = MAX(B, 0);
-		}
-
-		*Pixel =  (A | R << 16 | G << 8 | B);
-	}
-}
-
 //A function to blend two pixels based on the 
 inline void Blend(unsigned int* Source, unsigned int* Dest) {
 	//Get the source channels
@@ -141,149 +102,6 @@ bool ResizeSprite(Win32Sprite* Sprite, int W, int H){
 	return true;
 }
 
-union RGB_Pixel {
-	unsigned int Val;
-	struct{
-		unsigned char B, G, R, A;
-	};
-};
-
-struct Pixel {
-	int X, Y;
-	RGB_Pixel Value;
-};
-
-
-inline unsigned char Interpolate(char A, char B, char D) {
-	return (A * D) >> 8 + (B * (256 - D)) >> 8;
-}
-
-bool ResizeSpriteInterpolated(Win32Sprite* Sprite, int W, int H) {
-	//Initialize a temporary buffer for the sprite
-	unsigned int *TempBuffer = (unsigned int*)VirtualAlloc(0, W * H * 4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-
-	//Calculate the scaling ratios
-	double ScaleX = (double)Sprite->Width / W;
-	double ScaleY = (double)Sprite->Height / H;
-
-	//Location of the original pixel
-	double PixelX, PixelY;
-	double DistanceX, DistanceY;
-
-	int TmpX, TmpY;
-	Pixel TL, TR, BL, BR;
-
-	for (int Y = 0; Y < H; Y++) {
-		for (int X = 0; X < W; X++) {
-			//Find the pixel at the correct location
-			//At this point we shift the numbers back to normal integers
-			PixelX = (double)X * ScaleX;
-			PixelY = (double)Y * ScaleY;
-
-			//Round the pixel values
-			TmpX = (int)(PixelX + 0.5);
-			TmpY = (int)(PixelY + 0.5);
-
-			//Get the adjacent Pixel locations
-
-			//Deal with edges
-			//This method is a lot of code, but fast
-
-			
-			if (TmpX <= 0 && TmpY <= 0) {
-				//Top Left Corner
-				TL = { TmpX, TmpY }; //Bottom Right
-				TR = { TmpX, TmpY }; //Bottom Right
-				BL = { TmpX, TmpY }; //Bottom Right
-				BR = { TmpX, TmpY }; //Bottom Right
-			}
-			else if (TmpX <= 0 && TmpY >= H) {
-				//Bottom Left Corner
-				TL = { TmpX, TmpY - 1 }; //Top Right
-				TR = { TmpX, TmpY - 1 }; //Top Right
-				BL = { TmpX, TmpY - 1 }; //Top Right
-				BR = { TmpX, TmpY - 1 }; //Top Right
-			}
-			else if (TmpX >= W && TmpY <= 0){
-				//Top Right Corner
-				TL = { TmpX - 1, TmpY }; //Bottom Left
-				TR = { TmpX - 1, TmpY }; //Bottom Left
-				BL = { TmpX - 1, TmpY }; //Bottom Left
-				BR = { TmpX - 1, TmpY }; //Bottom Left
-			}
-			else if (TmpX >= W && TmpY >= H) {
-				//Bottom Right Corner
-				TL = { TmpX - 1, TmpY - 1 }; //Top Left
-				TR = { TmpX - 1, TmpY - 1 }; //Top Left
-				BL = { TmpX - 1, TmpY - 1 }; //Top Left
-				BR = { TmpX - 1, TmpY - 1 }; //Top Left
-			}
-			else if (TmpX <= 0) {
-				//Left Edge
-				TL = { TmpX, TmpY - 1 };  //Top Right
-				TR = { TmpX, TmpY - 1 }; //Top Right
-				BL = { TmpX, TmpY }; //Bottom Right
-				BR = { TmpX, TmpY }; //Bottom Right
-			}
-			else if (TmpY <= 0) {
-				//Top Edge
-				TL = { TmpX - 1, TmpY }; //Bottom Left
-				TR = { TmpX, TmpY }; //Bottom Right
-				BL = { TmpX - 1, TmpY }; //Bottom Left
-				BR = { TmpX, TmpY }; //Bottom Right
-			}
-			else if (TmpY >= H)
-			{
-				//Bottom Edge
-				TL = { TmpX - 1, TmpY - 1 }; //Top Left
-				TR = { TmpX, TmpY - 1 }; //Top Right
-				BL = { TmpX - 1, TmpY - 1}; //Top Left
-				BR = { TmpX, TmpY - 1 }; //Top Right
-			}
-			else if (TmpX >= W) {
-				//Right Edge
-				TL = { TmpX - 1, TmpY - 1 }; //Top Left
-				TR = { TmpX - 1, TmpY - 1 }; //Top Left
-				BL = { TmpX - 1, TmpY }; //Bottom Left
-				BR = { TmpX - 1, TmpY }; //Bottom Left
-			}
-			else {
-				TL = { TmpX - 1, TmpY - 1 }; //Top Left
-				TR = { TmpX, TmpY - 1 }; //Top Right
-				BL = { TmpX - 1, TmpY }; //Bottom Left
-				BR = { TmpX, TmpY }; //Bottom Right
-			}
-
-			TL.Value.Val = Sprite->Data[TL.X * Sprite->Width + TL.Y];
-			TR.Value.Val = Sprite->Data[TR.X * Sprite->Width + TR.Y];
-			BL.Value.Val = Sprite->Data[BL.X * Sprite->Width + BL.Y];
-			BR.Value.Val = Sprite->Data[BR.X * Sprite->Width + BR.Y];
-
-			DistanceX = (PixelX) - (TL.X);
-			DistanceY = (PixelY) - (TL.Y);
-
-			//X Axis interpolation
-			//Y Axis interpolation
-		}
-	}
-
-	//Delete the old Sprite data
-	if (Sprite->Data) VirtualFree(Sprite->Data, Sprite->Width * Sprite->Height * 4, MEM_RELEASE);
-	
-	//Set the sprite data to the new buffer
-	Sprite->Data = TempBuffer;
-
-	//Set up the sprites members according to the change
-	Sprite->Width = W;
-	Sprite->Height = H;
-	Sprite->length = W * H * 4;
-
-	return true;
-	//return false; //Change to true when working
-}
-
-
-
 bool Win32Sprite::Load(const char * Filename) {
 	Win32FileContents FileContents = ReadEntireFile(Filename);
 
@@ -321,24 +139,8 @@ bool Win32Sprite::Load(const char * Filename) {
 bool Win32Sprite::Load(AssetManager::AssetFile AssetFile, int id){
 	AssetManager::Asset BMP = AssetFile.GetAsset(id);
 	this->Data = (unsigned int*)BMP.Memory;
-	/*hasTransparency = false;
 
-	for (int i = 0; i < this->Width * this->Height * 4; i++) {
-		//Transformations to be done on each pixel of the loaded sprite
-		unsigned int* P = Data + i;
-
-		//Swap the Red and Blue bytes by masking out the relevant bits, shifting them into place, and using bitwise or to combine the bytes
-		//Doing this now is a lot faser than doing it in the rendering code later as I used to
-		*P = (*P & 0xff00ff00) | ((*P & 0xff0000) >> 16) | ((*P & 0xff) << 16);
-
-		//Do premultiplied alpha, should make graphics scale and blend better
-		float Alpha = (((*P & 0xff000000) >> 24) / 255.f);
-		*P = (*P & 0xff000000) | ((int)((*P & 0xff0000) * Alpha) & 0xff0000) | ((int)((*P & 0xff00) * Alpha) & 0xff00) | ((int)((*P & 0xff) * Alpha) & 0xff);
-
-		if (Alpha != 0) {
-			hasTransparency = true;
-		}
-	}*/
+	//TODO(Jason): Implement
 
 	return true;
 }
@@ -403,8 +205,6 @@ bool RendererWin32Software::Initialize() {
 
 	int MemorySize = Buffer.Width * Buffer.Height * Buffer.BytesPerPixel;
 	Buffer.Memory = (int*)VirtualAlloc(0, MemorySize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-
-	RendererLightMap = new LightMap(Config.ResX, Config.ResX);
 
 	return 0;
 }
@@ -509,121 +309,5 @@ void RendererWin32Software::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Widt
 			//If the sprite has no transparency, or we are drawing without blending enabled, use memcpy to copy entire rows at once for speed
 			memcpy((void*)&((unsigned int*)Buffer.Memory)[((y - SrcY) + DstY) * Buffer.Width + DstX], (void*)&(Spr->Data[y * Spr->Width]), Width * 4);
 		}
-	}
-}
-
-//Lighting code
-
-//Constructor for the lightmap
-LightMap::LightMap(int W, int H) {
-	Width = W;
-	Height = H;
-
-	Buffer = (char*)VirtualAlloc(0, Width * Height, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-
-	memset((void*)Buffer, 0, Width * Height);
-};
-
-LightMap::~LightMap(){
-	VirtualFree(Buffer, Width * Height, MEM_RELEASE | MEM_FREE);
-}
-
-void RendererWin32Software::UpdateLighting() {
-	//Draw a Light, Move to own function soon
-
-	Light Lights[] = { 
-		{ { 200, 100 }, 200 },
-		{ { 600, 600 }, 400 }
-	};
-
-	for (int i = 0; i < RendererLightMap->Width * RendererLightMap->Height; i++) {
-		RendererLightMap->Buffer[i] = 0;
-	}
-
-	for (auto Light : Lights) {
-		//Center position of light and radius
-		int CX, CY, R;
-
-		CX = Light.Position.X;
-		CY = Light.Position.Y;
-		R = Light.Radius;
-
-		int X1, X2, Y1, Y2; // Define a rectangle in which the light resides
-
-		X1 = Light.Position.X - Light.Radius;
-		Y1 = Light.Position.Y - Light.Radius;
-		Y2 = Light.Position.Y + Light.Radius;
-		X2 = Light.Position.X + Light.Radius;
-		 
-		for (int Y = Y1; Y < Y2; Y++) {
-			for (int X = X1; X < X2; X++) {
-				if (X >= 0 && X < Buffer.Width && Y >= 0 && Y < Buffer.Height) {
-					//Use Pythagoras' Theorem to find the distance to the ceneter of the circle
-					int DistX = CX - X;
-					int DistY = CY - Y;
-					long Distance = DistX * DistX + DistY * DistY;
-
-					if (Distance < R * R) {
-						char* LightLevel = RendererLightMap->Buffer + (Y * Buffer.Width + X);
-						*LightLevel = MAX(*LightLevel, (char)(127 * (1 - ((float)Distance / R))));
-					}
-				}
-			}
-		}
-	}
-}
-
-struct ApplyLightConfig{
-	int From;
-	int To;
-	LightMap *Map;
-	Win32ScreenBuffer *Buffer;
-};
-
-DWORD WINAPI ApplyLightingThread(void* Config) {
-	int From = ((ApplyLightConfig*)Config)->From;
-	int To = ((ApplyLightConfig*)Config)->To;
-	LightMap *RendererLightMap = ((ApplyLightConfig*)Config)->Map;
-	Win32ScreenBuffer *Buffer = ((ApplyLightConfig*)Config)->Buffer;
-
-	for (int i = From; i <= To; i++) {
-		char *LightLevel = RendererLightMap->Buffer + i;
-		if (LightLevel != 0) {
-			int *Pixel = Buffer->Memory + i;
-			Lighten(Pixel, *LightLevel);
-		}
-	}
-	return 0;
-}
-
-void RendererWin32Software::ApplyLighting() {
-	const int ThreadCount = 1;
-	int PixelsPerThread = (Buffer.Width * Buffer.Height) / ThreadCount;
-
-	static ApplyLightConfig* Configs[ThreadCount];
-	static HANDLE Threads[ThreadCount];
-	static DWORD ThreadIDs[ThreadCount];
-
-	for (int i = 0; i < ThreadCount; i++) {
-
-		if (!Configs[i]) {
-			int From = PixelsPerThread * i;
-			int To = (PixelsPerThread * i) + (PixelsPerThread - 1);
-
-			Configs[i] = (ApplyLightConfig*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ApplyLightConfig));
-
-			Configs[i]->From = From;
-			Configs[i]->To = To;
-			Configs[i]->Buffer = &Buffer;
-			Configs[i]->Map = RendererLightMap;
-		}
-
-		Threads[i] = CreateThread(0, 0, ApplyLightingThread, (void*)(Configs[i]), 0, &ThreadIDs[i]);
-	}
-
-	WaitForMultipleObjects(ThreadCount, Threads, TRUE, INFINITE);
-	
-	for (int i = 0; i < ThreadCount; i++) {
-		//HeapFree(GetProcessHeap(), 0, Configs[i]);
 	}
 }
