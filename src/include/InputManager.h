@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Types.h"
 //Mouse state struct provides the data structure containing mouse related variables 
 struct MouseState {
 	int x;
@@ -15,8 +16,8 @@ struct MouseState {
 //The InputManager class provides the game with keyboard and mouse input
 class InputManager {
 private:
-	unsigned char KeyStateCurrent[255];
-	unsigned char KeyStatePrevious[255];
+	byte KeyStateCurrent[255];
+	byte KeyStatePrevious[255];
 public:
 	//This should be run once per frame to update the keyboard states
 	void Update();
