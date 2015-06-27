@@ -30,13 +30,13 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	std::vector<GameObject> GameObjects;
 
 	GameObject Player({ 20, 20 });
-	Player.loadTexture("Assets/Mario.png");
+	Player.loadTexture("assets/Mario.png");
 	ResizeSprite((Win32Sprite*)Player.Sprite, 48);
 
 	GameObjects.push_back(Player);
 
 	GameObject AI({ 600 - 20, 20 }, { -10, 5 });
-	AI.loadTexture("Assets/Mario.png");
+	AI.loadTexture("assets/Mario.png");
 	GameObjects.push_back(AI);
 
 	float counter = 1.f;
@@ -53,10 +53,6 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 	int Frames = 0;
 	double JumpTime = 0;
-
-	Win32Sprite Sprite;
-	AssetManager::AssetFile BallAsset("Assets/ball.aaf");
-	Sprite.Load(BallAsset, 0);
 
 	bool GameRunning = true;
 	while (GameRunning) {
