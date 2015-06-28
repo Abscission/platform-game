@@ -1,8 +1,15 @@
 #pragma once
 
-#include "Renderer.h"
 #include "Maths.h"
+#include "AssetManager.h"
 #include <Windows.h>
+
+class ImageHeader {
+	unsigned int Width;
+	unsigned int Height;
+	unsigned int length;
+	unsigned int HasTransparency;
+};
 
 struct Win32ScreenBuffer {
 	BITMAPINFO Info;
@@ -12,25 +19,41 @@ struct Win32ScreenBuffer {
 	int BytesPerPixel;
 };
 
-class Win32Sprite : public Sprite {
-private:
-public:
-	~Win32Sprite();
-	bool Load(const char * filename);
-	bool Load(AssetManager::AssetFile, int);
-
+struct RendererConfig{
+	int ResX;
+	int ResY;
+	int BPP;
 };
 
-bool ResizeSprite(Win32Sprite* Sprite, int W, int H);
-bool ResizeSprite(Win32Sprite* Sprite, int W);
+class Sprite {
+public:
+	bool Load(const char * filename);
+	bool Load(AssetManager::AssetFile AssetFile, int id);
 
-class RendererWin32Software : public Renderer {
+	ImageHeader Header;
+
+	unsigned long Width;
+	unsigned long Height;
+
+	bool hasTransparency;
+
+	//May become OS specific in the future, depending on compatibility
+	unsigned int *Data;
+	unsigned int length;
+
+	~Sprite();
+};
+
+bool ResizeSprite(Sprite* Sprite, int W, int H);
+bool ResizeSprite(Sprite* Sprite, int W);
+
+class Renderer {
 private:
-	Win32Sprite BG;
 	HBITMAP BM;
 	HINSTANCE Instance;
 	HDC DeviceContext;
 	Win32ScreenBuffer Buffer;
+	RendererConfig Config;
 public:
 	HWND Window;
 	bool OpenWindow(int Width, int Height, char* Title);

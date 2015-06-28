@@ -56,13 +56,13 @@ inline void Blend(unsigned int* Source, unsigned int* Dest) {
 	*DB = *SB + ((*DB * (256 - *SA)) >> 8);
 }
 
-bool ResizeSprite(Win32Sprite* Sprite, int W) {
+bool ResizeSprite(Sprite* Sprite, int W) {
 	return ResizeSprite(Sprite, W, Sprite->Height * (W / Sprite->Width));
 }
 
 
 //A function to resize a sprite using nearest neighbour
-bool ResizeSprite(Win32Sprite* Sprite, int W, int H){
+bool ResizeSprite(Sprite* Sprite, int W, int H){
 	//Initialize a temporary buffer for the sprite
 	unsigned int *TempBuffer = (unsigned int*)VirtualAlloc(0, W * H * 4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 	
@@ -103,7 +103,7 @@ bool ResizeSprite(Win32Sprite* Sprite, int W, int H){
 	return true;
 }
 
-bool Win32Sprite::Load(const char * Filename) {
+bool Sprite::Load(const char * Filename) {
 	Win32FileContents FileContents = ReadEntireFile(Filename);
 
 	if (this->Data) VirtualFree(this->Data, this->Width * this->Height * 4, MEM_RELEASE);
@@ -137,7 +137,7 @@ bool Win32Sprite::Load(const char * Filename) {
 	return true;
 }
 
-bool Win32Sprite::Load(AssetManager::AssetFile AssetFile, int id){
+bool Sprite::Load(AssetManager::AssetFile AssetFile, int id){
 	AssetManager::Asset BMP = AssetFile.GetAsset(id);
 	this->Data = (unsigned int*)BMP.Memory;
 
@@ -146,12 +146,12 @@ bool Win32Sprite::Load(AssetManager::AssetFile AssetFile, int id){
 	return true;
 }
 
-Win32Sprite::~Win32Sprite() {
+Sprite::~Sprite() {
 	if (this->Data) VirtualFree(this->Data, this->Width * this->Height * 4, MEM_RELEASE);
 }
 
 
-bool RendererWin32Software::OpenWindow(int Width, int Height, char* Title){
+bool Renderer::OpenWindow(int Width, int Height, char* Title){
 	WNDCLASSEX WindClass = {}; //Create a Window Class structure
 	
 	//Check if the class has been registered aleady	
@@ -171,6 +171,7 @@ bool RendererWin32Software::OpenWindow(int Width, int Height, char* Title){
 	}
 
 	DWORD WindowStyle = WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX | WS_VISIBLE;
+	WindowStyle = WS_POPUP | WS_VISIBLE;
 	
 	RECT WindowRect = { 0, 0, Width, Height };
 	AdjustWindowRect(&WindowRect, WindowStyle, false);
@@ -179,9 +180,9 @@ bool RendererWin32Software::OpenWindow(int Width, int Height, char* Title){
 	return true;
 }
 
-bool RendererWin32Software::Initialize() {
-	Config.ResX = 1024;
-	Config.ResY = 768;
+bool Renderer::Initialize() {
+	Config.ResX = 1680;
+	Config.ResY = 1050;
 	Config.BPP = 4;
 
 	Instance = GetModuleHandle(NULL);
@@ -211,7 +212,7 @@ bool RendererWin32Software::Initialize() {
 	return 0;
 }
 
-bool RendererWin32Software::Refresh() {
+bool Renderer::Refresh() {
 	//Now update the screen
 	StretchDIBits(DeviceContext, 0, 0, Buffer.Width, Buffer.Height, 0, 0, Buffer.Width, Buffer.Height, Buffer.Memory, &Buffer.Info, DIB_RGB_COLORS, SRCCOPY);
 
@@ -221,7 +222,7 @@ bool RendererWin32Software::Refresh() {
 	return !ShouldClose;
 }
 
-void RendererWin32Software::DrawRectangle(int X, int Y, int Width, int Height, int Color) {
+void Renderer::DrawRectangle(int X, int Y, int Width, int Height, int Color) {
 	for (int y = 0; y < Height; y++){
 		int Down = Buffer.Width * (Y + y);
 		for (int x = 0; x < Width; x++) {
@@ -231,7 +232,7 @@ void RendererWin32Software::DrawRectangle(int X, int Y, int Width, int Height, i
 }
 
 
-void RendererWin32Software::DrawSpriteRectangle(int X, int Y, int Width, int Height, Sprite* Spr) {
+void Renderer::DrawSpriteRectangle(int X, int Y, int Width, int Height, Sprite* Spr) {
 	for (int y = Y; y < Y + Height; y+= Spr->Width){
 		int Down = Buffer.Width * (Y + y);
 		for (int x = X; x < X + Width; x += Spr->Width) {
@@ -240,15 +241,15 @@ void RendererWin32Software::DrawSpriteRectangle(int X, int Y, int Width, int Hei
 	}
 }
 
-void RendererWin32Software::DrawSprite(Sprite* Spr, int X, int Y) {
+void Renderer::DrawSprite(Sprite* Spr, int X, int Y) {
 	DrawSprite(Spr, 0, 0, Spr->Width, Spr->Height, X, Y, true);
 }
 
-void RendererWin32Software::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY){
+void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY){
 	DrawSprite(Spr, SrcX, SrcY, Width, Height, DstX, DstY, true);
 }
 
-void RendererWin32Software::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool ShouldBlend){
+void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool ShouldBlend){
 	//Out of bounds checks
 	//If the sprite is drawn partially offscreen, draw a section
 	//If it is fully offscreen, don't draw it.

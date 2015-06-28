@@ -1,5 +1,4 @@
 
-#include "Renderer.h"
 #include "RendererSoftware.h"
 #include "GameObject.h"
 
@@ -20,11 +19,11 @@ GameObject::GameObject(Vector2 Position){
 
 void GameObject::loadTexture(const char *filename) {
 	//Create the sprite if it doesn't exist
-	if (!Sprite) {
+	if (!_Sprite) {
 		//TODO: Some kind of factory to abstract this platform specific code
-		Sprite = new Win32Sprite();
+		_Sprite = new Sprite();
 	}
-	Sprite->Load(filename);
+	_Sprite->Load(filename);
 }
 
 void GameObject::ApplyForce(Vector2 Force) {
@@ -33,22 +32,11 @@ void GameObject::ApplyForce(Vector2 Force) {
 
 void GameObject::Update(double DeltaTime) {
 	//The Hitbox of the object
-	Rect Hitbox = { Position, { Sprite->Width, Sprite->Height } };
-
-	int friction = 4500;
-
-	if (Acceleration.X == 0) {
-		if (Velocity.X > 0) {
-			Velocity.X -= friction * DeltaTime;
-		}
-		else if (Velocity.X < 0) {
-			Velocity.X += friction * DeltaTime;
-		}
-	}
+	Rect Hitbox = { Position, { _Sprite->Width, _Sprite->Height } };
 
 	//Apply gravity 
 	if (isGrounded) {
-		TargetVelocity.Y = 5;
+		TargetVelocity.Y = 0;
 	}
 	else {
 		TargetVelocity.Y += 2000;
@@ -60,8 +48,7 @@ void GameObject::Update(double DeltaTime) {
 	Vector2 Direction = Vector2{ Sign(TargetVelocity.X - Velocity.X), Sign(TargetVelocity.Y - Velocity.Y) };
 
 	Velocity.Y = Velocity.Y + (Direction.Y * 1000) * DeltaTime;
-Velocity.X = Velocity.X + (Direction.X * (isGrounded ? 10000 : 5500)) * DeltaTime;
-
+	Velocity.X = Velocity.X + (Direction.X * (isGrounded ? 10000 : 1500)) * DeltaTime;
 
 	if (Sign(TargetVelocity.X - Velocity.X) != Direction.X) {
 		Velocity.X = TargetVelocity.X;
@@ -82,6 +69,7 @@ Velocity.X = Velocity.X + (Direction.X * (isGrounded ? 10000 : 5500)) * DeltaTim
 	Rect Level[] = { { 0, 300, 224, 64 }, { 320, 512, 320, 64 }, { 512, 0, 64, 512 }, { 0, 768 - 32, 1024, 64 } };
 
 	isGrounded = false;
+	canJump = false;
 
 	//For each Box in the level, first do a broad phase collision test (to see if we are near enough we could hit)
 	//Then do a more precise collision test to see weather we did.
@@ -94,17 +82,27 @@ Velocity.X = Velocity.X + (Direction.X * (isGrounded ? 10000 : 5500)) * DeltaTim
 			float CollisionTime = CheckCollisionSweptAABB(Hitbox, Box, DeltaPosition, Normal);
 			DeltaPosition *= CollisionTime;
 
-			if (CollisionTime < 1.0) {
-				//DeltaPosition *= CollisionTime;
-
+			if (CollisionTime < 100.0 * DeltaTime) {
 				if (abs(Normal.X) > 0){
+					wallJumpDirection = -Sign(Velocity.X);
+
+					canJump = true;
+				}
+			}
+
+			if (CollisionTime < 1.0) {
+				if (abs(Normal.X) > 0){
+					wallJumpDirection = -Sign(Velocity.X);
+
 					Velocity.X = 0;
 					DeltaPosition.X = DeltaPosition.X * CollisionTime;
+					canJump = true;
 				}
 				if (abs(Normal.Y) > 0) {
 					DeltaPosition.Y = DeltaPosition.Y * CollisionTime;
 					Velocity.Y = 0;
 					isGrounded = true;
+					canJump = true;
 				}
 			}
 
@@ -116,5 +114,5 @@ Velocity.X = Velocity.X + (Direction.X * (isGrounded ? 10000 : 5500)) * DeltaTim
 }
 
 void GameObject::Draw(Renderer* renderer) {
-	renderer->DrawSprite(Sprite, 0, 0, Sprite->Width, Sprite->Height, (int)(Position.X), (int)(Position.Y), true);
+	renderer->DrawSprite(_Sprite, 0, 0, _Sprite->Width, _Sprite->Height, (int)(Position.X), (int)(Position.Y), true);
 }

@@ -7,31 +7,31 @@
 
 #include "Maths.h"
 
-#include "PlatformLayer.h"
-#include "Win32_PlatformLayer.h"
+#include "GameLayer.h"
 #include "RendererSoftware.h"
-#include "Renderer.h"
 #include "GameObject.h"
 #include "Entity.h"
 #include "AssetManager.h"
 #include "InputManager.h"
 
 int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
-	PlatformLayer* PlatformLayer;
-	PlatformLayer = new Win32PlatformLayer();
-	PlatformLayer->Initialize();
+	//Create a platform layer
+	GameLayer PlatformLayer;
+	PlatformLayer.Initialize();
 
-	//Get a renderer object from the platform layer 
-	Renderer* renderer;
-	renderer = PlatformLayer->GetRenderer();
+	//Get a renderer object from the game layer 
+	Renderer Renderer;
+	Renderer = PlatformLayer.GetRenderer();
 
+	//Get an Input Manager
 	InputManager InputMgr;
 
+	//Temporary GameObject vector
 	std::vector<GameObject> GameObjects;
 
 	GameObject Player({40, 40 });
 	Player.loadTexture("assets/Mario.png");
-	ResizeSprite((Win32Sprite*)Player.Sprite, 48);
+	ResizeSprite(Player._Sprite, 48);
 
 	GameObjects.push_back(Player);
 
@@ -92,7 +92,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 		ControllerState Controller = InputMgr.GetControllerState();
 
 
-		int MaxSpeed = 500;
+		int MaxSpeed = (InputMgr.GetKeyState(VK_SHIFT) || Controller.Buttons & 0x2000) ? 400 : 600;
 
 		if (InputMgr.GetKeyState('D') || Controller.Buttons & 0x8) {
 			GameObjects[0].TargetVelocity.X = MaxSpeed;
@@ -106,11 +106,31 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 //			GameObjects[0].TargetVelocity.X = 0;
 		}
 
-		if (InputMgr.GetKeyState(VK_SPACE) || Controller.Buttons & 0x1000) {
-			if (GameObjects[0].isGrounded) {
-				GameObjects[0].Velocity.Y = -750;
+		if (JumpTime == 0) {
+			if (InputMgr.GetKeyState(VK_SPACE) || Controller.Buttons & 0x1000) {
+				if (GameObjects[0].canJump) {
+					if (!GameObjects[0].isGrounded) {
+						//walljump
+						GameObjects[0].Velocity.X = 600 * GameObjects[0].wallJumpDirection;
+					}
+
+					GameObjects[0].Velocity.Y = -600;
+					JumpTime += DeltaTime;
+				}
 			}
 		}
+
+		if (JumpTime > 0){
+			if (InputMgr.GetKeyState(VK_SPACE) || Controller.Buttons & 0x1000) {
+				JumpTime += DeltaTime;
+				if (JumpTime < 1.0f) {
+					GameObjects[0].Velocity.Y -= 500 * DeltaTime;
+				}
+			}
+			else {
+				JumpTime = 0;
+			}
+		} 
 
 		//GameObjects[0].Velocity.Y += JumpTime;
 
@@ -118,16 +138,20 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 			GameRunning = false;
 		}
 
+		if (GameObjects[0].Position.Y > 2000) {
+			GameObjects[0].Position = { 50, -100 };
+			GameObjects[0].Velocity = { 0, 0 };
 
+		}
 
 		//TODO: See if iterator approach is fast enough
 		for (auto & Object : GameObjects){
 			Object.Update(DeltaTime);
-			Object.Draw(renderer);
+			Object.Draw(&Renderer);
 		}
 
 		
-		if(!PlatformLayer->Update(DeltaTime)) GameRunning = false;
+		if(!PlatformLayer.Update(DeltaTime)) GameRunning = false;
 	
 		
 	}

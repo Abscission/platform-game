@@ -9,6 +9,9 @@ protected:
 
 public:
 	bool isGrounded = false;
+	bool canJump = false;
+
+	int wallJumpDirection;
 
 	Vector2 Position;
 	Vector2 Velocity;
@@ -29,8 +32,8 @@ public:
 	///<param name="filename">The filename of the image to load</param>
 	void loadTexture(const char * filename);
 
-	Sprite* Sprite;
-
+	Sprite* _Sprite;
+	
 	void ApplyForce(Vector2 Force);
 
 	///<summary>
