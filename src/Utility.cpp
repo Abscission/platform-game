@@ -17,3 +17,40 @@ void DisplayMessage(HRESULT Code) {
 		ErrorText = NULL;
 	}
 }
+
+Win32FileContents ReadEntireFile(const char * Filename){
+	HANDLE File = CreateFileA(Filename, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+
+	LARGE_INTEGER Size;
+	GetFileSizeEx(File, &Size);
+
+	Win32FileContents FileContents = {};
+
+	FileContents.Size = Size.QuadPart;
+	FileContents.Data = (unsigned char *)VirtualAlloc(0, Size.LowPart, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
+	DWORD BytesRead;
+	ReadFile(File, FileContents.Data, Size.LowPart, &BytesRead, 0);
+
+
+	if (BytesRead != Size.LowPart) {
+		DisplayMessage(GetLastError());
+		//TODO: Logging, errors etc
+	}
+
+	return FileContents;
+};
+
+std::string Trim(std::string str) {
+	size_t End = str.find_last_not_of(" \t");
+	if (std::string::npos != End){
+		str = str.substr(0, End + 1);
+	}
+
+	size_t Start = str.find_first_not_of(" \t");
+	if (std::string::npos != Start){
+		str = str.substr(0, Start);
+	}
+
+	return str;
+}

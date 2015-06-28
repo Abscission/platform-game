@@ -1,5 +1,4 @@
 #include "GameLayer.h"
-#include "Renderer.h"
 #include "RendererSoftware.h"
 #include "Maths.h"
 
@@ -23,7 +22,9 @@ bool GameLayer::Update(float DeltaTime) {
 
 	static Sprite Platform;
 	if (!Platform.Data) {
-		Platform.Load("Assets/tile01.png");
+		AssetManager::AssetFile Assets("assets/assets.aaf");
+		Platform.Load(Assets, 1);
+		
 		ResizeSprite(&Platform, 16, 16);
 	}
 

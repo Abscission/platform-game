@@ -1,6 +1,8 @@
 
 #include <stdlib.h> 
 #include <vector>
+#include <string>
+
 #include <Windows.h>
 
 #include "Utility.h"
@@ -13,6 +15,7 @@
 #include "Entity.h"
 #include "AssetManager.h"
 #include "InputManager.h"
+#include "Config.h"
 
 int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	//Create a platform layer
@@ -29,15 +32,14 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	//Temporary GameObject vector
 	std::vector<GameObject> GameObjects;
 
+	AssetManager::AssetFile Mario("assets/assets.aaf");
+
 	GameObject Player({40, 40 });
-	Player.loadTexture("assets/Mario.png");
+	Player.loadTexture(Mario, 0);
+	
 	ResizeSprite(Player._Sprite, 48);
 
 	GameObjects.push_back(Player);
-
-	GameObject AI({ 600 - 20, 20 }, { -10, 5 });
-	AI.loadTexture("assets/Mario.png");
-	GameObjects.push_back(AI);
 
 	float counter = 1.f;
 	LARGE_INTEGER Time;

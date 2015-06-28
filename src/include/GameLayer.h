@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Renderer.h"
 #include "RendererSoftware.h"
 
 class GameLayer  {

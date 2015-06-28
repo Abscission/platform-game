@@ -5,6 +5,7 @@
 #include <Windows.h>
 
 class ImageHeader {
+public:
 	unsigned int Width;
 	unsigned int Height;
 	unsigned int length;
@@ -20,9 +21,12 @@ struct Win32ScreenBuffer {
 };
 
 struct RendererConfig{
-	int ResX;
-	int ResY;
+	int RenderResX;
+	int RenderResY;
+	int WindowResX;
+	int WindowResY;
 	int BPP;
+	bool Fullscreen;
 };
 
 class Sprite {

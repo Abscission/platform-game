@@ -9,8 +9,12 @@
 #include "RendererSoftware.h"
 #include "MemoryManager.h"
 #include "AssetManager.h"
+#include "Config.h"
 
 bool ShouldClose = false;
+
+static int MonitorCount;
+static Rect Monitors[8];
 
 //The window callback, this is what processes messages from our windows
 LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPARAM lParam) {
@@ -139,10 +143,18 @@ bool Sprite::Load(const char * Filename) {
 
 bool Sprite::Load(AssetManager::AssetFile AssetFile, int id){
 	AssetManager::Asset BMP = AssetFile.GetAsset(id);
-	this->Data = (unsigned int*)BMP.Memory;
+	
+	byte* Memory = (byte*)BMP.Memory;
+	ImageHeader* Header = (ImageHeader*)Memory;
+	
+	this->Width = Header->Width;
+	this->Height = Header->Height;
+	this->length = Header->length;
 
-	//TODO(Jason): Implement
-
+	
+	this->Data = (u32*)VirtualAlloc(0, Header->length, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+	memcpy((void*)this->Data, (void*)(Memory + sizeof(ImageHeader)), Header->length);
+	
 	return true;
 }
 
@@ -170,8 +182,7 @@ bool Renderer::OpenWindow(int Width, int Height, char* Title){
 		}
 	}
 
-	DWORD WindowStyle = WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX | WS_VISIBLE;
-	WindowStyle = WS_POPUP | WS_VISIBLE;
+	DWORD WindowStyle = Config.Fullscreen ? (WS_POPUP | WS_VISIBLE) : (WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX | WS_VISIBLE);
 	
 	RECT WindowRect = { 0, 0, Width, Height };
 	AdjustWindowRect(&WindowRect, WindowStyle, false);
@@ -180,13 +191,70 @@ bool Renderer::OpenWindow(int Width, int Height, char* Title){
 	return true;
 }
 
+struct MonitorEnumResult {
+	HMONITOR Monitors[8];
+	int Count = 0;
+};
+
+BOOL CALLBACK MonitorEnumProc(HMONITOR Monitor, HDC DeviceContext, LPRECT Rect, LPARAM Data) {
+	MonitorEnumResult* Monitors = (MonitorEnumResult*)Data;
+	Monitors->Monitors[Monitors->Count++] = Monitor;
+	return true;
+}
+
 bool Renderer::Initialize() {
-	Config.ResX = 1680;
-	Config.ResY = 1050;
+	ConfigFile GraphicsConfig("config/Graphics.ini");
+
+	std::string sFullscreen = GraphicsConfig.Get("Fullscreen", "1");
+	
+	Config.Fullscreen = sFullscreen != "0";
+
+	std::string sRenderResX = GraphicsConfig.Get("RenderResolutionX");
+	std::string sRenderResY = GraphicsConfig.Get("RenderResolutionY");
+
+	if (sRenderResX != ""){
+		Config.RenderResX = std::atoi(sRenderResX.c_str());
+	}
+	else {
+		Config.RenderResX = Config.Fullscreen ? 0 : 1024;
+	}
+
+	if (sRenderResY != ""){
+		Config.RenderResY = std::atoi(sRenderResY.c_str());
+	}
+	else {
+		Config.RenderResY = Config.Fullscreen ? 0 : 768;
+	}
+
+	if (Config.Fullscreen) {
+		int Monitor = 0;
+
+		MonitorEnumResult Monitors;
+
+		EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, (LPARAM)&Monitors);
+
+		MONITORINFO MonitorInfo;
+		MonitorInfo.cbSize = sizeof(MONITORINFO);
+		GetMonitorInfo(Monitors.Monitors[Monitor], &MonitorInfo);
+
+		Config.WindowResY = MonitorInfo.rcMonitor.bottom - MonitorInfo.rcMonitor.top;
+		Config.WindowResX = MonitorInfo.rcMonitor.right - MonitorInfo.rcMonitor.left;
+
+		if (Config.RenderResX == 0) Config.RenderResX = Config.WindowResX;
+		if (Config.RenderResY == 0) Config.RenderResY = Config.WindowResY;
+	}
+	else {
+		Config.WindowResX = Config.RenderResX;
+		Config.WindowResY = Config.RenderResY;
+	}
+
+	GraphicsConfig.Set("RenderResolutionX", std::to_string(Config.RenderResX));
+	GraphicsConfig.Set("RenderResolutionY", std::to_string(Config.RenderResY));
+
 	Config.BPP = 4;
 
 	Instance = GetModuleHandle(NULL);
-	this->OpenWindow(Config.ResX, Config.ResY, "Title");
+	this->OpenWindow(Config.WindowResX, Config.WindowResY, "Title");
 	this->DeviceContext = GetWindowDC(this->Window);
 
 	//Create a DIB to render to
@@ -194,8 +262,8 @@ bool Renderer::Initialize() {
 		VirtualFree(Buffer.Memory, 0, MEM_RELEASE);
 	}
 
-	Buffer.Width = Config.ResX;
-	Buffer.Height = Config.ResY;
+	Buffer.Width = Config.RenderResX;
+	Buffer.Height = Config.RenderResY;
 	Buffer.BytesPerPixel = 4;
 
 	Buffer.Info.bmiHeader.biSize = sizeof(Buffer.Info.bmiHeader);
@@ -214,7 +282,9 @@ bool Renderer::Initialize() {
 
 bool Renderer::Refresh() {
 	//Now update the screen
-	StretchDIBits(DeviceContext, 0, 0, Buffer.Width, Buffer.Height, 0, 0, Buffer.Width, Buffer.Height, Buffer.Memory, &Buffer.Info, DIB_RGB_COLORS, SRCCOPY);
+
+	//Stretch to the screen
+	StretchDIBits(DeviceContext, 0, 0, Config.WindowResX, Config.WindowResY, 0, 0, Buffer.Width, Buffer.Height, Buffer.Memory, &Buffer.Info, DIB_RGB_COLORS, SRCCOPY);
 
 	//Clear the backbuffer
 	ZeroMemory(Buffer.Memory, Buffer.Width * Buffer.Height * Buffer.BytesPerPixel);
@@ -233,10 +303,10 @@ void Renderer::DrawRectangle(int X, int Y, int Width, int Height, int Color) {
 
 
 void Renderer::DrawSpriteRectangle(int X, int Y, int Width, int Height, Sprite* Spr) {
-	for (int y = Y; y < Y + Height; y+= Spr->Width){
+	for (int y = Y; y < Y + Height; y+= 16 ) { //Spr->Width){
 		int Down = Buffer.Width * (Y + y);
-		for (int x = X; x < X + Width; x += Spr->Width) {
-			DrawSprite(Spr, x, y);
+		for (int x = X; x < X + Width; x += 16) { //Spr->Width) {
+			DrawSprite(Spr, 0, 0, 16, 16, x, y);
 		}
 	}
 }
@@ -253,15 +323,6 @@ void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height
 	//Out of bounds checks
 	//If the sprite is drawn partially offscreen, draw a section
 	//If it is fully offscreen, don't draw it.
-
-	float Scale = 1.5f;
-
-	//DstX *= Scale;
-	//DstY *= Scale;
-	Width *= Scale;
-	Height *= Scale;
-
-	ResizeSprite(Spr, Width);
 
 	if (DstX < 0) {
 		SrcX -= DstX;
@@ -283,9 +344,7 @@ void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height
 		Width = Buffer.Width - DstX;
 		DstX = Buffer.Width - Width;
 
-		if (Width <= 0) {
-			return;
-		}
+		if (Width <= 0) return;
 	}
 
 	if (DstY + Height > Buffer.Height) {
@@ -319,3 +378,4 @@ void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height
 		}
 	}
 }
+

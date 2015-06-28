@@ -1,7 +1,7 @@
 #pragma once 
 
 #include "maths.h"
-#include "Renderer.h"
+#include "AssetManager.h"
 
 class GameObject {
 protected:
@@ -31,6 +31,9 @@ public:
 	///</summary>
 	///<param name="filename">The filename of the image to load</param>
 	void loadTexture(const char * filename);
+
+	void loadTexture(AssetManager::AssetFile AssetFile, int id);
+
 
 	Sprite* _Sprite;
 	

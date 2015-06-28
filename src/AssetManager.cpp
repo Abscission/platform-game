@@ -8,7 +8,7 @@ namespace AssetManager {
 		File = CreateFileA(Filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		FileMapping = CreateFileMapping(File, NULL, PAGE_READONLY, 0, 0, NULL);
 		FileHeader = (Header*)MapViewOfFile(FileMapping, FILE_MAP_READ, 0, 0, 0);
-
+		
 		//Check if the file contains our identifier, "AGEA":
 		if (*(int*)&FileHeader->FileID != 0x41454741) {
 			OutputDebugStringA("Invalid!");
