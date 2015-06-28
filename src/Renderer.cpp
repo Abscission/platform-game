@@ -253,6 +253,16 @@ void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height
 	//Out of bounds checks
 	//If the sprite is drawn partially offscreen, draw a section
 	//If it is fully offscreen, don't draw it.
+
+	float Scale = 1.5f;
+
+	//DstX *= Scale;
+	//DstY *= Scale;
+	Width *= Scale;
+	Height *= Scale;
+
+	ResizeSprite(Spr, Width);
+
 	if (DstX < 0) {
 		SrcX -= DstX;
 		Width += DstX;
