@@ -104,8 +104,6 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 		}
 		else {
 			GameObjects[0].TargetVelocity.X = (MaxSpeed / 32767.f) * Controller.LeftStick.X;
-
-//			GameObjects[0].TargetVelocity.X = 0;
 		}
 
 		if (JumpTime == 0) {
@@ -132,9 +130,18 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 			else {
 				JumpTime = 0;
 			}
-		} 
+		}
 
-		//GameObjects[0].Velocity.Y += JumpTime;
+		Rect MoveRect = { 10, 10, 1000, 1000 };
+
+		GameObject& Player = GameObjects[0];
+		
+		IVec2 PlayerScreenPos = Renderer.TransformPosition({ Player.Position.X, Player.Position.Y });
+
+		if (PlayerScreenPos.X < MoveRect.X){
+			IVec2 CameraPos = Renderer.GetCameraPosition();
+			//Renderer.SetCameraPosition(CameraPos.X + PlayerScreenPos.X, CameraPos.Y);
+		}
 
 		if (Controller.Buttons & 0x10) {
 			GameRunning = false;
@@ -146,6 +153,9 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 		}
 
+		//Update Level HERE
+
+
 		//TODO: See if iterator approach is fast enough
 		for (auto & Object : GameObjects){
 			Object.Update(DeltaTime);
@@ -154,8 +164,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 		
 		if(!PlatformLayer.Update(DeltaTime)) GameRunning = false;
-	
-		
+
 	}
 
 	return 0;

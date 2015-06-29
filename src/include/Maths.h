@@ -25,7 +25,7 @@ inline int Sign(int X) {
 	return X > 0 ? 1 : -1;
 }
 
-inline float Sign(float X) {
+inline int Sign(float X) {
 	return X > 0 ? 1 : -1;
 }
 

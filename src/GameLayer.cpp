@@ -7,6 +7,11 @@ void GameLayer::Initialize(){
 	this->Window = _Renderer.Window;
 }
 
+struct Surface {
+	Rect Position;
+	Sprite& Spr;
+};
+
 bool GameLayer::Update(float DeltaTime) {
 	MSG Message;
 
@@ -16,20 +21,45 @@ bool GameLayer::Update(float DeltaTime) {
 		DispatchMessage(&Message);
 	}
 
-	Rect Level[] = { { 0, 300, 224, 64 }, { 320, 512, 320, 64 }, { 512, 0, 64, 512 }, { 0, 768 - 32, 1024, 64 } };
-	static float CameraX = 0;
-	//CameraX += 25 * DeltaTime;
-
-	static Sprite Platform;
-	if (!Platform.Data) {
-		AssetManager::AssetFile Assets("assets/assets.aaf");
-		Platform.Load(Assets, 1);
+	static Sprite Platform01;
+	if (!Platform01.Data) {
+		AssetManager::AssetFile Tiles("assets/tiles.aaf");
+		Platform01.Load(Tiles, 0);
 		
-		ResizeSprite(&Platform, 16, 16);
+		ResizeSprite(&Platform01, 32, 32);
 	}
 
+	static Sprite Platform02;
+	if (!Platform02.Data) {
+		AssetManager::AssetFile Tiles("assets/tiles.aaf");
+		Platform02.Load(Tiles, 2);
+
+		ResizeSprite(&Platform02, 32, 32);
+	}
+
+	static Sprite Platform03;
+	if (!Platform03.Data) {
+		AssetManager::AssetFile Tiles("assets/tiles.aaf");
+		Platform03.Load(Tiles, 1);
+
+		ResizeSprite(&Platform03, 32, 32);
+	}
+
+
+	static Sprite Platform04;
+	if (!Platform04.Data) {
+		AssetManager::AssetFile Tiles("assets/tiles.aaf");
+		Platform04.Load(Tiles, 3);
+
+		ResizeSprite(&Platform04, 32, 32);
+	}
+
+
+	Surface Level[] = { { { 16, 768-600, 400, 400 }, Platform04 }, { { 0, 300, 224, 64 }, Platform01 }, { { 320, 512, 320, 64 }, Platform01 }, { { 512, 0, 64, 512 }, Platform01 }, { { 0, 768 - 32, 1024, 32 }, Platform02 }, { { 0, 768, 1024, 32 }, Platform03 }
+};
+
 	for (auto Surface : Level) {
-		_Renderer.DrawSpriteRectangle(Surface.X - CameraX, Surface.Y, Surface.W, Surface.H, &Platform);
+		_Renderer.DrawSpriteRectangle(Surface.Position.X, Surface.Position.Y, Surface.Position.W, Surface.Position.H, &Surface.Spr);
 	}
 
  	return _Renderer.Refresh();

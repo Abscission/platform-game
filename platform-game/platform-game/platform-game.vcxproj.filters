@@ -27,9 +27,6 @@
     <ClCompile Include="..\..\src\InputManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\PicoPNG.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -62,9 +59,6 @@
     <ClInclude Include="..\..\src\include\Maths.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\include\PicoPNG.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\include\Utility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -94,19 +88,11 @@
     <None Include="..\..\README.md">
       <Filter>Other Files</Filter>
     </None>
-    <None Include="..\..\assets\ball.aaf">
+    <None Include="..\..\assets\assets.aaf">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\src\MemoryManager.asm">
-      <Filter>Source Files</Filter>
+    <None Include="..\..\assets\tiles.aaf">
+      <Filter>Resource Files</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="..\..\assets\Mario.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\..\assets\tile01.png">
-      <Filter>Resource Files</Filter>
-    </Image>
   </ItemGroup>
 </Project>

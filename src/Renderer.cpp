@@ -107,40 +107,6 @@ bool ResizeSprite(Sprite* Sprite, int W, int H){
 	return true;
 }
 
-bool Sprite::Load(const char * Filename) {
-	Win32FileContents FileContents = ReadEntireFile(Filename);
-
-	if (this->Data) VirtualFree(this->Data, this->Width * this->Height * 4, MEM_RELEASE);
-
-	std::vector<unsigned char> Image;
-
-	decodePNG(Image, this->Width, this->Height, FileContents.Data, (unsigned long)FileContents.Size);
-
-	this->Data = (unsigned int *)VirtualAlloc(0, Image.size() * 4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-	std::copy(Image.begin(), Image.end(), (unsigned char*)this->Data);
-
-	hasTransparency = false;
-
-	for (int i = 0; i < this->Width * this->Height * 4; i++) {
-		//Transformations to be done on each pixel of the loaded sprite
-		unsigned int* P = Data + i;
-
-		//Swap the Red and Blue bytes by masking out the relevant bits, shifting them into place, and using bitwise or to combine the bytes
-		//Doing this now is a lot faser than doing it in the rendering code later as I used to
-		*P = (*P & 0xff00ff00) | ((*P & 0xff0000) >> 16) | ((*P & 0xff) << 16);
-
-		//Do premultiplied alpha, should make graphics scale and blend better
-		float Alpha = (((*P & 0xff000000) >> 24) / 255.f);
-		*P = (*P & 0xff000000) | ((int)((*P & 0xff0000) * Alpha) & 0xff0000) | ((int)((*P & 0xff00) * Alpha) & 0xff00) | ((int)((*P & 0xff) * Alpha) & 0xff);
-
-		if (Alpha != 0) {
-			hasTransparency = true;
-		}
-	}
-	
-	return true;
-}
-
 bool Sprite::Load(AssetManager::AssetFile AssetFile, int id){
 	AssetManager::Asset BMP = AssetFile.GetAsset(id);
 	
@@ -150,7 +116,7 @@ bool Sprite::Load(AssetManager::AssetFile AssetFile, int id){
 	this->Width = Header->Width;
 	this->Height = Header->Height;
 	this->length = Header->length;
-
+	this->hasTransparency = Header->HasTransparency;
 	
 	this->Data = (u32*)VirtualAlloc(0, Header->length, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 	memcpy((void*)this->Data, (void*)(Memory + sizeof(ImageHeader)), Header->length);
@@ -202,7 +168,18 @@ BOOL CALLBACK MonitorEnumProc(HMONITOR Monitor, HDC DeviceContext, LPRECT Rect, 
 	return true;
 }
 
+void Renderer::SetCameraPosition(int X, int Y) {
+	this->CameraPos = { X, Y };
+}
+
+void Renderer::SetCameraPosition(IVec2 Position) {
+	this->CameraPos = Position;
+}
+
 bool Renderer::Initialize() {
+
+	SetCameraPosition({ -100, 0 });
+
 	ConfigFile GraphicsConfig("config/Graphics.ini");
 
 	std::string sFullscreen = GraphicsConfig.Get("Fullscreen", "1");
@@ -287,7 +264,9 @@ bool Renderer::Refresh() {
 	StretchDIBits(DeviceContext, 0, 0, Config.WindowResX, Config.WindowResY, 0, 0, Buffer.Width, Buffer.Height, Buffer.Memory, &Buffer.Info, DIB_RGB_COLORS, SRCCOPY);
 
 	//Clear the backbuffer
-	ZeroMemory(Buffer.Memory, Buffer.Width * Buffer.Height * Buffer.BytesPerPixel);
+	//ZeroMemory(Buffer.Memory, Buffer.Width * Buffer.Height * Buffer.BytesPerPixel);
+
+	DrawRectangle(0, 0, Config.RenderResX, Config.RenderResY, 0x000033);
 
 	return !ShouldClose;
 }
@@ -303,10 +282,10 @@ void Renderer::DrawRectangle(int X, int Y, int Width, int Height, int Color) {
 
 
 void Renderer::DrawSpriteRectangle(int X, int Y, int Width, int Height, Sprite* Spr) {
-	for (int y = Y; y < Y + Height; y+= 16 ) { //Spr->Width){
+	for (int y = Y; y < Y + Height; y+= Spr->Width){
 		int Down = Buffer.Width * (Y + y);
-		for (int x = X; x < X + Width; x += 16) { //Spr->Width) {
-			DrawSprite(Spr, 0, 0, 16, 16, x, y);
+		for (int x = X; x < X + Width; x += Spr->Width) {
+			DrawSprite(Spr, 0, 0, Spr->Width, Spr->Height, x, y);
 		}
 	}
 }
@@ -324,6 +303,9 @@ void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height
 	//If the sprite is drawn partially offscreen, draw a section
 	//If it is fully offscreen, don't draw it.
 
+	DstX -= CameraPos.X;
+	DstY -= CameraPos.Y;
+
 	if (DstX < 0) {
 		SrcX -= DstX;
 		Width += DstX;
@@ -333,7 +315,7 @@ void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height
 	}
 
 	if (DstY < 0){	
-		SrcY += -DstY;
+		SrcY -= DstY;
 		Height += DstY;
 
 		DstY = 0;
@@ -355,7 +337,7 @@ void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height
 	}
 
 	for (unsigned int y = SrcY; y < (SrcY + Height); y++){
-		if (ShouldBlend && Spr->hasTransparency) {
+		if ((ShouldBlend && Spr->hasTransparency) || true) {
 			//If the pixel should be drawn with transparency itterate over each pixel
 			for (unsigned int x = SrcX; x < (SrcX + Width); x++) {
 				unsigned int ARGB = Spr->Data[y * Spr->Width + x];

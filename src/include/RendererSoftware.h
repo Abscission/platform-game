@@ -31,17 +31,13 @@ struct RendererConfig{
 
 class Sprite {
 public:
-	bool Load(const char * filename);
 	bool Load(AssetManager::AssetFile AssetFile, int id);
-
-	ImageHeader Header;
 
 	unsigned long Width;
 	unsigned long Height;
 
 	bool hasTransparency;
 
-	//May become OS specific in the future, depending on compatibility
 	unsigned int *Data;
 	unsigned int length;
 
@@ -58,9 +54,19 @@ private:
 	HDC DeviceContext;
 	Win32ScreenBuffer Buffer;
 	RendererConfig Config;
+	IVec2 CameraPos;
 public:
 	HWND Window;
 	bool OpenWindow(int Width, int Height, char* Title);
+
+	void SetCameraPosition(IVec2 Position);
+	void SetCameraPosition(int X, int Y);
+
+	IVec2 TransformPosition(IVec2 Position) {
+		return{ Position.X - CameraPos.X, Position.Y - CameraPos.Y };
+	}
+
+	IVec2 GetCameraPosition() { return CameraPos; };
 
 	void DrawSprite(Sprite* Spr, int X, int Y);
 	void DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY);

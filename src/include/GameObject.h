@@ -29,9 +29,8 @@ public:
 	///<summary>
 	///Loads a texture from a file, and assigns it to the GameObject
 	///</summary>
-	///<param name="filename">The filename of the image to load</param>
-	void loadTexture(const char * filename);
-
+	///<param name="AssetFile">The AAF file from which to load the image</param>
+	///<param name="id">The index of the asset from which to get the texture</param>
 	void loadTexture(AssetManager::AssetFile AssetFile, int id);
 
 

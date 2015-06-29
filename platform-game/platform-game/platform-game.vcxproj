@@ -93,7 +93,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>zdll.lib;xinput.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>zdll.lib;Xinput9_1_0.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -106,7 +106,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>zdll64.lib;xinput.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>zdll64.lib;Xinput9_1_0.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -123,7 +123,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>zdll.lib;xinput.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>zdll.lib;Xinput9_1_0.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -140,7 +140,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>zdll64.lib;xinput.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>zdll64.lib;Xinput9_1_0.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -149,7 +149,6 @@
     <ClCompile Include="..\..\src\GameObject.cpp" />
     <ClCompile Include="..\..\src\InputManager.cpp" />
     <ClCompile Include="..\..\src\MemoryManager.cpp" />
-    <ClCompile Include="..\..\src\PicoPNG.cpp" />
     <ClCompile Include="..\..\src\Main.cpp" />
     <ClCompile Include="..\..\src\GameLayer.cpp" />
     <ClCompile Include="..\..\src\Renderer.cpp" />
@@ -162,7 +161,6 @@
     <ClInclude Include="..\..\src\include\InputManager.h" />
     <ClInclude Include="..\..\src\include\Maths.h" />
     <ClInclude Include="..\..\src\include\MemoryManager.h" />
-    <ClInclude Include="..\..\src\include\PicoPNG.h" />
     <ClInclude Include="..\..\src\include\Types.h" />
     <ClInclude Include="..\..\src\include\GameLayer.h" />
     <ClInclude Include="..\..\src\include\RendererSoftware.h" />
@@ -170,14 +168,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\.gitignore" />
-    <None Include="..\..\assets\ball.aaf" />
+    <None Include="..\..\assets\assets.aaf" />
+    <None Include="..\..\assets\tiles.aaf" />
     <None Include="..\..\LICENSE" />
     <None Include="..\..\README.md" />
-    <None Include="..\..\src\MemoryManager.asm" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="..\..\assets\Mario.png" />
-    <Image Include="..\..\assets\tile01.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

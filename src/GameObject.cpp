@@ -26,16 +26,6 @@ void GameObject::loadTexture(AssetManager::AssetFile AssetFile, int id){
 	_Sprite->Load(AssetFile, id);
 }
 
-
-void GameObject::loadTexture(const char *filename) {
-	//Create the sprite if it doesn't exist
-	if (!_Sprite) {
-		//TODO: Some kind of factory to abstract this platform specific code
-		_Sprite = new Sprite();
-	}
-	_Sprite->Load(filename);
-}
-
 void GameObject::ApplyForce(Vector2 Force) {
 	Velocity = Velocity + Force;
 }
