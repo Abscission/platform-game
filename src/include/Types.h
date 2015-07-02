@@ -17,6 +17,10 @@ typedef int64_t int64;
 typedef float float32;
 typedef double float64;
 
+#define KILOBYTES(n) (n * 1024)
+#define MEGABYTES(n) (KILOBYTES(n) * 1024)
+#define GIGABYTES(n) (MEGABYTES(n) * 1024)
+
 struct IVec2 {
 	int X;
 	int Y;

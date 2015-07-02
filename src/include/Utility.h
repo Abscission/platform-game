@@ -17,3 +17,9 @@ std::string Trim(std::string str);
 void DisplayMessage(HRESULT Code);
 
 Win32FileContents ReadEntireFile(const char * Filename);
+
+//Sum all the positive integers from 0 to N
+#define SUMTO(N) (N*(N+1)/2)
+
+//Sum all the integers between A and B
+#define SUMBETWEEN(A, B) (SUMTO(B) - SUMTO(A - 1))

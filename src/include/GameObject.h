@@ -1,7 +1,8 @@
 #pragma once 
 
-#include "maths.h"
+#include "Maths.h"
 #include "AssetManager.h"
+#include "Renderer.h"
 
 class GameObject {
 protected:
@@ -27,11 +28,11 @@ public:
 	float Mass;
 
 	///<summary>
-	///Loads a texture from a file, and assigns it to the GameObject
+	///Loads a sprite from a file, and assigns it to the GameObject
 	///</summary>
 	///<param name="AssetFile">The AAF file from which to load the image</param>
 	///<param name="id">The index of the asset from which to get the texture</param>
-	void loadTexture(AssetManager::AssetFile AssetFile, int id);
+	void LoadSprite(AssetFile AssetFile, int id);
 
 
 	Sprite* _Sprite;

@@ -31,7 +31,7 @@ struct RendererConfig{
 
 class Sprite {
 public:
-	bool Load(AssetManager::AssetFile AssetFile, int id);
+	bool Load(AssetFile AssetFile, int id);
 
 	unsigned long Width;
 	unsigned long Height;

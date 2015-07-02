@@ -42,8 +42,8 @@ inline bool CheckCollisionAABB(Rect a, Rect b){
 
 //Checks for collisions using the swept axis align bounding box algorithm
 //See http://www.gamedev.net/page/resources/_/technical/game-programming/swept-aabb-collision-detection-and-response-r3084
-//Returns T, a value which tells us how long untill a collisio occurs.
-//If no collision will occur, T will be greater than 1 or less than 0
+//Returns T, a value which tells us how long untill a collision occurs.
+//If no collision will occur in the next frame, T will be greater than 1 or less than 0
 inline float CheckCollisionSweptAABB(Rect A, Rect B, Vector2 Velocity, Vector2& Normal) {
 	//Find out the distance to the near and far sides of each object
 	float xInvEntry, yInvEntry;

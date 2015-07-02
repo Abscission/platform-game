@@ -1,6 +1,6 @@
 
-#include "RendererSoftware.h"
 #include "GameObject.h"
+#include "Renderer.h"
 
 GameObject::GameObject() {
 	this->Position = { 0, 0 };
@@ -17,7 +17,7 @@ GameObject::GameObject(Vector2 Position){
 	this->Velocity = { 0, 0 };
 }
 
-void GameObject::loadTexture(AssetManager::AssetFile AssetFile, int id){
+void GameObject::LoadSprite(AssetFile AssetFile, int id){
 	//Create the sprite if it doesn't exist
 	if (!_Sprite) {
 		//TODO: Some kind of factory to abstract this platform specific code

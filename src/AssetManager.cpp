@@ -1,68 +1,67 @@
 #include "AssetManager.h"
+
 #include <Windows.h>
 #include <zlib.h>
 
-namespace AssetManager {
-	AssetFile::AssetFile(char* Filename) {
+AssetFile::AssetFile(char* Filename) {
 		//WinAPI functions to create and open a file mapping. At the end, FileHeader is a pointer to the start of the file
-		File = CreateFileA(Filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-		FileMapping = CreateFileMapping(File, NULL, PAGE_READONLY, 0, 0, NULL);
-		FileHeader = (Header*)MapViewOfFile(FileMapping, FILE_MAP_READ, 0, 0, 0);
-		
+	File = CreateFileA(Filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	FileMapping = CreateFileMapping(File, NULL, PAGE_READONLY, 0, 0, NULL);
+	FileHeader = (Header*)MapViewOfFile(FileMapping, FILE_MAP_READ, 0, 0, 0);
+	
 		//Check if the file contains our identifier, "AGEA":
-		if (*(int*)&FileHeader->FileID != 0x41454741) {
-			OutputDebugStringA("Invalid!");
-		}
-
-		Indexes = (IndexEntry*)((char*)FileHeader + 13);
-
-		Data = (char*)Indexes + FileHeader->NumberOfEntries * sizeof(IndexEntry);
+	if (*(int*)&FileHeader->FileID != 0x41454741) {
+		OutputDebugStringA("Invalid!");
 	}
 
-	AssetFile::~AssetFile() {
-		UnmapViewOfFile(FileHeader);
-	}
+	Indexes = (IndexEntry*)((char*)FileHeader + 13);
 
-	Asset AssetFile::GetAsset(int FileID){
-		if (FileID > FileHeader->NumberOfEntries) return{ 0, 0 };
+	Data = (char*)Indexes + FileHeader->NumberOfEntries * sizeof(IndexEntry);
+}
 
-		IndexEntry IE = Indexes[FileID];
+AssetFile::~AssetFile() {
+	UnmapViewOfFile(FileHeader);
+}
 
-		if (!FileHeader->Compressed) {
+Asset AssetFile::GetAsset(int FileID){
+	if (FileID > FileHeader->NumberOfEntries) return{ 0, 0 };
+
+	IndexEntry IE = Indexes[FileID];
+
+	if (!FileHeader->Compressed) {
 			//Copy the file
-			Asset Asset = {};
-			Asset.Memory = VirtualAlloc(0, IE.Length, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-			if (!Asset.Memory) {
-				return{ 0, 0 };
-			}
-			memcpy(Asset.Memory, Data + IE.Position, IE.Length);
-			Asset.Length = IE.Length;
-			return Asset;
+		Asset Asset = {};
+		Asset.Memory = VirtualAlloc(0, IE.Length, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+		if (!Asset.Memory) {
+			return{ 0, 0 };
 		}
-		else {
+		memcpy(Asset.Memory, Data + IE.Position, IE.Length);
+		Asset.Length = IE.Length;
+		return Asset;
+	}
+	else {
 			//Decompress the file
 			//Grab the variables from the data section
-			char* Data = this->Data + IE.Position;
-			unsigned int OriginalSize = *(int*)Data;
-			unsigned int CompressedSize = *((int*)Data + 1);
-			Data = (char*)((int*)Data + 2);
+		char* Data = this->Data + IE.Position;
+		unsigned int OriginalSize = *(int*)Data;
+		unsigned int CompressedSize = *((int*)Data + 1);
+		Data = (char*)((int*)Data + 2);
 
 			//Create the asset
-			Asset Asset = {};
-			Asset.Memory = VirtualAlloc(0, OriginalSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+		Asset Asset = {};
+		Asset.Memory = VirtualAlloc(0, OriginalSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 
-			if (!Asset.Memory) {
-				return{ 0, 0 };
-			}
-
-			uncompress((Byte*)Asset.Memory, (uLongf*)&OriginalSize, (Byte*)Data, CompressedSize);
-
-			Asset.Length = OriginalSize;
-			return Asset;
+		if (!Asset.Memory) {
+			return{ 0, 0 };
 		}
-	}
 
-	Asset::~Asset() {
-		if (Memory) VirtualFree(Memory, Length, MEM_FREE | MEM_RELEASE);
+		uncompress((Byte*)Asset.Memory, (uLongf*)&OriginalSize, (Byte*)Data, CompressedSize);
+
+		Asset.Length = OriginalSize;
+		return Asset;
 	}
+}
+
+Asset::~Asset() {
+	if (Memory) VirtualFree(Memory, Length, MEM_FREE | MEM_RELEASE);
 }

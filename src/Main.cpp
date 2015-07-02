@@ -1,21 +1,21 @@
 
-#include <stdlib.h> 
+#include <stdlib.h>
+
 #include <vector>
 #include <string>
 
 #include <Windows.h>
 
 #include "Utility.h"
-
 #include "Maths.h"
-
 #include "GameLayer.h"
-#include "RendererSoftware.h"
+#include "Renderer.h"
 #include "GameObject.h"
 #include "Entity.h"
 #include "AssetManager.h"
 #include "InputManager.h"
 #include "Config.h"
+#include "Level.h"
 
 int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	//Create a platform layer
@@ -32,10 +32,10 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	//Temporary GameObject vector
 	std::vector<GameObject> GameObjects;
 
-	AssetManager::AssetFile Mario("assets/assets.aaf");
+	AssetFile Mario("assets/assets.aaf");
 
 	GameObject Player({40, 40 });
-	Player.loadTexture(Mario, 0);
+	Player.LoadSprite(Mario, 0);
 	
 	ResizeSprite(Player._Sprite, 48);
 
@@ -62,6 +62,11 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	else {
 		OutputDebugString("Controller Not Connected\n");
 	}
+
+	Level level;
+
+	Chunk C = level.GetChunk(2, 1);
+	C = level.GetChunk(1, 1);
 
 	bool GameRunning = true;
 	while (GameRunning) {

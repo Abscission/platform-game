@@ -1,8 +1,7 @@
-#include<Windows.h>
-#include <Xinput.h>
 
 #include"InputManager.h"
-
+#include <Windows.h>
+#include <Xinput.h>
 #include "Utility.h"
 
 void InputManager::Update(){

@@ -1,12 +1,11 @@
 
-#include <Windows.h>
+#include "Renderer.h"
+
 #include <vector>
 
-#include "PicoPNG.h"
+#include <Windows.h>
 
 #include "Utility.h"
-
-#include "RendererSoftware.h"
 #include "MemoryManager.h"
 #include "AssetManager.h"
 #include "Config.h"
@@ -89,7 +88,6 @@ bool ResizeSprite(Sprite* Sprite, int W, int H){
 			PixelY = (int)(Y * Scale_Y) >> 16;
 
 			TempBuffer[Y * W + X] = Sprite->Data[(PixelY * Sprite->Width) + PixelX];
-
 		}
 	}
 
@@ -107,8 +105,8 @@ bool ResizeSprite(Sprite* Sprite, int W, int H){
 	return true;
 }
 
-bool Sprite::Load(AssetManager::AssetFile AssetFile, int id){
-	AssetManager::Asset BMP = AssetFile.GetAsset(id);
+bool Sprite::Load(AssetFile AssetFile, int id){
+	Asset BMP = AssetFile.GetAsset(id);
 	
 	byte* Memory = (byte*)BMP.Memory;
 	ImageHeader* Header = (ImageHeader*)Memory;
@@ -252,7 +250,7 @@ bool Renderer::Initialize() {
 
 	int MemorySize = Buffer.Width * Buffer.Height * Buffer.BytesPerPixel;
 
-	Buffer.Memory = (int*)MemoryManager::AllocateMemoryAligned(MemorySize, 16);
+	Buffer.Memory = (int*)MemoryManager::AllocateMemory(MemorySize, 16);
 
 	return 0;
 }
