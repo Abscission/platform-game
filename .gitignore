@@ -193,3 +193,5 @@ dist
 *log*
 platform-game/x64/Debug/platform-game.exe
 *.idb
+
+object-cache
