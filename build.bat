@@ -24,4 +24,26 @@ msbuild .\platform-game\platform-game\platform-game.vcxproj /m /p:Configuration=
 copy platform-game\x64\Release\platform-game.exe build\x64
 copy lib\x64\* build\x64 > NUL
 
+echo Building Assets
+if not exist ..\platform-game-art-assets git clone https://github.com/rilwal/platform-game-art-assets ..\platform-game-art-assets
+pushd ..\platform-game-art-assets
+git pull
+call build.bat
+popd
+
+mkdir build\x64\assets
+copy ..\platform-game-art-assets\build\* build\x64\assets > NUL
+
+mkdir build\x86\assets
+copy ..\platform-game-art-assets\build\* build\x86\assets > NUL
+
+pushd build
+cd x86
+7z a %file_32% *
+cd ..
+cd x64
+7z a %file_64% *
+cd ..
+popd
+
 endlocal
