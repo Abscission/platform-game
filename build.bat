@@ -26,10 +26,10 @@ copy lib\x64\* build\x64 > NUL
 
 pushd build
 cd x86
-7z a %file_32% *
+7z a platform-game-32-%buildnumber%.zip *
 cd ..
 cd x64
-7z a %file_64% *
+7z a platform-game-64-%buildnumber%.zip *
 cd ..
 popd
 
