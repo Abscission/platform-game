@@ -194,4 +194,5 @@ dist
 platform-game/x64/Debug/platform-game.exe
 *.idb
 
-object-cache
+build
+BuildNumber
