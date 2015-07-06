@@ -106,5 +106,8 @@
     <None Include="..\..\assets\tiles.aaf">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\..\build.bat">
+      <Filter>Other Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

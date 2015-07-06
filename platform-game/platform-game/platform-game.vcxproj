@@ -192,6 +192,7 @@
     <None Include="..\..\.gitignore" />
     <None Include="..\..\assets\assets.aaf" />
     <None Include="..\..\assets\tiles.aaf" />
+    <None Include="..\..\build.bat" />
     <None Include="..\..\LICENSE" />
     <None Include="..\..\README.md" />
   </ItemGroup>

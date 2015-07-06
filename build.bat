@@ -24,12 +24,19 @@ msbuild .\platform-game\platform-game\platform-game.vcxproj /m /p:Configuration=
 copy platform-game\x64\Release\platform-game.exe build\x64
 copy lib\x64\* build\x64 > NUL
 
+echo Copying assets
+mkdir build\x86\assets
+mkdir build\x64\assets
+
+copy assets\* build\x86\assets 
+copy assets\* build\x64\assets 
+
 pushd build
 cd x86
-7z a platform-game-32-%buildnumber%.zip *
+7z a -r platform-game-32-%buildnumber%.zip *
 cd ..
 cd x64
-7z a platform-game-64-%buildnumber%.zip *
+7z a -r platform-game-64-%buildnumber%.zip *
 cd ..
 popd
 
