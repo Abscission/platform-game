@@ -203,7 +203,7 @@ bool Renderer::Initialize() {
 	}
 
 	if (Config.Fullscreen) {
-		int Monitor = 1;
+		int Monitor = 0;
 
 		MonitorEnumResult Monitors;
 
