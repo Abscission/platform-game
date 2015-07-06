@@ -5,7 +5,6 @@
 #pragma once
 
 #include <Windows.h>
-
 #include "Types.h"
 
 //Mouse state struct provides the data structure containing mouse related variables 

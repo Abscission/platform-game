@@ -4,7 +4,7 @@
 #include <zlib.h>
 
 AssetFile::AssetFile(char* Filename) {
-		//WinAPI functions to create and open a file mapping. At the end, FileHeader is a pointer to the start of the file
+	//WinAPI functions to create and open a file mapping. At the end, FileHeader is a pointer to the start of the file
 	File = CreateFileA(Filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	FileMapping = CreateFileMapping(File, NULL, PAGE_READONLY, 0, 0, NULL);
 	FileHeader = (Header*)MapViewOfFile(FileMapping, FILE_MAP_READ, 0, 0, 0);

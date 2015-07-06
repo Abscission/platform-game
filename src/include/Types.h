@@ -68,8 +68,8 @@ struct Vector2 {
 
 	inline Vector2 operator*(const double b){
 		Vector2 a = *this;
-		a.X *= b;
-		a.Y *= b;
+		a.X *= (float)b;
+		a.Y *= (float)b;
 		return a;
 	}
 
@@ -79,7 +79,6 @@ struct Vector2 {
 		a.Y *= b;
 		return a;
 	}
-
 
 	inline Vector2 operator/(const int b) {
 		Vector2 a = *this;
@@ -93,19 +92,28 @@ struct Vector2 {
 	}
 };
 
-union Rect {
-	struct {
-		Vector2 Position;
-		Vector2 Size;
-	};
-	struct {
-		float X;
-		float Y;
-		float W;
-		float H;
-	};
+
+
+struct Rect {
+	float X;
+	float Y;
+	float W;
+	float H;
+
+	/*operator iRect() const {
+		return iRect{ (int)X, (int)Y, (int)W, (int)H };
+	}*/
+
 };
 
 struct iRect {
-	int X, Y, W, H;
+	int X;
+	int Y;
+	int W;
+	int H;
+
+	operator Rect() const {
+		return Rect{ X, Y, W, H };
+	}
+
 };

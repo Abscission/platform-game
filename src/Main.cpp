@@ -6,6 +6,7 @@
 
 #include <Windows.h>
 
+#include "Types.h"
 #include "Utility.h"
 #include "Maths.h"
 #include "GameLayer.h"
@@ -63,19 +64,64 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 	AssetFile Tiles("assets/tiles.aaf");
 	level.Sprites[1] = new Sprite();
-	level.Sprites[1]->Load(Tiles, 1);
+	level.Sprites[1]->Load(Tiles, 0);
+
+	AssetFile Tiles2("assets/tiles.aaf");
+	level.Sprites[2] = new Sprite();
+	level.Sprites[2]->Load(Tiles2, 1);
+
+	AssetFile Tiles3("assets/tiles.aaf");
+	level.Sprites[3] = new Sprite();
+	level.Sprites[3]->Load(Tiles3, 3);
+
 
 	Chunk TestChunk = {};
-	TestChunk.Grid[16 * 3 + 0] = { 1 };
-	TestChunk.Grid[16 * 3 + 1] = { 1 };
-	TestChunk.Grid[2] = { 1 };
-	TestChunk.Grid[3] = { 1 };
-	TestChunk.Grid[4] = { 1 };
-	TestChunk.Grid[5] = { 1 };
+	TestChunk.X = 0;
+	TestChunk.Y = 0;
+
+	for (int y = 0; y < 8; y++) {
+		for (int x = 0; x < 8; x++) {
+			if (x == 0 || x == 7 || y == 0) {
+				if (y == 5 || y == 6) {
+					//doorway
+					TestChunk.Grid[(2 + y) * 16 + x + 6] = { 3, false };
+				}
+				else {
+					TestChunk.Grid[(2 + y) * 16 + x + 6] = { 1, true };
+				}
+			}
+			else if (y == 7) {
+				TestChunk.Grid[(2 + y) * 16 + x + 6] = { 2, true };
+			}
+			else {
+				TestChunk.Grid[(2 + y) * 16 + x + 6] = { 3, false };
+			}
+		}
+	}
+
+	TestChunk.Grid[16 * 3 + 0] = { 1, true };
+	TestChunk.Grid[16 * 3 + 1] = { 1, true };
+	TestChunk.Grid[2] = { 2, true };
+	TestChunk.Grid[3] = { 3, true };
+	TestChunk.Grid[4] = { 1, true };
+	TestChunk.Grid[5] = { 1, true };
+	TestChunk.Grid[6] = { 1, true };
+	TestChunk.Grid[7] = { 1, true };
+	TestChunk.Grid[8] = { 1, true };
+	TestChunk.Grid[9] = { 1, true };
+	TestChunk.Grid[10] = { 1, true };
+	TestChunk.Grid[11] = { 1, true };
 
 	level.SetChunk(0, 0, TestChunk);
 
+	TestChunk.X = 0;
+	TestChunk.Y = 1;
+	level.SetChunk(0, 1, TestChunk);
+
 	std::vector <iRect> LevelGeometry = level.GenerateCollisionGeometryFromChunk(0, 0);
+	std::vector <iRect> LevelGeometry2 = level.GenerateCollisionGeometryFromChunk(0, 1);
+
+	LevelGeometry.insert(LevelGeometry.end(), LevelGeometry2.begin(), LevelGeometry2.end());
 
 	bool GameRunning = true;
 	while (GameRunning) {
@@ -112,6 +158,8 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 		//Update Level HERE
 		level.DrawChunk(&Renderer, 0, 0);
+		level.DrawChunk(&Renderer, 0, 1);
+
 
 
 		//TODO: See if iterator approach is fast enough
@@ -121,13 +169,12 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 
 			GameObject* Object = GameObjects[i];
-			Object->Update(DeltaTime, ;
+			Object->Update(DeltaTime, LevelGeometry);
 			Object->Draw(&Renderer);
 		}
 
 		if(!PlatformLayer.Update(DeltaTime)) GameRunning = false;
 		Renderer.SetCameraPosition({ Player.Position.X - 512, Player.Position.Y - 300 });
-
 	}
 
 	return 0;

@@ -1,7 +1,7 @@
 #include "Player.h"
 #include "InputManager.h"
 
-void Player::Update(double DeltaTime) {
+void Player::Update(double DeltaTime, std::vector<iRect> Collision) {
 
 	//InputManager InputManager::Get() = InputManager::Get();
 	ControllerState Controller = InputManager::Get().GetControllerState();
@@ -51,5 +51,5 @@ void Player::Update(double DeltaTime) {
 		Velocity = { 0, 0 };
 	}
 
-	GameObject::Update(DeltaTime);
+	GameObject::Update(DeltaTime, Collision);
 }

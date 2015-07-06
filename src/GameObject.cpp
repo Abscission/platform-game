@@ -32,7 +32,7 @@ void GameObject::ApplyForce(Vector2 Force) {
 
 void GameObject::Update(double DeltaTime, std::vector<iRect> CollisionGeometry){
 	//The Hitbox of the object
-	Rect Hitbox = { Position, { _Sprite->Width, _Sprite->Height } };
+	Rect Hitbox = { Position.X, Position.Y, (float)_Sprite->Width, (float)_Sprite->Height };
 
 	//Apply gravity 
 	if (isGrounded) {
@@ -66,8 +66,6 @@ void GameObject::Update(double DeltaTime, std::vector<iRect> CollisionGeometry){
 	//If an object isn't in here, it will not collide with the object.
 	Rect BroadPhase = GetBroadphaseRect(Hitbox, DeltaPosition);
 
-	Rect Level[] = { { 0, 0, 32, 16 }, { 0, 300, 224, 64 }, { 320, 512, 320, 64 }, { 512, 0, 64, 512 }, { 0, 768 - 32, 1024, 64 } };
-
 	isGrounded = false;
 	canJump = false;
 
@@ -75,7 +73,7 @@ void GameObject::Update(double DeltaTime, std::vector<iRect> CollisionGeometry){
 	//Then do a more precise collision test to see weather we did.
 	//If we did hit we should bounce off
 	for (auto Box : CollisionGeometry) {
-		if (CheckCollisionAABB(BroadPhase, Box)) {
+		if (CheckCollisionAABB(BroadPhase, (iRect)Box)) {
 			//This is the normal of the object we hit, if any
 			Vector2 Normal;
 

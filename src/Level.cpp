@@ -22,33 +22,57 @@ u32 Level::LookupLocation(u16 X, u16 Y) {
 	//TODO: Make this less bad ;-)
 	//We need a hash function which minimizes collisisons
 
-	return (X * UINT16_MAX + Y) % UINT16_MAX;
+	return (Y * UINT16_MAX + X) % UINT16_MAX;
 }
 
 void Level::SetChunk(u16 X, u16 Y, Chunk C){
-	Chunk** Location = &Chunks[LookupLocation(X, Y)];
-	while (*Location != NULL) {
-		*Location = ((*Location)->Collission);
+	Chunk** Parent = &Chunks[LookupLocation(X, Y)];
+	while (*Parent != NULL) {
+		Parent = &(*Parent)->Collission;
 	}
-	*Location = new Chunk();
-	memcpy((void*)*Location, &C, sizeof(C));
+	Chunk* ToSet = new Chunk();
+
+	*Parent = ToSet;
+	memcpy((void*)ToSet, &C, sizeof(C));
 }
 
 Chunk* Level::GetChunk(u16 X, u16 Y){
-	Chunk** Location = &Chunks[LookupLocation(X, Y)];
-
-	return *Location;
+	Chunk* Location = Chunks[LookupLocation(X, Y)];
+	if (Location == nullptr) {
+		return{};
+	}
+	while (Location->X != X || Location->Y != Y) {
+		if (Location->Collission == nullptr) {
+			return nullptr;
+		}
+		Location = Location->Collission;
+	}
+	return Location;
 }
 
+#define ChunkLoc(x,y) (y*16+x)
+
 std::vector<iRect> Level::GenerateCollisionGeometryFromChunk(u16 X, u16 Y) {
-	Chunk C = *(GetChunk(X, Y));
+	Chunk* C = GetChunk(X, Y);
+
+	bool Visited[16 * 16] = {};
 
 	std::vector<iRect> CollisionGeometry;
 
-	for (int x = 0; x < 16; x++) {
-		for (int y = 0; y < 16; y++) {
-			if (C.Grid[Y * 16 + X].Collision) {
-				CollisionGeometry.push_back({ (x + X * 16) * 32, (y + Y * 16) * 32, 32, 32 } );
+	for (int y = 0; y < 16; y++) {
+		for (int x = 0; x < 16; x++) {
+			if (C->Grid[ChunkLoc(x, y)].Collision &!Visited[ChunkLoc(x, y)]) {
+				int Top = (y + Y * 16) * 32;
+				int Left = (x + X * 16) * 32;
+				int Width = 32;
+
+				int n = 0;
+				while (C->Grid[ChunkLoc(x + (++n), y)].Collision) {
+					Visited[ChunkLoc(x + n, y)] = true;
+					Width += 32;
+				}
+
+				CollisionGeometry.push_back({ Left, Top, Width, 32} );
 			}
 		}
 	}
@@ -57,12 +81,12 @@ std::vector<iRect> Level::GenerateCollisionGeometryFromChunk(u16 X, u16 Y) {
 }
 
 void Level::DrawChunk(Renderer* Renderer, u16 X, u16 Y) {
-	Chunk C = *(GetChunk(X, Y));
+	Chunk* C = GetChunk(X, Y);
 
-	for (X = 0; X < 16; X++) {
-		for (Y = 0; Y < 16; Y++) {
-			if (C.Grid[Y * 16 + X].Texture != NULL) {
-				Renderer->DrawSprite(Sprites[C.Grid[Y * 16 + X].Texture], 32 * X, 32 * Y);
+	for (int x = 0; x < 16; x++) {
+		for (int y = 0; y < 16; y++) {
+			if (C->Grid[y * 16 + x].Texture != NULL) {
+				Renderer->DrawSprite(Sprites[C->Grid[y * 16 + x].Texture], 32 * (16 * X + x), 32 * (16 * Y + y));
 			}
 		}
 	}

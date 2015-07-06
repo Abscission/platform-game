@@ -5,5 +5,5 @@ class Player : public GameObject {
 private:
 	double JumpTime = 0;
 public:
-	void Update(double DeltaTime);
+	void Update(double DeltaTime, std::vector<iRect> Collision);
 };
