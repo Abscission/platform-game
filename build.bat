@@ -15,13 +15,13 @@ mkdir build
 echo Building 32 bit
 mkdir build\x86
 msbuild .\platform-game\platform-game\platform-game.vcxproj /m /p:Configuration=Release /p:Platform=win32 > .\build\x86\build.log
-copy platform-game\Release\platform-game.exe build\x86
+copy platform-game\platform-game\Release\platform-game.exe build\x86
 copy lib\x86\* build\x86 > NUL
 
 echo Building 64 bit
 mkdir build\x64
 msbuild .\platform-game\platform-game\platform-game.vcxproj /m /p:Configuration=Release /p:Platform=x64 > .\build\x64\build.log
-copy platform-game\x64\Release\platform-game.exe build\x64
+copy platform-game\platform-game\x64\Release\platform-game.exe build\x64
 copy lib\x64\* build\x64 > NUL
 
 echo Copying assets
