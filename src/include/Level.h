@@ -1,9 +1,11 @@
 
 #include "Types.h"
 #include "Renderer.h"
+#include <vector>
 
 struct GridSquare {
 	u16 Texture;
+	bool Collision;
 };
 
 struct Chunk {
@@ -16,10 +18,17 @@ struct Chunk {
 
 class Level {
 private:
-	Sprite* Sprites;
-	u32 LookupLocation(u16 X, u16 Y);
-	Chunk* Chunks;
+
 public:
+
+	//These will be private when done!
+
+	Sprite** Sprites;
+	u32 LookupLocation(u16 X, u16 Y);
+	Chunk** Chunks;
+
+	//Public here
+
 	//Constructor and destructor for the level
 	Level();
 	~Level();
@@ -29,5 +38,8 @@ public:
 	u16 Height;
 
 	void SetChunk(u16 X, u16 Y, Chunk C);
-	Chunk& GetChunk(u16 X, u16 Y);
+	Chunk* GetChunk(u16 X, u16 Y);
+
+	std::vector<iRect> GenerateCollisionGeometryFromChunk(u16 X, u16 Y);
+	void DrawChunk(Renderer* Renderer, u16 X, u16 Y);
 };

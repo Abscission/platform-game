@@ -27,12 +27,19 @@ struct ControllerState {
 	u16  Buttons;
 };
 
+
 //The InputManager class provides the game with keyboard and mouse input
 class InputManager {
 private:
 	byte KeyStateCurrent[255];
 	byte KeyStatePrevious[255];
 public:
+
+	static InputManager& Get(){
+		static InputManager IM;
+		return IM;
+	}
+
 	//This should be run once per frame to update the keyboard states
 	void Update();
 
@@ -56,4 +63,3 @@ public:
 	///<summary>Find out where the mouse cursor is and if a mouse button is pressed</summary>
 	MouseState GetMouseState(HWND Window);
 };
-

@@ -30,7 +30,7 @@ void GameObject::ApplyForce(Vector2 Force) {
 	Velocity = Velocity + Force;
 }
 
-void GameObject::Update(double DeltaTime) {
+void GameObject::Update(double DeltaTime, std::vector<iRect> CollisionGeometry){
 	//The Hitbox of the object
 	Rect Hitbox = { Position, { _Sprite->Width, _Sprite->Height } };
 
@@ -66,7 +66,7 @@ void GameObject::Update(double DeltaTime) {
 	//If an object isn't in here, it will not collide with the object.
 	Rect BroadPhase = GetBroadphaseRect(Hitbox, DeltaPosition);
 
-	Rect Level[] = { { 0, 300, 224, 64 }, { 320, 512, 320, 64 }, { 512, 0, 64, 512 }, { 0, 768 - 32, 1024, 64 } };
+	Rect Level[] = { { 0, 0, 32, 16 }, { 0, 300, 224, 64 }, { 320, 512, 320, 64 }, { 512, 0, 64, 512 }, { 0, 768 - 32, 1024, 64 } };
 
 	isGrounded = false;
 	canJump = false;
@@ -74,7 +74,7 @@ void GameObject::Update(double DeltaTime) {
 	//For each Box in the level, first do a broad phase collision test (to see if we are near enough we could hit)
 	//Then do a more precise collision test to see weather we did.
 	//If we did hit we should bounce off
-	for (auto Box : Level) {
+	for (auto Box : CollisionGeometry) {
 		if (CheckCollisionAABB(BroadPhase, Box)) {
 			//This is the normal of the object we hit, if any
 			Vector2 Normal;
@@ -108,7 +108,6 @@ void GameObject::Update(double DeltaTime) {
 
 		}
 	}
-	
 
 	Position = Position + DeltaPosition;
 }

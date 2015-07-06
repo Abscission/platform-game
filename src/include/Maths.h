@@ -136,3 +136,14 @@ inline Rect GetBroadphaseRect(Rect A, Vector2 V)
 
 	return BroadRect;
 }
+
+inline Rect GetBroadphaseRect(iRect A, Vector2 V)
+{
+	Rect BroadRect;
+	BroadRect.X = V.X > 0 ? A.X : A.X + V.X;
+	BroadRect.Y = V.Y > 0 ? A.Y : A.Y + V.Y;
+	BroadRect.W = V.X > 0 ? A.X + A.W : A.W - V.X;
+	BroadRect.H = V.Y > 0 ? V.Y + A.H : A.H - V.Y;
+
+	return BroadRect;
+}

@@ -1,24 +1,23 @@
 #pragma once 
 
+#include <vector>
 #include "Maths.h"
 #include "AssetManager.h"
 #include "Renderer.h"
 
 class GameObject {
 protected:
-
-
-public:
 	bool isGrounded = false;
 	bool canJump = false;
-
 	int wallJumpDirection;
 
-	Vector2 Position;
 	Vector2 Velocity;
 	Vector2 Acceleration;
 
 	Vector2 TargetVelocity;
+public:
+	Vector2 Position;
+
 
 	//Constructors for GameObject
 	GameObject();
@@ -43,7 +42,7 @@ public:
 	///Advance a GameObjects state to a new point in time
 	///</summary>
 	///<param name="DeltaTime">The amount of time to advance in seconds typically the time taken to render the last frame</param>
-	virtual void Update(double DeltaTime);
+	virtual void Update(double DeltaTime, std::vector<iRect> CollisionGeometry);
 
 	void Draw(Renderer*);
 };

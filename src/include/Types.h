@@ -105,3 +105,7 @@ union Rect {
 		float H;
 	};
 };
+
+struct iRect {
+	int X, Y, W, H;
+};

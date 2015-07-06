@@ -62,7 +62,7 @@ bool GameLayer::Update(float DeltaTime) {
 };
 
 	for (auto Surface : Level) {
-		_Renderer.DrawSpriteRectangle(Surface.Position.X, Surface.Position.Y, Surface.Position.W, Surface.Position.H, &Surface.Spr);
+		//_Renderer.DrawSpriteRectangle(Surface.Position.X, Surface.Position.Y, Surface.Position.W, Surface.Position.H, &Surface.Spr);
 	}
 
  	return _Renderer.Refresh();

@@ -40,15 +40,15 @@ Asset AssetFile::GetAsset(int FileID){
 		return Asset;
 	}
 	else {
-			//Decompress the file
-			//Grab the variables from the data section
+		//Decompress the file
+		//Grab the variables from the data section
 		char* Data = this->Data + IE.Position;
 		unsigned int OriginalSize = *(int*)Data;
 		unsigned int CompressedSize = *((int*)Data + 1);
 		Data = (char*)((int*)Data + 2);
 
-			//Create the asset
-		Asset Asset = {};
+		//Create the asset
+		Asset Asset;// = new Asset();
 		Asset.Memory = VirtualAlloc(0, OriginalSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 
 		if (!Asset.Memory) {
@@ -63,5 +63,5 @@ Asset AssetFile::GetAsset(int FileID){
 }
 
 Asset::~Asset() {
-	if (Memory) VirtualFree(Memory, Length, MEM_FREE | MEM_RELEASE);
+	//if (Memory) VirtualFree(Memory, 0, MEM_RELEASE);
 }

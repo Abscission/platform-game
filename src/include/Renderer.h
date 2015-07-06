@@ -72,6 +72,8 @@ public:
 	void DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY);
 	void DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend);
 
+	void DrawSpriteWC(Sprite* Spr, int X, int Y);
+	
 	void DrawSpriteRectangle(int X, int Y, int Width, int Height, Sprite* Spr);
 
 	void DrawRectangle(int X, int Y, int Width, int Height, int Color);

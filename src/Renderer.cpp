@@ -9,6 +9,7 @@
 #include "MemoryManager.h"
 #include "AssetManager.h"
 #include "Config.h"
+#include <intrin.h>
 
 bool ShouldClose = false;
 
@@ -92,7 +93,7 @@ bool ResizeSprite(Sprite* Sprite, int W, int H){
 	}
 
 	//Delete the old Sprite data
-	if (Sprite->Data) VirtualFree(Sprite->Data, Sprite->Width * Sprite->Height * 4, MEM_RELEASE);
+	if (Sprite->Data) VirtualFree(Sprite->Data, 0, MEM_RELEASE);
 	
 	//Set the sprite data to the new buffer
 	Sprite->Data = TempBuffer;
@@ -123,7 +124,7 @@ bool Sprite::Load(AssetFile AssetFile, int id){
 }
 
 Sprite::~Sprite() {
-	if (this->Data) VirtualFree(this->Data, this->Width * this->Height * 4, MEM_RELEASE);
+	if (this->Data) VirtualFree(this->Data, 0, MEM_RELEASE);
 }
 
 
@@ -151,7 +152,7 @@ bool Renderer::OpenWindow(int Width, int Height, char* Title){
 	RECT WindowRect = { 0, 0, Width, Height };
 	AdjustWindowRect(&WindowRect, WindowStyle, false);
 
-	this->Window = CreateWindowExA(WS_EX_OVERLAPPEDWINDOW, "JasonWindowClassName", Title, WindowStyle, CW_USEDEFAULT, CW_USEDEFAULT, WindowRect.right, WindowRect.bottom, 0, 0, Instance, 0);
+	this->Window = CreateWindowExA(WS_EX_OVERLAPPEDWINDOW, "JasonWindowClassName", Title, WindowStyle, 0, 0, WindowRect.right, WindowRect.bottom, 0, 0, Instance, 0);
 	return true;
 }
 
@@ -176,7 +177,7 @@ void Renderer::SetCameraPosition(IVec2 Position) {
 
 bool Renderer::Initialize() {
 
-	SetCameraPosition({ -100, 0 });
+	SetCameraPosition({ 0, 0 });
 
 	ConfigFile GraphicsConfig("config/Graphics.ini");
 
@@ -202,7 +203,7 @@ bool Renderer::Initialize() {
 	}
 
 	if (Config.Fullscreen) {
-		int Monitor = 0;
+		int Monitor = 1;
 
 		MonitorEnumResult Monitors;
 
@@ -235,6 +236,7 @@ bool Renderer::Initialize() {
 	//Create a DIB to render to
 	if (Buffer.Memory) {
 		VirtualFree(Buffer.Memory, 0, MEM_RELEASE);
+
 	}
 
 	Buffer.Width = Config.RenderResX;
@@ -250,6 +252,7 @@ bool Renderer::Initialize() {
 
 	int MemorySize = Buffer.Width * Buffer.Height * Buffer.BytesPerPixel;
 
+//	BM = CreateDIBSection(DeviceContext, &Buffer.Info, DIB_RGB_COLORS, (void**)&Buffer.Memory, NULL, 0);
 	Buffer.Memory = (int*)MemoryManager::AllocateMemory(MemorySize, 16);
 
 	return 0;
@@ -257,14 +260,10 @@ bool Renderer::Initialize() {
 
 bool Renderer::Refresh() {
 	//Now update the screen
-
 	//Stretch to the screen
 	StretchDIBits(DeviceContext, 0, 0, Config.WindowResX, Config.WindowResY, 0, 0, Buffer.Width, Buffer.Height, Buffer.Memory, &Buffer.Info, DIB_RGB_COLORS, SRCCOPY);
-
-	//Clear the backbuffer
-	//ZeroMemory(Buffer.Memory, Buffer.Width * Buffer.Height * Buffer.BytesPerPixel);
-
-	DrawRectangle(0, 0, Config.RenderResX, Config.RenderResY, 0x000033);
+	
+	DrawRectangle(0, 0, Config.RenderResX, Config.RenderResY, 0xbbbbbbff);
 
 	return !ShouldClose;
 }
@@ -283,9 +282,18 @@ void Renderer::DrawSpriteRectangle(int X, int Y, int Width, int Height, Sprite* 
 	for (int y = Y; y < Y + Height; y+= Spr->Width){
 		int Down = Buffer.Width * (Y + y);
 		for (int x = X; x < X + Width; x += Spr->Width) {
+
+			x -= CameraPos.X;
+			y -= CameraPos.Y;
+
+
 			DrawSprite(Spr, 0, 0, Spr->Width, Spr->Height, x, y);
 		}
 	}
+}
+
+void Renderer::DrawSpriteWC(Sprite* Spr, int X, int Y) {
+	DrawSprite(Spr, X - CameraPos.X, Y - CameraPos.Y);
 }
 
 void Renderer::DrawSprite(Sprite* Spr, int X, int Y) {
