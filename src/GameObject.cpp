@@ -45,10 +45,10 @@ void GameObject::Update(double DeltaTime, std::vector<iRect> CollisionGeometry){
 		}
 	}
 
-	Vector2 Direction = Vector2{ Sign(TargetVelocity.X - Velocity.X), Sign(TargetVelocity.Y - Velocity.Y) };
+	IVec2 Direction = { Sign(TargetVelocity.X - Velocity.X), Sign(TargetVelocity.Y - Velocity.Y) };
 
-	Velocity.Y = Velocity.Y + (Direction.Y * 1000) * DeltaTime;
-	Velocity.X = Velocity.X + (Direction.X * (isGrounded ? 10000 : 1500)) * DeltaTime;
+	Velocity.Y = Velocity.Y + (Direction.Y * 1000) * static_cast<float>(DeltaTime);
+	Velocity.X = Velocity.X + (Direction.X * (isGrounded ? 10000 : 1500)) * static_cast<float>(DeltaTime);
 
 	if (Sign(TargetVelocity.X - Velocity.X) != Direction.X) {
 		Velocity.X = TargetVelocity.X;

@@ -23,3 +23,13 @@ Win32FileContents ReadEntireFile(const char * Filename);
 
 //Sum all the integers between A and B
 #define SUMBETWEEN(A, B) (SUMTO(B) - SUMTO(A - 1))
+
+
+//Asserions
+#ifdef _DEBUG
+#define assertnoreason(n) if (n); else { OutputDebugStringA("Assertion Failed: "); OutputDebugStringA(#n); OutputDebugStringA("\n");  exit(455327); }
+#define assert(n, d) if (n); else { OutputDebugStringA("Assertion Failed: "); OutputDebugStringA(d); OutputDebugStringA("\n");  exit(455327); }
+#else
+#define assertnoreason(n);
+#define assert(n, d);
+#endif

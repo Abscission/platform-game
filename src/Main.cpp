@@ -63,17 +63,13 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	Level level;
 
 	AssetFile Tiles("assets/tiles.aaf");
-	level.Sprites[1] = new Sprite();
+
+	for (int i = 0; i < 4; i++) level.Sprites[i] = new Sprite();
+
+	level.Sprites[0] = 0;
 	level.Sprites[1]->Load(Tiles, 0);
-
-	AssetFile Tiles2("assets/tiles.aaf");
-	level.Sprites[2] = new Sprite();
-	level.Sprites[2]->Load(Tiles2, 1);
-
-	AssetFile Tiles3("assets/tiles.aaf");
-	level.Sprites[3] = new Sprite();
-	level.Sprites[3]->Load(Tiles3, 3);
-
+	level.Sprites[2]->Load(Tiles, 1);
+	level.Sprites[3]->Load(Tiles, 3);
 
 	Chunk TestChunk = {};
 	TestChunk.X = 0;
@@ -101,27 +97,23 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 	TestChunk.Grid[16 * 3 + 0] = { 1, true };
 	TestChunk.Grid[16 * 3 + 1] = { 1, true };
-	TestChunk.Grid[2] = { 2, true };
-	TestChunk.Grid[3] = { 3, true };
-	TestChunk.Grid[4] = { 1, true };
-	TestChunk.Grid[5] = { 1, true };
-	TestChunk.Grid[6] = { 1, true };
-	TestChunk.Grid[7] = { 1, true };
-	TestChunk.Grid[8] = { 1, true };
-	TestChunk.Grid[9] = { 1, true };
-	TestChunk.Grid[10] = { 1, true };
-	TestChunk.Grid[11] = { 1, true };
+	for (int i = 2; i < 12; i++) TestChunk.Grid[i] = { 2, true };
+
+	TestChunk.Entities[0] = new GameObject();
+	TestChunk.Entities[0]->LoadSprite(Mario, 0);
 
 	level.SetChunk(0, 0, TestChunk);
-
-	TestChunk.X = 0;
-	TestChunk.Y = 1;
 	level.SetChunk(0, 1, TestChunk);
+	level.SetChunk(1, 1, TestChunk);
+	level.SetChunk(2, 1, TestChunk);
+	level.SetChunk(3, 1, TestChunk);
+	level.SetChunk(4, 2, TestChunk);
 
 	std::vector <iRect> LevelGeometry = level.GenerateCollisionGeometryFromChunk(0, 0);
 	std::vector <iRect> LevelGeometry2 = level.GenerateCollisionGeometryFromChunk(0, 1);
 
 	LevelGeometry.insert(LevelGeometry.end(), LevelGeometry2.begin(), LevelGeometry2.end());
+
 
 	bool GameRunning = true;
 	while (GameRunning) {
@@ -135,7 +127,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 		_DeltaTime.QuadPart /= PerfFreq.QuadPart;
 
 		//DeltaTime is the time since the last frame in seconds
-		DeltaTime = _DeltaTime.QuadPart;
+		DeltaTime = static_cast<double>(_DeltaTime.QuadPart);
 		DeltaTime *= 1.0e-6;
 
 		Frames++;
@@ -157,10 +149,14 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 		}
 
 		//Update Level HERE
-		level.DrawChunk(&Renderer, 0, 0);
-		level.DrawChunk(&Renderer, 0, 1);
 
+		static IVec2 ChunksToDraw[6] = { {0, 0}, {0, 1}, {1, 1}, {2, 1}, {3, 1}, {4, 2} };
 
+#pragma loop(hint_parallel(6))
+		for (int i = 0; i < 6; i++) {
+		//for (auto Chunk : ChunksToDraw) {
+			level.DrawChunk(&Renderer, ChunksToDraw[i].X, ChunksToDraw[i].Y);
+		}
 
 		//TODO: See if iterator approach is fast enough
 //#pragma loop(hint_parallel(8))
@@ -174,7 +170,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 		}
 
 		if(!PlatformLayer.Update(DeltaTime)) GameRunning = false;
-		Renderer.SetCameraPosition({ Player.Position.X - 512, Player.Position.Y - 300 });
+		Renderer.SetCameraPosition({ (int)Player.Position.X - 512, (int)Player.Position.Y - 300 });
 	}
 
 	return 0;

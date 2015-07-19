@@ -26,6 +26,9 @@ u32 Level::LookupLocation(u16 X, u16 Y) {
 }
 
 void Level::SetChunk(u16 X, u16 Y, Chunk C){
+	C.X = X;
+	C.Y = Y;
+
 	Chunk** Parent = &Chunks[LookupLocation(X, Y)];
 	while (*Parent != NULL) {
 		Parent = &(*Parent)->Collission;
@@ -39,7 +42,7 @@ void Level::SetChunk(u16 X, u16 Y, Chunk C){
 Chunk* Level::GetChunk(u16 X, u16 Y){
 	Chunk* Location = Chunks[LookupLocation(X, Y)];
 	if (Location == nullptr) {
-		return{};
+		return new Chunk{ X, Y, 0 };
 	}
 	while (Location->X != X || Location->Y != Y) {
 		if (Location->Collission == nullptr) {
@@ -88,6 +91,12 @@ void Level::DrawChunk(Renderer* Renderer, u16 X, u16 Y) {
 			if (C->Grid[y * 16 + x].Texture != NULL) {
 				Renderer->DrawSprite(Sprites[C->Grid[y * 16 + x].Texture], 32 * (16 * X + x), 32 * (16 * Y + y));
 			}
+		}
+	}
+
+	for (auto Entity : C->Entities) {
+		if (Entity != nullptr) {
+			Entity->Draw(Renderer);
 		}
 	}
 }

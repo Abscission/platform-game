@@ -15,7 +15,7 @@ struct Surface {
 	Sprite& Spr;
 };
 
-bool GameLayer::Update(float DeltaTime) {
+bool GameLayer::Update(double DeltaTime) {
 	MSG Message;
 
 	//Handle Win32 Messages first

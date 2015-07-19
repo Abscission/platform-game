@@ -61,6 +61,9 @@ inline void Blend(unsigned int* Source, unsigned int* Dest) {
 }
 
 bool ResizeSprite(Sprite* Sprite, int W) {
+	assert(W > 0, "Tried to resize sprite to zero width");
+	assert(Sprite->Width != 0, "Tried to resize invalid sprite");
+
 	return ResizeSprite(Sprite, W, Sprite->Height * (W / Sprite->Width));
 }
 
@@ -115,7 +118,7 @@ bool Sprite::Load(AssetFile AssetFile, int id){
 	this->Width = Header->Width;
 	this->Height = Header->Height;
 	this->length = Header->length;
-	this->hasTransparency = Header->HasTransparency;
+	this->hasTransparency = Header->HasTransparency != 0;
 	
 	this->Data = (u32*)VirtualAlloc(0, Header->length, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 	memcpy((void*)this->Data, (void*)(Memory + sizeof(ImageHeader)), Header->length);
@@ -158,12 +161,19 @@ bool Renderer::OpenWindow(int Width, int Height, char* Title){
 
 struct MonitorEnumResult {
 	HMONITOR Monitors[8];
+	int Primary = 0;
 	int Count = 0;
 };
 
 BOOL CALLBACK MonitorEnumProc(HMONITOR Monitor, HDC DeviceContext, LPRECT Rect, LPARAM Data) {
 	MonitorEnumResult* Monitors = (MonitorEnumResult*)Data;
 	Monitors->Monitors[Monitors->Count++] = Monitor;
+
+	MONITORINFO MonitorInfo;
+	MonitorInfo.cbSize = sizeof(MONITORINFO);
+	GetMonitorInfo(Monitor, &MonitorInfo);
+
+	if (MonitorInfo.dwFlags & MONITORINFOF_PRIMARY) Monitors->Primary = Monitors->Count - 1;
 	return true;
 }
 
@@ -203,11 +213,11 @@ bool Renderer::Initialize() {
 	}
 
 	if (Config.Fullscreen) {
-		int Monitor = 0;
-
 		MonitorEnumResult Monitors;
 
 		EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, (LPARAM)&Monitors);
+
+		int Monitor = std::atoi(GraphicsConfig.Get("Monitor", std::to_string(Monitors.Primary)).c_str());
 
 		MONITORINFO MonitorInfo;
 		MonitorInfo.cbSize = sizeof(MONITORINFO);
@@ -236,7 +246,6 @@ bool Renderer::Initialize() {
 	//Create a DIB to render to
 	if (Buffer.Memory) {
 		VirtualFree(Buffer.Memory, 0, MEM_RELEASE);
-
 	}
 
 	Buffer.Width = Config.RenderResX;
@@ -342,14 +351,14 @@ void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height
 		if (Height <= 0) return;
 	}
 
-	for (unsigned int y = SrcY; y < (SrcY + Height); y++){
+	for (int y = SrcY; y < (SrcY + Height); y++){
 		if ((ShouldBlend && Spr->hasTransparency) || true) {
 			//If the pixel should be drawn with transparency itterate over each pixel
-			for (unsigned int x = SrcX; x < (SrcX + Width); x++) {
+			for (int x = SrcX; x < (SrcX + Width); x++) {
 				unsigned int ARGB = Spr->Data[y * Spr->Width + x];
 				unsigned char* SA = ((unsigned char*)&ARGB) + 3;
 
-				if (*SA == 0) { //If the pixel is fully transparent, skip to the next loop itteration
+				if (*SA == 0) { //If the pixel is fully transparent, skip to the next loop itteration as no rendering is needed
 					continue;
 				}
 				else if (*SA == 255) { //If the pixel has no transparency, copy it into the destination

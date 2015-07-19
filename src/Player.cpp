@@ -10,10 +10,10 @@ void Player::Update(double DeltaTime, std::vector<iRect> Collision) {
 	int MaxSpeed = (InputManager::Get().GetKeyState(VK_SHIFT) || Controller.Buttons & 0x2000) ? 400 : 600;
 
 	if (InputManager::Get().GetKeyState('D') || Controller.Buttons & 0x8) {
-		TargetVelocity.X = MaxSpeed;
+		TargetVelocity.X = static_cast<float>(MaxSpeed);
 	}
 	else if (InputManager::Get().GetKeyState('A') || Controller.Buttons & 0x4) {
-		TargetVelocity.X = -MaxSpeed;
+		TargetVelocity.X = -static_cast<float>(MaxSpeed);
 	}
 	else {
 		TargetVelocity.X = (MaxSpeed / 32767.f) * Controller.LeftStick.X;
@@ -24,7 +24,7 @@ void Player::Update(double DeltaTime, std::vector<iRect> Collision) {
 			if (canJump) {
 				if (!isGrounded) {
 					//walljump
-					Velocity.X = 600 * wallJumpDirection;
+					Velocity.X = static_cast<float>(600 * wallJumpDirection);
 				}
 
 				Velocity.Y = -600;
@@ -37,7 +37,7 @@ void Player::Update(double DeltaTime, std::vector<iRect> Collision) {
 		if (InputManager::Get().GetKeyState(VK_SPACE) || Controller.Buttons & 0x1000) {
 			JumpTime += DeltaTime;
 			if (JumpTime < 1.0f) {
-				Velocity.Y -= 500 * DeltaTime;
+				Velocity.Y -= 500 * static_cast<float>(DeltaTime);
 			}
 		}
 		else {

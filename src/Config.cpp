@@ -1,5 +1,6 @@
 #include "Config.h"
 #include <fstream>
+#include "Types.h"
 
 bool ConfigFile::Load(std::string Filename) {
 	std::ifstream FileStream;
@@ -8,7 +9,7 @@ bool ConfigFile::Load(std::string Filename) {
 	std::string Line, Key, Val;
 
 	while (std::getline(FileStream, Line)) {
-		int Delimiter = Line.find("="); // resolutionx=1920 => 11
+		u64 Delimiter = Line.find("="); // resolutionx=1920 => 11
 		if (Delimiter == std::string::npos) {
 			//invalid line
 			continue;

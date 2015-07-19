@@ -8,7 +8,7 @@ private:
 	Renderer _Renderer;
 public:
 	void Initialize();
-	bool Update(float DeltaTime);
+	bool Update(double DeltaTime);
 
 	HWND GetWindow() {
 		return Window;

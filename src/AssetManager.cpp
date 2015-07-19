@@ -3,24 +3,61 @@
 #include <Windows.h>
 #include <zlib.h>
 
+#include "Utility.h"
+
 AssetFile::AssetFile(char* Filename) {
 	//WinAPI functions to create and open a file mapping. At the end, FileHeader is a pointer to the start of the file
 	File = CreateFileA(Filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	FileMapping = CreateFileMapping(File, NULL, PAGE_READONLY, 0, 0, NULL);
-	FileHeader = (Header*)MapViewOfFile(FileMapping, FILE_MAP_READ, 0, 0, 0);
-	
-		//Check if the file contains our identifier, "AGEA":
-	if (*(int*)&FileHeader->FileID != 0x41454741) {
-		OutputDebugStringA("Invalid!");
+
+	//Check the file handle is valid
+	if (File == INVALID_HANDLE_VALUE) {
+		OutputDebugStringA("Failed to load asset file ");
+		OutputDebugStringA(Filename);
+		OutputDebugStringA(": Couldn't load file\n");
+
+#ifdef _DEBUG
+		exit(1); //Kill the whole program on error here, we need to catch these in debug
+#endif
+		return;
 	}
 
-	Indexes = (IndexEntry*)((char*)FileHeader + 13);
+	FileMapping = CreateFileMapping(File, NULL, PAGE_READONLY, 0, 0, NULL);
+	//Check the file handle is valid
+	if (FileMapping == INVALID_HANDLE_VALUE) {
+		OutputDebugStringA("Failed to load asset file ");
+		OutputDebugStringA(Filename);
+		OutputDebugStringA(": Couldn't map file\n");
+#ifdef _DEBUG
+		exit(1);
+#endif
+		return;
+	}
 
-	Data = (char*)Indexes + FileHeader->NumberOfEntries * sizeof(IndexEntry);
+
+	//Open the actual mapping
+	void* Mapping = MapViewOfFile(FileMapping, FILE_MAP_READ, 0, 0, sizeof(Header));
+
+	assert(Mapping != 0, "File mapping invalid"); //Check it's valid
+
+	FileHeader = new Header; //Create the header
+	memcpy((void*)FileHeader, Mapping, sizeof(Header)); //Copy the header
+
+	Indexes = new IndexEntry[FileHeader->NumberOfEntries]; //Create the indexes
+	memcpy((void*)Indexes, (void*)((byte*)Mapping + sizeof(Header)), sizeof(IndexEntry) * FileHeader->NumberOfEntries); //Copy the indexes
+
+	UnmapViewOfFile(Mapping); //Unmap the view
+
+	//Check if the file contains our identifier, "AGEA":
+	if (*(int*)&(FileHeader->FileID) != 0x41454741) {
+		OutputDebugStringA("Invalid!");
+	}
 }
 
 AssetFile::~AssetFile() {
-	UnmapViewOfFile(FileHeader);
+	//delete[] Indexes;
+
+	//CloseHandle(FileMapping);
+	//CloseHandle(File);
 }
 
 Asset AssetFile::GetAsset(int FileID){
@@ -28,38 +65,42 @@ Asset AssetFile::GetAsset(int FileID){
 
 	IndexEntry IE = Indexes[FileID];
 
+	//Map the file
+	int DataOffset = sizeof(Header) + sizeof(IndexEntry) * FileHeader->NumberOfEntries;
+	void* AssetMapping = (void*)((byte*)MapViewOfFile(FileMapping, FILE_MAP_READ, 0, 0, 0) + DataOffset + IE.Position);
+
+	//Create the asset
+	Asset Asset = {};
+
 	if (!FileHeader->Compressed) {
-			//Copy the file
-		Asset Asset = {};
+		//Copy the file
 		Asset.Memory = VirtualAlloc(0, IE.Length, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 		if (!Asset.Memory) {
 			return{ 0, 0 };
 		}
-		memcpy(Asset.Memory, Data + IE.Position, IE.Length);
+
+		memcpy(Asset.Memory, AssetMapping, IE.Length);
 		Asset.Length = IE.Length;
-		return Asset;
 	}
 	else {
 		//Decompress the file
 		//Grab the variables from the data section
-		char* Data = this->Data + IE.Position;
-		unsigned int OriginalSize = *(int*)Data;
-		unsigned int CompressedSize = *((int*)Data + 1);
-		Data = (char*)((int*)Data + 2);
+		unsigned int OriginalSize = *(int*)AssetMapping;
+		unsigned int CompressedSize = *((int*)AssetMapping + 1);
+		AssetMapping = (char*)((int*)AssetMapping + 2);
 
-		//Create the asset
-		Asset Asset;// = new Asset();
 		Asset.Memory = VirtualAlloc(0, OriginalSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-
 		if (!Asset.Memory) {
 			return{ 0, 0 };
 		}
 
-		uncompress((Byte*)Asset.Memory, (uLongf*)&OriginalSize, (Byte*)Data, CompressedSize);
-
+		uncompress((Byte*)Asset.Memory, (uLongf*)&OriginalSize, (Byte*)AssetMapping, CompressedSize);
 		Asset.Length = OriginalSize;
-		return Asset;
 	}
+
+	UnmapViewOfFile(AssetMapping);
+
+	return Asset;
 }
 
 Asset::~Asset() {

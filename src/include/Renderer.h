@@ -4,6 +4,8 @@
 #include "AssetManager.h"
 #include <Windows.h>
 
+#include <d3d9.h>
+
 class ImageHeader {
 public:
 	unsigned int Width;
@@ -55,6 +57,7 @@ private:
 	Win32ScreenBuffer Buffer;
 	RendererConfig Config;
 	IVec2 CameraPos;
+
 public:
 	HWND Window;
 	bool OpenWindow(int Width, int Height, char* Title);
@@ -78,9 +81,6 @@ public:
 
 	void DrawRectangle(int X, int Y, int Width, int Height, int Color);
 	
-	void UpdateLighting();
-	void ApplyLighting();
-
 	bool Initialize();
 	bool Refresh();
 };

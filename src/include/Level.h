@@ -1,6 +1,7 @@
 
 #include "Types.h"
 #include "Renderer.h"
+#include "GameObject.h"
 #include <vector>
 
 struct GridSquare {
@@ -12,6 +13,8 @@ struct Chunk {
 	u16 X;
 	u16 Y;
 	GridSquare Grid[16*16];
+
+	GameObject* Entities[32];
 
 	Chunk* Collission;
 };
@@ -28,6 +31,10 @@ public:
 	Chunk** Chunks;
 
 	//Public here
+
+	IVec2 GetChunkFromLocation(IVec2 Location) {
+		return{ Location.X / 16, Location.Y / 16 };
+	}
 
 	//Constructor and destructor for the level
 	Level();

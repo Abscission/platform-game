@@ -113,7 +113,13 @@ struct iRect {
 	int H;
 
 	operator Rect() const {
-		return Rect{ X, Y, W, H };
+
+		return Rect{ 
+			static_cast<float>(X), 
+			static_cast<float>(Y), 
+			static_cast<float>(W), 
+			static_cast<float>(H) 
+		};
 	}
 
 };

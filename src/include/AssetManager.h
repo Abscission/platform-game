@@ -49,8 +49,6 @@ class AssetFile {
 private:
 	Header* FileHeader;
 	IndexEntry* Indexes;
-	char* Data;
-
 	HANDLE File;
 	HANDLE FileMapping;
 
