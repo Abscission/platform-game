@@ -1,8 +1,10 @@
 
 #include "Types.h"
+#include <vector>
+
+#include "List.h"
 #include "Renderer.h"
 #include "GameObject.h"
-#include <vector>
 
 struct GridSquare {
 	u16 Texture;
@@ -14,7 +16,8 @@ struct Chunk {
 	u16 Y;
 	GridSquare Grid[16*16];
 
-	GameObject* Entities[32];
+	DoubleLinkedList<GameObject> Entities;
+	//GameObject* Entities[32];
 
 	Chunk* Collission;
 };

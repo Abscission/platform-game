@@ -9,8 +9,8 @@
 #include "MemoryManager.h"
 
 Level::Level() {
-	Chunks = (Chunk**)MemoryManager::AllocateMemory(sizeof(Chunk*) * UINT16_MAX, 0);
-	Sprites = (Sprite**)MemoryManager::AllocateMemory(sizeof(Sprite*) * UINT8_MAX, 0);
+	Chunks = (Chunk**)MemoryManager::AllocateMemory(sizeof(Chunk*) * UINT16_MAX);
+	Sprites = (Sprite**)MemoryManager::AllocateMemory(sizeof(Sprite*) * UINT8_MAX);
 }
 
 Level::~Level() {
@@ -94,9 +94,18 @@ void Level::DrawChunk(Renderer* Renderer, u16 X, u16 Y) {
 		}
 	}
 
-	for (auto Entity : C->Entities) {
+	auto Entity = C->Entities.First;
+
+	do {
+		Entity->Item->Draw(Renderer);
+
+	} while (Entity != C->Entities.Last);
+
+	
+
+	/*for (auto Entity : C->Entities) {
 		if (Entity != nullptr) {
 			Entity->Draw(Renderer);
 		}
-	}
+	}*/
 }

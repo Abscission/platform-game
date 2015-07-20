@@ -262,7 +262,7 @@ bool Renderer::Initialize() {
 	int MemorySize = Buffer.Width * Buffer.Height * Buffer.BytesPerPixel;
 
 //	BM = CreateDIBSection(DeviceContext, &Buffer.Info, DIB_RGB_COLORS, (void**)&Buffer.Memory, NULL, 0);
-	Buffer.Memory = (int*)MemoryManager::AllocateMemory(MemorySize, 16);
+	Buffer.Memory = (int*)MemoryManager::AllocateMemory(MemorySize);
 
 	return 0;
 }

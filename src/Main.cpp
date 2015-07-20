@@ -19,6 +19,8 @@
 #include "Config.h"
 #include "Level.h"
 
+#include "List.h"
+
 int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	//Create a platform layer
 	GameLayer PlatformLayer;
@@ -60,6 +62,30 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 		OutputDebugString("Controller Not Connected\n");
 	}
 
+	  ////////////////////////////////////
+	 //  DOUBLY LINKED LIST TEST CODE  //
+	////////////////////////////////////
+
+	int* testint = MemoryManager::AllocateMemory<int>(10);
+	testint[0] = 5;
+	testint[1] = 12;
+	testint[2] = 32;
+	testint[3] = -2;
+	testint[4] = 124125;
+	
+	DoubleLinkedList<int> TestList;
+	DoubleLinkedList<int>::Node* testnode = TestList.Insert(&testint[0]);
+	TestList.Insert(&testint[1]);
+	TestList.Insert(&testint[2]);
+	TestList.Insert(&testint[3]);
+	TestList.Insert(&testint[4]);
+
+	TestList.Remove(testnode);
+
+	  ///////////////////////
+	 //  LEVEL TEST CODE  //
+	///////////////////////
+
 	Level level;
 
 	AssetFile Tiles("assets/tiles.aaf");
@@ -99,8 +125,9 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	TestChunk.Grid[16 * 3 + 1] = { 1, true };
 	for (int i = 2; i < 12; i++) TestChunk.Grid[i] = { 2, true };
 
-	TestChunk.Entities[0] = new GameObject();
-	TestChunk.Entities[0]->LoadSprite(Mario, 0);
+	GameObject* test = MemoryManager::AllocateMemory<GameObject>();
+	test->LoadSprite(Mario, 0);
+	TestChunk.Entities.Insert(test);
 
 	level.SetChunk(0, 0, TestChunk);
 	level.SetChunk(0, 1, TestChunk);
