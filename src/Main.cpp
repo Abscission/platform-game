@@ -21,6 +21,8 @@
 
 #include "List.h"
 
+#include "Test.h"
+
 int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	//Create a platform layer
 	GameLayer PlatformLayer;
@@ -62,25 +64,9 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 		OutputDebugString("Controller Not Connected\n");
 	}
 
-	  ////////////////////////////////////
-	 //  DOUBLY LINKED LIST TEST CODE  //
-	////////////////////////////////////
-
-	int* testint = MemoryManager::AllocateMemory<int>(10);
-	testint[0] = 5;
-	testint[1] = 12;
-	testint[2] = 32;
-	testint[3] = -2;
-	testint[4] = 124125;
-	
-	DoubleLinkedList<int> TestList;
-	DoubleLinkedList<int>::Node* testnode = TestList.Insert(&testint[0]);
-	TestList.Insert(&testint[1]);
-	TestList.Insert(&testint[2]);
-	TestList.Insert(&testint[3]);
-	TestList.Insert(&testint[4]);
-
-	TestList.Remove(testnode);
+#ifdef _DEBUG
+	Test();
+#endif
 
 	  ///////////////////////
 	 //  LEVEL TEST CODE  //
@@ -121,25 +107,27 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 		}
 	}
 
+	Pool<GameObject>* GOs = new Pool<GameObject>(10);
+	GameObject* test = GOs->Get();
+
+	test->LoadSprite(Mario, 0);
+	TestChunk.Entities.Insert(test);
+
 	TestChunk.Grid[16 * 3 + 0] = { 1, true };
 	TestChunk.Grid[16 * 3 + 1] = { 1, true };
 	for (int i = 2; i < 12; i++) TestChunk.Grid[i] = { 2, true };
 
-	GameObject* test = MemoryManager::AllocateMemory<GameObject>();
-	test->LoadSprite(Mario, 0);
-	TestChunk.Entities.Insert(test);
+	static IVec2 ChunksToDraw[6] = { { 0, 0 },{ 0, 1 },{ 1, 1 },{ 2, 1 },{ 3, 1 },{ 4, 2 } };
 
-	level.SetChunk(0, 0, TestChunk);
-	level.SetChunk(0, 1, TestChunk);
-	level.SetChunk(1, 1, TestChunk);
-	level.SetChunk(2, 1, TestChunk);
-	level.SetChunk(3, 1, TestChunk);
-	level.SetChunk(4, 2, TestChunk);
+	std::vector <iRect> LevelGeometry = {};
 
-	std::vector <iRect> LevelGeometry = level.GenerateCollisionGeometryFromChunk(0, 0);
-	std::vector <iRect> LevelGeometry2 = level.GenerateCollisionGeometryFromChunk(0, 1);
+	for (auto Chunk : ChunksToDraw) {
+		level.SetChunk(Chunk.X, Chunk.Y, TestChunk);
+		std::vector <iRect> NewGeometry = level.GenerateCollisionGeometryFromChunk(Chunk.X, Chunk.Y);
+		LevelGeometry.insert(LevelGeometry.end(), NewGeometry.begin(), NewGeometry.end());
+	}
 
-	LevelGeometry.insert(LevelGeometry.end(), LevelGeometry2.begin(), LevelGeometry2.end());
+
 
 
 	bool GameRunning = true;
@@ -177,11 +165,11 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 		//Update Level HERE
 
-		static IVec2 ChunksToDraw[6] = { {0, 0}, {0, 1}, {1, 1}, {2, 1}, {3, 1}, {4, 2} };
 
 #pragma loop(hint_parallel(6))
 		for (int i = 0; i < 6; i++) {
 		//for (auto Chunk : ChunksToDraw) {
+			level.UpdateChunk(ChunksToDraw[i].X, ChunksToDraw[i].Y, DeltaTime, LevelGeometry);
 			level.DrawChunk(&Renderer, ChunksToDraw[i].X, ChunksToDraw[i].Y);
 		}
 
@@ -189,8 +177,6 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 //#pragma loop(hint_parallel(8))
 		for (int i = 0; i < GameObjects.size(); i++){
 		//for (auto & Object : GameObjects){
-
-
 			GameObject* Object = GameObjects[i];
 			Object->Update(DeltaTime, LevelGeometry);
 			Object->Draw(&Renderer);

@@ -51,5 +51,8 @@ public:
 	Chunk* GetChunk(u16 X, u16 Y);
 
 	std::vector<iRect> GenerateCollisionGeometryFromChunk(u16 X, u16 Y);
+
+	void UpdateChunk(u16 X, u16 Y, double DeltaTime, std::vector<iRect>& Geometry);
+
 	void DrawChunk(Renderer* Renderer, u16 X, u16 Y);
 };

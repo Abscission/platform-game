@@ -143,6 +143,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>zdll.lib;Xinput9_1_0.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -161,6 +162,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>zdll64.lib;Xinput9_1_0.lib;d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -174,6 +176,7 @@
     <ClCompile Include="..\..\src\GameLayer.cpp" />
     <ClCompile Include="..\..\src\Player.cpp" />
     <ClCompile Include="..\..\src\Renderer.cpp" />
+    <ClCompile Include="..\..\src\Test.cpp" />
     <ClCompile Include="..\..\src\Utility.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -187,6 +190,7 @@
     <ClInclude Include="..\..\src\include\MemoryManager.h" />
     <ClInclude Include="..\..\src\include\Player.h" />
     <ClInclude Include="..\..\src\include\Renderer.h" />
+    <ClInclude Include="..\..\src\include\Test.h" />
     <ClInclude Include="..\..\src\include\Types.h" />
     <ClInclude Include="..\..\src\include\GameLayer.h" />
     <ClInclude Include="..\..\src\include\Utility.h" />

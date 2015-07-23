@@ -40,15 +40,18 @@ public:
 
 	void Remove(Node* n){
 		//TODO: Check if the node is in the list?
-		if (n->Previous) {
+		if (n->Previous == nullptr) {
+			First = n->Next;
+		} 
+		else {
 			n->Previous->Next = n == Last ? nullptr : n->Next;
 		}
 		
-		if (n->Next) {
+		if (n->Next == nullptr) {
+			Last = n->Previous;
+		}
+		else {
 			n->Next->Previous = n == First ? nullptr : n->Previous;
 		}
-
-		if (n == Last) Last = n->Previous;
-		if (n == First) First = n->Next;
 	}
 };

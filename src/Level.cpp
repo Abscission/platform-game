@@ -58,9 +58,13 @@ Chunk* Level::GetChunk(u16 X, u16 Y){
 std::vector<iRect> Level::GenerateCollisionGeometryFromChunk(u16 X, u16 Y) {
 	Chunk* C = GetChunk(X, Y);
 
-	bool Visited[16 * 16] = {};
-
 	std::vector<iRect> CollisionGeometry;
+
+	if (C == nullptr) {
+		return CollisionGeometry;
+	}
+
+	bool Visited[16 * 16] = {};
 
 	for (int y = 0; y < 16; y++) {
 		for (int x = 0; x < 16; x++) {
@@ -83,8 +87,28 @@ std::vector<iRect> Level::GenerateCollisionGeometryFromChunk(u16 X, u16 Y) {
 	return CollisionGeometry;
 }
 
+void Level::UpdateChunk(u16 X, u16 Y, double DeltaTime, std::vector<iRect>& Geometry) {
+	Chunk* C = GetChunk(X, Y);
+
+	if (C == nullptr) {
+		return;
+	}
+
+	auto Entity = C->Entities.First;
+
+	if (Entity != nullptr) {
+		do {
+			Entity->Item->Update(DeltaTime, Geometry);
+		} while (Entity != C->Entities.Last);
+	}
+}
+
 void Level::DrawChunk(Renderer* Renderer, u16 X, u16 Y) {
 	Chunk* C = GetChunk(X, Y);
+
+	if (C == nullptr) {
+		return;
+	}
 
 	for (int x = 0; x < 16; x++) {
 		for (int y = 0; y < 16; y++) {
@@ -96,11 +120,11 @@ void Level::DrawChunk(Renderer* Renderer, u16 X, u16 Y) {
 
 	auto Entity = C->Entities.First;
 
-	do {
-		Entity->Item->Draw(Renderer);
-
-	} while (Entity != C->Entities.Last);
-
+	if (Entity != nullptr) {
+		do {
+			Entity->Item->Draw(Renderer);
+		} while (Entity != C->Entities.Last);
+	}
 	
 
 	/*for (auto Entity : C->Entities) {

@@ -1,5 +1,6 @@
 
 #include "GameObject.h"
+#include "MemoryManager.h"
 #include "Renderer.h"
 
 GameObject::GameObject() {
@@ -20,8 +21,7 @@ GameObject::GameObject(Vector2 Position){
 void GameObject::LoadSprite(AssetFile AssetFile, int id){
 	//Create the sprite if it doesn't exist
 	if (!_Sprite) {
-		//TODO: Some kind of factory to abstract this platform specific code
-		_Sprite = new Sprite();
+		_Sprite = MemoryManager::AllocateMemory<Sprite>();
 	}
 	_Sprite->Load(AssetFile, id);
 }
