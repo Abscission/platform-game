@@ -28,13 +28,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -172,6 +172,7 @@
     <ClCompile Include="..\..\src\GameObject.cpp" />
     <ClCompile Include="..\..\src\InputManager.cpp" />
     <ClCompile Include="..\..\src\Level.cpp" />
+    <ClCompile Include="..\..\src\LogManager.cpp" />
     <ClCompile Include="..\..\src\MemoryManager.cpp" />
     <ClCompile Include="..\..\src\Main.cpp" />
     <ClCompile Include="..\..\src\GameLayer.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="..\..\src\include\InputManager.h" />
     <ClInclude Include="..\..\src\include\Level.h" />
     <ClInclude Include="..\..\src\include\List.h" />
+    <ClInclude Include="..\..\src\include\LogManager.h" />
     <ClInclude Include="..\..\src\include\Maths.h" />
     <ClInclude Include="..\..\src\include\MemoryManager.h" />
     <ClInclude Include="..\..\src\include\Player.h" />

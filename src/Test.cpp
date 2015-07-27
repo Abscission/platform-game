@@ -3,6 +3,7 @@
 
 #include "List.h"
 #include "Test.h"
+#include "LogManager.h"
 
 void Test()
 {
@@ -59,5 +60,15 @@ void Test()
 
 	//Delete the pool
 	delete TestPool;
+
+	//////////////////////
+	// LOGING TEST CODE //
+	//////////////////////
 	
+	Log TestLog("TestLog.txt");
+	TestLog.Write("Hello!");
+	TestLog.Write("I am a cheese");
+
+
+
 }
