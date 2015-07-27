@@ -172,7 +172,6 @@
     <ClCompile Include="..\..\src\GameObject.cpp" />
     <ClCompile Include="..\..\src\InputManager.cpp" />
     <ClCompile Include="..\..\src\Level.cpp" />
-    <ClCompile Include="..\..\src\LogManager.cpp" />
     <ClCompile Include="..\..\src\MemoryManager.cpp" />
     <ClCompile Include="..\..\src\Main.cpp" />
     <ClCompile Include="..\..\src\GameLayer.cpp" />
@@ -188,7 +187,6 @@
     <ClInclude Include="..\..\src\include\InputManager.h" />
     <ClInclude Include="..\..\src\include\Level.h" />
     <ClInclude Include="..\..\src\include\List.h" />
-    <ClInclude Include="..\..\src\include\LogManager.h" />
     <ClInclude Include="..\..\src\include\Maths.h" />
     <ClInclude Include="..\..\src\include\MemoryManager.h" />
     <ClInclude Include="..\..\src\include\Player.h" />
