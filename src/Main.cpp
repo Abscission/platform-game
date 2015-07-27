@@ -39,9 +39,11 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	Player Player;
 	Player.LoadSprite(Mario, 0);
 	
+	GameObjects.push_back(&Player);
+
 	ResizeSprite(Player._Sprite, 48);
 
-	GameObjects.push_back(&Player);
+	//GameObjects.push_back(&Player);
 
 	float counter = 1.f;
 	LARGE_INTEGER Time;
@@ -84,8 +86,6 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	level.Sprites[3]->Load(Tiles, 3);
 
 	Chunk TestChunk = {};
-	TestChunk.X = 0;
-	TestChunk.Y = 0;
 
 	for (int y = 0; y < 8; y++) {
 		for (int x = 0; x < 8; x++) {
@@ -113,6 +113,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	test->LoadSprite(Mario, 0);
 	TestChunk.Entities.Insert(test);
 
+
 	TestChunk.Grid[16 * 3 + 0] = { 1, true };
 	TestChunk.Grid[16 * 3 + 1] = { 1, true };
 	for (int i = 2; i < 12; i++) TestChunk.Grid[i] = { 2, true };
@@ -122,13 +123,16 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	std::vector <iRect> LevelGeometry = {};
 
 	for (auto Chunk : ChunksToDraw) {
+		
 		level.SetChunk(Chunk.X, Chunk.Y, TestChunk);
 		std::vector <iRect> NewGeometry = level.GenerateCollisionGeometryFromChunk(Chunk.X, Chunk.Y);
 		LevelGeometry.insert(LevelGeometry.end(), NewGeometry.begin(), NewGeometry.end());
+
 	}
 
-
-
+	Chunk FirstChunk = {};
+	auto player = FirstChunk.Entities.Insert((GameObject*)&Player);
+	level.SetChunk(0, 0, FirstChunk);
 
 	bool GameRunning = true;
 	while (GameRunning) {

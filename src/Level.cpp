@@ -96,10 +96,9 @@ void Level::UpdateChunk(u16 X, u16 Y, double DeltaTime, std::vector<iRect>& Geom
 
 	auto Entity = C->Entities.First;
 
-	if (Entity != nullptr) {
-		do {
-			Entity->Item->Update(DeltaTime, Geometry);
-		} while (Entity != C->Entities.Last);
+	while (Entity != nullptr) {
+		Entity->Item->Update(DeltaTime, Geometry);
+		Entity = Entity->Next;
 	}
 }
 
@@ -120,10 +119,9 @@ void Level::DrawChunk(Renderer* Renderer, u16 X, u16 Y) {
 
 	auto Entity = C->Entities.First;
 
-	if (Entity != nullptr) {
-		do {
-			Entity->Item->Draw(Renderer);
-		} while (Entity != C->Entities.Last);
+	while (Entity != nullptr) {
+		Entity->Item->Draw(Renderer);
+		Entity = Entity->Next;
 	}
 	
 
