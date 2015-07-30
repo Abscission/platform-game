@@ -186,12 +186,12 @@ FakesAssemblies/
 # Visual Studio 6 workspace options file
 *.opt
 
-config
 
 dist
 
-*log*
 platform-game/x64/Debug/platform-game.exe
+platform-game/Release/
+platform-game/Debug/
 *.idb
 
 build
