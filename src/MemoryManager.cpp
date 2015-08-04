@@ -11,3 +11,4 @@ void MemoryManager::FreeMemory(void * Start)
 {
 	VirtualFree(Start, 0, MEM_RELEASE);
 }
+

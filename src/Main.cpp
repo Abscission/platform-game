@@ -39,11 +39,9 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	Player Player;
 	Player.LoadSprite(Mario, 0);
 	
-	GameObjects.push_back(&Player);
-
 	ResizeSprite(Player._Sprite, 48);
 
-	//GameObjects.push_back(&Player);
+	GameObjects.push_back(&Player);
 
 	float counter = 1.f;
 	LARGE_INTEGER Time;
@@ -169,18 +167,13 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 		//Update Level HERE
 
-
 #pragma loop(hint_parallel(6))
 		for (int i = 0; i < 6; i++) {
-		//for (auto Chunk : ChunksToDraw) {
 			level.UpdateChunk(ChunksToDraw[i].X, ChunksToDraw[i].Y, DeltaTime, LevelGeometry);
 			level.DrawChunk(&Renderer, ChunksToDraw[i].X, ChunksToDraw[i].Y);
 		}
 
-		//TODO: See if iterator approach is fast enough
-//#pragma loop(hint_parallel(8))
 		for (int i = 0; i < GameObjects.size(); i++){
-		//for (auto & Object : GameObjects){
 			GameObject* Object = GameObjects[i];
 			Object->Update(DeltaTime, LevelGeometry);
 			Object->Draw(&Renderer);

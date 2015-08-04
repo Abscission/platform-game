@@ -34,7 +34,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -180,6 +180,7 @@
     <ClCompile Include="..\..\src\Renderer.cpp" />
     <ClCompile Include="..\..\src\Test.cpp" />
     <ClCompile Include="..\..\src\Utility.cpp" />
+    <ClCompile Include="Interpreter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\include\AssetManager.h" />
@@ -197,6 +198,7 @@
     <ClInclude Include="..\..\src\include\Types.h" />
     <ClInclude Include="..\..\src\include\GameLayer.h" />
     <ClInclude Include="..\..\src\include\Utility.h" />
+    <ClInclude Include="Interpreter.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\.gitignore" />

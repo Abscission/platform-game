@@ -351,10 +351,10 @@ void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height
 		if (Height <= 0) return;
 	}
 
-	for (int y = SrcY; y < (SrcY + Height); y++){
+	for (register int y = SrcY; y < (SrcY + Height); y++){
 		if ((ShouldBlend && Spr->hasTransparency) || true) {
 			//If the pixel should be drawn with transparency itterate over each pixel
-			for (int x = SrcX; x < (SrcX + Width); x++) {
+			for (register int x = SrcX; x < (SrcX + Width); x++) {
 				unsigned int ARGB = Spr->Data[y * Spr->Width + x];
 				unsigned char* SA = ((unsigned char*)&ARGB) + 3;
 
