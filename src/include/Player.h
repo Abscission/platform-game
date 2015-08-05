@@ -1,14 +1,18 @@
 #pragma once
 #include "GameObject.h"
 #include "Config.h"
-#include "LogManager.h"
+
+struct Controls {
+	char Left = 'A';
+	char Right = 'D';
+	char Jump = VK_SPACE;
+	char Shift = VK_SHIFT;
+};
 
 class Player : public GameObject {
 private:
 	double JumpTime = 0;
-	char Left = 'A'; 
-	char Right = 'D';
-	char Jump = VK_SPACE;
+	Controls Controls;
 	void GetBindings();
 public:
 	Player();
