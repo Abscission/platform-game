@@ -1,3 +1,7 @@
+
+//Copyright (c) 2015 Jason Light
+//License: MIT
+
 //This header contains the memory management code for Abscission's platform game engine.
 
 //TODO: Add useful allocators (pools etc)

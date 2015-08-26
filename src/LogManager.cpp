@@ -1,5 +1,9 @@
-#include"LogManager.h"
-#include<fstream>
+
+//Copyright (c) 2015 Jason Light
+//License: MIT
+//
+#include "LogManager.h"
+#include <fstream>
 
 Log::Log(std::string FileName){
 	std::ofstream FileStream;

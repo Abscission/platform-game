@@ -1,3 +1,7 @@
+
+//Copyright (c) 2015 Jason Light
+//License: MIT
+
 #include "Player.h"
 #include <cstdlib>
 #include "InputManager.h"

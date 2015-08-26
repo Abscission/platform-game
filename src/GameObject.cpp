@@ -1,4 +1,7 @@
 
+//Copyright (c) 2015 Jason Light
+//License: MIT
+
 #include "GameObject.h"
 #include "MemoryManager.h"
 #include "Renderer.h"

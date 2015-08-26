@@ -1,4 +1,9 @@
+
+//Copyright (c) 2015 Jason Light
+//License: MIT
+
 #pragma once
+
 #include "GameObject.h"
 #include "Config.h"
 #include "LogManager.h"

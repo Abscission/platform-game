@@ -1,3 +1,7 @@
+
+//Copyright (c) 2015 Jason Light
+//License: MIT
+
 #include "AssetManager.h"
 
 #include <Windows.h>

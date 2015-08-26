@@ -1,4 +1,7 @@
 
+//Copyright (c) 2015 Jason Light
+//License: MIT
+
 #include "Renderer.h"
 
 #include <vector>

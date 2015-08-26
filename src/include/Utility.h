@@ -1,3 +1,7 @@
+
+//Copyright (c) 2015 Jason Light
+//License: MIT
+
 #pragma once
 
 #include <Types.h>

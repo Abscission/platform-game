@@ -1,6 +1,11 @@
+
+//Copyright (c) 2015 Jason Light
+//License: MIT
+
 #pragma once
-#include<string>
-#include<map>
+
+#include <string>
+#include <map>
 
 class Log {
 private:

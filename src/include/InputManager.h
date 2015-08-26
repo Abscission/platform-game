@@ -1,3 +1,7 @@
+
+//Copyright (c) 2015 Jason Light
+//License: MIT
+
 // InputManager.h
 // This is the header file that provides an input interface to the game
 // Author: Daniel Alexander

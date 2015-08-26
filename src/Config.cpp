@@ -1,3 +1,7 @@
+
+//Copyright (c) 2015 Jason Light
+//License: MIT
+
 #include "Config.h"
 #include <fstream>
 #include "Types.h"

@@ -1,3 +1,7 @@
+
+//Copyright (c) 2015 Jason Light
+//License: MIT
+
 #include "MemoryManager.h"
 
 #include <Windows.h>

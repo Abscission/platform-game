@@ -1,5 +1,8 @@
 
-#include"InputManager.h"
+//Copyright (c) 2015 Jason Light
+//License: MIT
+
+#include "InputManager.h"
 #include <Windows.h>
 #include <Xinput.h>
 #include "Utility.h"

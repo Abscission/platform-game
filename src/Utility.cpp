@@ -1,4 +1,7 @@
 
+//Copyright (c) 2015 Jason Light
+//License: MIT
+
 #include "Utility.h"
 
 void DisplayMessage(HRESULT Code) {
