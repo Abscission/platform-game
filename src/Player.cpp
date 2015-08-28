@@ -12,11 +12,12 @@ Player::Player() {
 }
 
 void Player::GetBindings(){
-	ConfigFile Controls("config/bindings.ini");
+	ConfigFile ControlsFile("config/bindings.ini");
 	
-	Left = atoi(Controls.Get("Left").c_str());
-	Right = atoi(Controls.Get("Right").c_str());
-	
+	Controls.Left = atoi(ControlsFile.Get("Left", (char*)0x41).c_str());
+	Controls.Right = atoi(ControlsFile.Get("Right", (char*)0x44).c_str());
+	//Controls.Jump = atoi(ControlsFile.Get("Jump", (char*)0x20).c_str());
+	//Controls.Shift = atoi(ControlsFile.Get("Shift", (char*)0xA0).c_str());
 }
 
 void Player::Update(double DeltaTime, std::vector<iRect> Collision) {
@@ -25,12 +26,12 @@ void Player::Update(double DeltaTime, std::vector<iRect> Collision) {
 	ControllerState Controller = InputManager::Get().GetControllerState();
 	
 
-	int MaxSpeed = (InputManager::Get().GetKeyState(VK_SHIFT) || Controller.Buttons & 0x2000) ? 400 : 600;
+	int MaxSpeed = (InputManager::Get().GetKeyState(/*Controls.Shift*/VK_SHIFT) || Controller.Buttons & 0x2000) ? 400 : 600;
 
-	if (InputManager::Get().GetKeyState(Right) || Controller.Buttons & 0x8) {
+	if (InputManager::Get().GetKeyState(Controls.Right) || Controller.Buttons & 0x8) {
 		TargetVelocity.X = static_cast<float>(MaxSpeed);
 	}
-	else if (InputManager::Get().GetKeyState(Left) || Controller.Buttons & 0x4) {
+	else if (InputManager::Get().GetKeyState(Controls.Left) || Controller.Buttons & 0x4) {
 		TargetVelocity.X = -static_cast<float>(MaxSpeed);
 	}
 	else {
@@ -38,7 +39,7 @@ void Player::Update(double DeltaTime, std::vector<iRect> Collision) {
 	}
 
 	if (JumpTime == 0) {
-		if (InputManager::Get().GetKeyState(Jump) || Controller.Buttons & 0x1000) {
+		if (InputManager::Get().GetKeyState(/*Controls.Jump*/VK_SPACE) || Controller.Buttons & 0x1000) {
 			if (canJump) {
 				if (!isGrounded) {
 					//walljump
@@ -52,7 +53,7 @@ void Player::Update(double DeltaTime, std::vector<iRect> Collision) {
 	}
 
 	if (JumpTime > 0){
-		if (InputManager::Get().GetKeyState(VK_SPACE) || Controller.Buttons & 0x1000) {
+		if (InputManager::Get().GetKeyState(/*Controls.Jump*/VK_SPACE) || Controller.Buttons & 0x1000) {
 			JumpTime += DeltaTime;
 			if (JumpTime < 1.0f) {
 				Velocity.Y -= 500 * static_cast<float>(DeltaTime);
