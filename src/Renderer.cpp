@@ -133,7 +133,6 @@ Sprite::~Sprite() {
 	if (this->Data) VirtualFree(this->Data, 0, MEM_RELEASE);
 }
 
-
 bool Renderer::OpenWindow(int Width, int Height, char* Title){
 	WNDCLASSEX WindClass = {}; //Create a Window Class structure
 	
@@ -379,3 +378,24 @@ void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height
 	}
 }
 
+void Renderer::DrawSprite(AnimatedSprite * Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend)
+{
+	int Frame = ((GetTickCount() - Spr->CreationTime) / (Spr->Period / Spr->NumberOfFrames)) % Spr->NumberOfFrames;
+	DrawSprite(Spr->Frames + Frame, SrcX, SrcY, Width, Height, DstX, DstY, Blend);
+}
+
+bool AnimatedSprite::Load(AssetFile Asset, int start, int amount)
+{
+	Frames = MemoryManager::AllocateMemory<Sprite>(amount);
+
+	for (int i = 0; i < amount; i++) {
+		if (!Frames[i].Load(Asset, start + i)) return false;
+		ResizeSprite(Frames + i, 48);
+	}
+
+	CurrentFrame = 0;
+	NumberOfFrames = amount;
+
+	CreationTime = GetTickCount();
+	return true;
+}

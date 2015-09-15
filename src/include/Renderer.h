@@ -50,6 +50,19 @@ public:
 	~Sprite();
 };
 
+class AnimatedSprite {
+public:
+	bool Load(AssetFile Asset, int start, int amount);
+
+	int CurrentFrame;
+	int NumberOfFrames;
+	int Period;
+
+	u32 CreationTime;
+
+	Sprite* Frames;
+};
+
 bool ResizeSprite(Sprite* Sprite, int W, int H);
 bool ResizeSprite(Sprite* Sprite, int W);
 
@@ -78,6 +91,8 @@ public:
 	void DrawSprite(Sprite* Spr, int X, int Y);
 	void DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY);
 	void DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend);
+	
+	void DrawSprite(AnimatedSprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend);
 
 	void DrawSpriteWC(Sprite* Spr, int X, int Y);
 	

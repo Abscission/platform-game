@@ -16,7 +16,6 @@
 #include "Renderer.h"
 #include "GameObject.h"
 #include "Player.h"
-#include "Entity.h"
 #include "AssetManager.h"
 #include "InputManager.h"
 #include "Config.h"
@@ -66,6 +65,28 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	else {
 		OutputDebugString("Controller Not Connected\n");
 	}
+
+	double AnimX = 64;
+	double AnimY = 64;
+
+	int AnimDirection = 0;
+
+	Sprite AnimStill;
+	AnimStill.Load("assets/animation.aaf", 0);
+	ResizeSprite(&AnimStill, 48);
+
+	Sprite AnimStillBack;
+	AnimStillBack.Load("assets/animation.aaf", 8);
+	ResizeSprite(&AnimStillBack, 48);
+
+
+	AnimatedSprite TestAnimation;
+	TestAnimation.Load("assets/animation.aaf", 0, 8);
+	TestAnimation.Period = 800;
+
+	AnimatedSprite TestAnimationBack;
+	TestAnimationBack.Load("assets/animation.aaf", 8, 8);
+	TestAnimationBack.Period = 800;
 
 #ifdef _DEBUG
 	Test();
@@ -170,6 +191,27 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 		//Update Level HERE
 
+		if (InputManager::Get().GetKeyState('S')) {
+			AnimY += (90 * DeltaTime);
+			AnimDirection = 0;
+			Renderer.DrawSprite(&TestAnimation, 0, 0, 48, 64, (int)AnimX, (int)AnimY, true);
+		}
+		else if (InputManager::Get().GetKeyState('W')) {
+			AnimY -= (90 * DeltaTime);
+			AnimDirection = 2;
+			Renderer.DrawSprite(&TestAnimationBack, 0, 0, 48, 64, (int)AnimX, (int)AnimY, true);
+		}
+		else
+		{
+			if (AnimDirection == 0) {
+				Renderer.DrawSprite(&AnimStill, 0, 0, 48, 64, (int)AnimX, (int)AnimY, true);
+			}
+			else {
+				Renderer.DrawSprite(&AnimStillBack, 0, 0, 48, 64, (int)AnimX, (int)AnimY, true);
+
+			}
+		}
+
 #pragma loop(hint_parallel(6))
 		for (int i = 0; i < 6; i++) {
 			level.UpdateChunk(ChunksToDraw[i].X, ChunksToDraw[i].Y, DeltaTime, LevelGeometry);
@@ -180,10 +222,11 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 			GameObject* Object = GameObjects[i];
 			Object->Update(DeltaTime, LevelGeometry);
 			Object->Draw(&Renderer);
+
 		}
 
 		if(!PlatformLayer.Update(DeltaTime)) GameRunning = false;
-		Renderer.SetCameraPosition({ (int)Player.Position.X - 512, (int)Player.Position.Y - 300 });
+		//Renderer.SetCameraPosition({ (int)Player.Position.X - 512, (int)Player.Position.Y - 300 });
 	}
 
 	return 0;

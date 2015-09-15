@@ -14,8 +14,8 @@ Player::Player() {
 void Player::GetBindings(){
 	ConfigFile ControlsFile("config/bindings.ini");
 	
-	Controls.Left = atoi(ControlsFile.Get("Left", (char*)0x41).c_str());
-	Controls.Right = atoi(ControlsFile.Get("Right", (char*)0x44).c_str());
+	Controls.Left = 'A';// *ControlsFile.Get("Left", (char*)0x41).c_str();
+	Controls.Right = 'D';// *ControlsFile.Get("Right", (char*)0x44).c_str();
 	//Controls.Jump = atoi(ControlsFile.Get("Jump", (char*)0x20).c_str());
 	//Controls.Shift = atoi(ControlsFile.Get("Shift", (char*)0xA0).c_str());
 }
@@ -25,7 +25,6 @@ void Player::Update(double DeltaTime, std::vector<iRect> Collision) {
 	//InputManager InputManager::Get() = InputManager::Get();
 	ControllerState Controller = InputManager::Get().GetControllerState();
 	
-
 	int MaxSpeed = (InputManager::Get().GetKeyState(/*Controls.Shift*/VK_SHIFT) || Controller.Buttons & 0x2000) ? 400 : 600;
 
 	if (InputManager::Get().GetKeyState(Controls.Right) || Controller.Buttons & 0x8) {
