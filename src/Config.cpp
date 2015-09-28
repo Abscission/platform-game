@@ -13,6 +13,8 @@ bool ConfigFile::Load(std::string Filename) {
 	std::string Line, Key, Val;
 
 	while (std::getline(FileStream, Line)) {
+		if (Line[0] == '#') continue;
+
 		u64 Delimiter = Line.find("="); // resolutionx=1920 => 11
 		if (Delimiter == std::string::npos) {
 			//invalid line

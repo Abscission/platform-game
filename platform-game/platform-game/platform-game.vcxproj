@@ -171,6 +171,7 @@
     <ClCompile Include="..\..\src\Config.cpp" />
     <ClCompile Include="..\..\src\GameObject.cpp" />
     <ClCompile Include="..\..\src\InputManager.cpp" />
+    <ClCompile Include="..\..\src\Interpreter.cpp" />
     <ClCompile Include="..\..\src\Level.cpp" />
     <ClCompile Include="..\..\src\LogManager.cpp" />
     <ClCompile Include="..\..\src\MemoryManager.cpp" />
@@ -186,6 +187,7 @@
     <ClInclude Include="..\..\src\include\Config.h" />
     <ClInclude Include="..\..\src\include\GameObject.h" />
     <ClInclude Include="..\..\src\include\InputManager.h" />
+    <ClInclude Include="..\..\src\include\Interpreter.h" />
     <ClInclude Include="..\..\src\include\Level.h" />
     <ClInclude Include="..\..\src\include\List.h" />
     <ClInclude Include="..\..\src\include\LogManager.h" />
@@ -197,7 +199,6 @@
     <ClInclude Include="..\..\src\include\Types.h" />
     <ClInclude Include="..\..\src\include\GameLayer.h" />
     <ClInclude Include="..\..\src\include\Utility.h" />
-    <ClInclude Include="Interpreter.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\.gitignore" />

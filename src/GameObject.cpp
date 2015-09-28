@@ -23,10 +23,10 @@ GameObject::GameObject(Vector2 Position){
 
 void GameObject::LoadSprite(AssetFile AssetFile, int id){
 	//Create the sprite if it doesn't exist
-	if (!_Sprite) {
-		_Sprite = MemoryManager::AllocateMemory<Sprite>();
+	if (!Spr) {
+		Spr = MemoryManager::AllocateMemory<Sprite>(1);
 	}
-	_Sprite->Load(AssetFile, id);
+	Spr->Load(AssetFile, id);
 }
 
 void GameObject::ApplyForce(Vector2 Force) {
@@ -35,7 +35,7 @@ void GameObject::ApplyForce(Vector2 Force) {
 
 void GameObject::Update(double DeltaTime, std::vector<iRect> CollisionGeometry){
 	//The Hitbox of the object
-	Rect Hitbox = { Position.X, Position.Y, (float)_Sprite->Width, (float)_Sprite->Height };
+	Rect Hitbox = { Position.X, Position.Y, (float)Spr->Width, (float)Spr->Height };
 
 	//Apply gravity 
 	if (isGrounded) {
@@ -114,5 +114,5 @@ void GameObject::Update(double DeltaTime, std::vector<iRect> CollisionGeometry){
 }
 
 void GameObject::Draw(Renderer* renderer) {
-	renderer->DrawSprite(_Sprite, 0, 0, _Sprite->Width, _Sprite->Height, (int)(Position.X), (int)(Position.Y), true);
+	renderer->DrawSprite(Spr, 0, 0, Spr->Width, Spr->Height, (int)(Position.X), (int)(Position.Y), true);
 }

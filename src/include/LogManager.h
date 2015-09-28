@@ -16,3 +16,5 @@ public:
 	void Write(std::string String);
 
 };
+
+extern Log GlobalLog;

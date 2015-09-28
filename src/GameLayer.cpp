@@ -15,7 +15,7 @@ void GameLayer::Initialize(){
 
 struct Surface {
 	Rect Position;
-	Sprite& Spr;
+	_Sprite& Spr;
 };
 
 bool GameLayer::Update(double DeltaTime) {
@@ -27,7 +27,7 @@ bool GameLayer::Update(double DeltaTime) {
 		DispatchMessage(&Message);
 	}
 
-	static Sprite Platform01;
+	static _Sprite Platform01;
 	if (!Platform01.Data) {
 		AssetFile Tiles("assets/tiles.aaf");
 		Platform01.Load(Tiles, 0);
@@ -35,7 +35,7 @@ bool GameLayer::Update(double DeltaTime) {
 		ResizeSprite(&Platform01, 32, 32);
 	}
 
-	static Sprite Platform02;
+	static _Sprite Platform02;
 	if (!Platform02.Data) {
 		AssetFile Tiles("assets/tiles.aaf");
 		Platform02.Load(Tiles, 2);
@@ -43,7 +43,7 @@ bool GameLayer::Update(double DeltaTime) {
 		ResizeSprite(&Platform02, 32, 32);
 	}
 
-	static Sprite Platform03;
+	static _Sprite Platform03;
 	if (!Platform03.Data) {
 		AssetFile Tiles("assets/tiles.aaf");
 		Platform03.Load(Tiles, 1);
@@ -52,7 +52,7 @@ bool GameLayer::Update(double DeltaTime) {
 	}
 
 
-	static Sprite Platform04;
+	static _Sprite Platform04;
 	if (!Platform04.Data) {
 		AssetFile Tiles("assets/tiles.aaf");
 		Platform04.Load(Tiles, 3);

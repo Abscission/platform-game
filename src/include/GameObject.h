@@ -38,7 +38,7 @@ public:
 	void LoadSprite(AssetFile AssetFile, int id);
 
 
-	Sprite* _Sprite;
+	Sprite* Spr;
 	
 	void ApplyForce(Vector2 Force);
 

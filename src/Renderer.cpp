@@ -4,7 +4,7 @@
 
 #include "Renderer.h"
 
-#include <vector>
+//#include <vector>
 
 #include <Windows.h>
 
@@ -21,6 +21,9 @@ static Rect Monitors[8];
 
 //The window callback, this is what processes messages from our windows
 LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPARAM lParam) {
+
+	static bool MouseOver = false;
+
 	switch (Message) {
 	case WM_CLOSE:
 		DestroyWindow(Window);
@@ -38,6 +41,7 @@ LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPARAM lPa
 			ShouldClose = true;
 			return 0;
 		}
+
 
 	default:
 		return DefWindowProc(Window, Message, wParam, lParam);
@@ -64,15 +68,34 @@ inline void Blend(unsigned int* Source, unsigned int* Dest) {
 }
 
 bool ResizeSprite(Sprite* Sprite, int W) {
+	for (int i = 0; i <= Sprite->NumberOfFrames; i++)
+		if (!ResizeSprite(&Sprite->Frames[i], W)) return false;
+
+	Sprite->Width = Sprite->Frames->Width;
+	Sprite->Height = Sprite->Frames->Height;
+
+	return true;
+}
+
+bool ResizeSprite(_Sprite* Sprite, int W) {
 	assert(W > 0, "Tried to resize sprite to zero width");
 	assert(Sprite->Width != 0, "Tried to resize invalid sprite");
 
 	return ResizeSprite(Sprite, W, Sprite->Height * (W / Sprite->Width));
 }
 
+bool ResizeSprite(Sprite* Sprite, int W, int H) {
+	for (int i = 0; i < Sprite->NumberOfFrames; i++)
+		if (!ResizeSprite(&Sprite->Frames[i], W, H)) return false;
+
+	Sprite->Width = Sprite->Frames->Width;
+	Sprite->Height = Sprite->Frames->Height;
+
+	return true;
+}
 
 //A function to resize a sprite using nearest neighbour
-bool ResizeSprite(Sprite* Sprite, int W, int H){
+bool ResizeSprite(_Sprite* Sprite, int W, int H){
 	//Initialize a temporary buffer for the sprite
 	unsigned int *TempBuffer = (unsigned int*)VirtualAlloc(0, W * H * 4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 	
@@ -112,7 +135,7 @@ bool ResizeSprite(Sprite* Sprite, int W, int H){
 	return true;
 }
 
-bool Sprite::Load(AssetFile AssetFile, int id){
+bool _Sprite::Load(AssetFile AssetFile, int id){
 	Asset BMP = AssetFile.GetAsset(id);
 	
 	byte* Memory = (byte*)BMP.Memory;
@@ -129,7 +152,7 @@ bool Sprite::Load(AssetFile AssetFile, int id){
 	return true;
 }
 
-Sprite::~Sprite() {
+_Sprite::~_Sprite() {
 	if (this->Data) VirtualFree(this->Data, 0, MEM_RELEASE);
 }
 
@@ -245,6 +268,7 @@ bool Renderer::Initialize() {
 	this->OpenWindow(Config.WindowResX, Config.WindowResY, "Title");
 	this->DeviceContext = GetWindowDC(this->Window);
 
+
 	//Create a DIB to render to
 	if (Buffer.Memory) {
 		VirtualFree(Buffer.Memory, 0, MEM_RELEASE);
@@ -288,8 +312,7 @@ void Renderer::DrawRectangle(int X, int Y, int Width, int Height, int Color) {
 	}
 }
 
-
-void Renderer::DrawSpriteRectangle(int X, int Y, int Width, int Height, Sprite* Spr) {
+void Renderer::DrawSpriteRectangle(int X, int Y, int Width, int Height, _Sprite* Spr) {
 	for (int y = Y; y < Y + Height; y+= Spr->Width){
 		int Down = Buffer.Width * (Y + y);
 		for (int x = X; x < X + Width; x += Spr->Width) {
@@ -303,19 +326,23 @@ void Renderer::DrawSpriteRectangle(int X, int Y, int Width, int Height, Sprite* 
 	}
 }
 
-void Renderer::DrawSpriteWC(Sprite* Spr, int X, int Y) {
-	DrawSprite(Spr, X - CameraPos.X, Y - CameraPos.Y);
-}
-
 void Renderer::DrawSprite(Sprite* Spr, int X, int Y) {
 	DrawSprite(Spr, 0, 0, Spr->Width, Spr->Height, X, Y, true);
 }
 
-void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY){
+void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY) {
 	DrawSprite(Spr, SrcX, SrcY, Width, Height, DstX, DstY, true);
 }
 
-void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool ShouldBlend){
+void Renderer::DrawSprite(_Sprite* Spr, int X, int Y) {
+	DrawSprite(Spr, 0, 0, Spr->Width, Spr->Height, X, Y, true);
+}
+
+void Renderer::DrawSprite(_Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY){
+	DrawSprite(Spr, SrcX, SrcY, Width, Height, DstX, DstY, true);
+}
+
+void Renderer::DrawSprite(_Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool ShouldBlend){
 	//Out of bounds checks
 	//If the sprite is drawn partially offscreen, draw a section
 	//If it is fully offscreen, don't draw it.
@@ -378,23 +405,48 @@ void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height
 	}
 }
 
-void Renderer::DrawSprite(AnimatedSprite * Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend)
-{
-	int Frame = ((GetTickCount() - Spr->CreationTime) / (Spr->Period / Spr->NumberOfFrames)) % Spr->NumberOfFrames;
+void Renderer::DrawSprite(Sprite * Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend) {
+	int Frame;
+
+	if (Spr->isAnimated) {
+		Frame = ((GetTickCount() - Spr->CreationTime) / (Spr->Period / Spr->NumberOfFrames)) % Spr->NumberOfFrames;
+	}
+	else {
+		Frame = 0;
+	}
 	DrawSprite(Spr->Frames + Frame, SrcX, SrcY, Width, Height, DstX, DstY, Blend);
 }
 
-bool AnimatedSprite::Load(AssetFile Asset, int start, int amount)
+bool Sprite::Load(AssetFile Asset, int id)
 {
-	Frames = MemoryManager::AllocateMemory<Sprite>(amount);
+	Frames = MemoryManager::AllocateMemory<_Sprite>(1);
+
+	if (!Frames->Load(Asset, id)) return false;
+
+	Width = Frames->Width;
+	Height = Frames->Height;
+
+	CurrentFrame = 0;
+	NumberOfFrames = 0;
+	isAnimated = false;
+
+	return true;
+}
+
+bool Sprite::Load(AssetFile Asset, int start, int amount) {
+	Frames = MemoryManager::AllocateMemory<_Sprite>(amount);
 
 	for (int i = 0; i < amount; i++) {
 		if (!Frames[i].Load(Asset, start + i)) return false;
 		ResizeSprite(Frames + i, 48);
 	}
 
+	Width = Frames->Width;
+	Height = Frames->Height;
+
 	CurrentFrame = 0;
 	NumberOfFrames = amount;
+	isAnimated = true;
 
 	CreationTime = GetTickCount();
 	return true;

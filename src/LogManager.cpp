@@ -4,6 +4,7 @@
 //
 #include "LogManager.h"
 #include <fstream>
+#include <Windows.h>
 
 Log::Log(std::string FileName){
 	std::ofstream FileStream;
@@ -19,4 +20,9 @@ void Log::Write(std::string String){
 	FileStream << String << "\n";
 	FileStream.close();
 
+	OutputDebugString(String.c_str());
+
+
 }
+
+Log GlobalLog("platform-game-log.txt");

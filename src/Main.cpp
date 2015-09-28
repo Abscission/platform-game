@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <string>
+#include <fstream>
 
 #include <Windows.h>
 
@@ -20,7 +21,7 @@
 #include "InputManager.h"
 #include "Config.h"
 #include "Level.h"
-
+#include "LogManager.h"
 #include "List.h"
 
 #include "Test.h"
@@ -34,6 +35,9 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	Renderer Renderer;
 	Renderer = PlatformLayer.GetRenderer();
 
+	//Set up the global log
+	//GlobalLog = Log("platform-game-log.txt");
+
 	//Temporary GameObject vector
 	std::vector<GameObject*> GameObjects;
 	AssetFile Mario("assets/assets.aaf");
@@ -41,7 +45,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	Player Player;
 	Player.LoadSprite(Mario, 0);
 	
-	ResizeSprite(Player._Sprite, 48);
+	ResizeSprite(Player.Spr, 48);
 
 	GameObjects.push_back(&Player);
 
@@ -66,6 +70,8 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 		OutputDebugString("Controller Not Connected\n");
 	}
 
+	// TEMPORARY ANIMATION TEST CODE
+
 	double AnimX = 64;
 	double AnimY = 64;
 
@@ -79,85 +85,54 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	AnimStillBack.Load("assets/animation.aaf", 8);
 	ResizeSprite(&AnimStillBack, 48);
 
-
-	AnimatedSprite TestAnimation;
+	Sprite TestAnimation;
 	TestAnimation.Load("assets/animation.aaf", 0, 8);
 	TestAnimation.Period = 800;
 
-	AnimatedSprite TestAnimationBack;
+	Sprite TestAnimationBack;
 	TestAnimationBack.Load("assets/animation.aaf", 8, 8);
 	TestAnimationBack.Period = 800;
 
-#ifdef _DEBUG
-	Test();
-#endif
+	// END TEMPORARY SECTION
 
-	  ///////////////////////
-	 //  LEVEL TEST CODE  //
-	///////////////////////
+	Level level = {};
+	AssetFile LevelAsset("assets/testlevel00.aaf");
+	level.LoadFromAsset(LevelAsset.GetAsset(0));
 
-	Level level;
+	static IVec2 ChunksToDraw[3] = { { 0, 0 }, {0, 1}, {1, 0} };
 
-	AssetFile Tiles("assets/tiles.aaf");
-
-	for (int i = 0; i < 4; i++) level.Sprites[i] = new Sprite();
-
-	level.Sprites[0] = 0;
-	level.Sprites[1]->Load(Tiles, 0);
-	level.Sprites[2]->Load(Tiles, 1);
-	level.Sprites[3]->Load(Tiles, 3);
-
-	Chunk TestChunk = {};
-
-	for (int y = 0; y < 8; y++) {
-		for (int x = 0; x < 8; x++) {
-			if (x == 0 || x == 7 || y == 0) {
-				if (y == 5 || y == 6) {
-					//doorway
-					TestChunk.Grid[(2 + y) * 16 + x + 6] = { 3, false };
-				}
-				else {
-					TestChunk.Grid[(2 + y) * 16 + x + 6] = { 1, true };
-				}
-			}
-			else if (y == 7) {
-				TestChunk.Grid[(2 + y) * 16 + x + 6] = { 2, true };
-			}
-			else {
-				TestChunk.Grid[(2 + y) * 16 + x + 6] = { 3, false };
-			}
-		}
-	}
-
-	Pool<GameObject>* GOs = new Pool<GameObject>(10);
-	GameObject* test = GOs->Get();
-
-	test->LoadSprite(Mario, 0);
-	TestChunk.Entities.Insert(test);
-
-
-	TestChunk.Grid[16 * 3 + 0] = { 1, true };
-	TestChunk.Grid[16 * 3 + 1] = { 1, true };
-	for (int i = 2; i < 12; i++) TestChunk.Grid[i] = { 2, true };
-
-	static IVec2 ChunksToDraw[6] = { { 0, 0 },{ 0, 1 },{ 1, 1 },{ 2, 1 },{ 3, 1 },{ 4, 2 } };
+	level.SpawnEntity(&Player, 0, 0);
 
 	std::vector <iRect> LevelGeometry = {};
 
 	for (auto Chunk : ChunksToDraw) {
-		
-		level.SetChunk(Chunk.X, Chunk.Y, TestChunk);
+
 		std::vector <iRect> NewGeometry = level.GenerateCollisionGeometryFromChunk(Chunk.X, Chunk.Y);
 		LevelGeometry.insert(LevelGeometry.end(), NewGeometry.begin(), NewGeometry.end());
 
 	}
 
-	Chunk FirstChunk = {};
-	auto player = FirstChunk.Entities.Insert((GameObject*)&Player);
-	level.SetChunk(0, 0, FirstChunk);
+#ifdef _DEBUG
+	Test();
+#endif
+
+	u16 SelectedSprite = 0;
+	u8 Collision = 0;
+	int NumSprites = level.Sprites.size();
+
+	bool EditMode = false;
+
+	bool EisDown;
+	bool QisDown;
+	bool SisDown;
+	bool TabisDown;
+	bool F2isDown;
 
 	bool GameRunning = true;
 	while (GameRunning) {
+
+		MouseState MS = InputManager::Get().GetMouseState(Renderer.Window);
+
 		//High res timer stuff, will be abstracted later.
 		//Game should have access to DeltaTime only.
 		LastTime = Time;
@@ -191,42 +166,143 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 		//Update Level HERE
 
-		if (InputManager::Get().GetKeyState('S')) {
-			AnimY += (90 * DeltaTime);
-			AnimDirection = 0;
-			Renderer.DrawSprite(&TestAnimation, 0, 0, 48, 64, (int)AnimX, (int)AnimY, true);
-		}
-		else if (InputManager::Get().GetKeyState('W')) {
-			AnimY -= (90 * DeltaTime);
-			AnimDirection = 2;
-			Renderer.DrawSprite(&TestAnimationBack, 0, 0, 48, 64, (int)AnimX, (int)AnimY, true);
-		}
-		else
-		{
-			if (AnimDirection == 0) {
-				Renderer.DrawSprite(&AnimStill, 0, 0, 48, 64, (int)AnimX, (int)AnimY, true);
-			}
-			else {
-				Renderer.DrawSprite(&AnimStillBack, 0, 0, 48, 64, (int)AnimX, (int)AnimY, true);
 
-			}
-		}
-
-#pragma loop(hint_parallel(6))
-		for (int i = 0; i < 6; i++) {
+		for (int i = 0; i < 3; i++) {
 			level.UpdateChunk(ChunksToDraw[i].X, ChunksToDraw[i].Y, DeltaTime, LevelGeometry);
+		}
+
+		for (int i = 0; i < 3; i++) {
 			level.DrawChunk(&Renderer, ChunksToDraw[i].X, ChunksToDraw[i].Y);
 		}
 
-		for (int i = 0; i < GameObjects.size(); i++){
-			GameObject* Object = GameObjects[i];
-			Object->Update(DeltaTime, LevelGeometry);
-			Object->Draw(&Renderer);
+		for (int i = 0; i < 3; i++) {
+			level.DrawChunkEntities(&Renderer, ChunksToDraw[i].X, ChunksToDraw[i].Y);
+		}
 
+
+		if (InputManager::Get().GetKeyState(VK_F2)) {
+			if (!F2isDown) {
+				F2isDown = true;
+
+				EditMode = !EditMode;
+			}
+		}
+		else {
+			F2isDown = false;
+		}
+
+
+		if (EditMode) {
+
+			if (MS.Btn1) {
+				int X = MS.x / 32;
+				int Y = MS.y / 32;
+
+				int ChunkX = X / 16;
+				int ChunkY = Y / 16;
+
+				int LocalX = X % 16;
+				int LocalY = Y % 16 + 1;
+
+				Chunk* C = level.GetChunk(ChunkX, ChunkY);
+
+				C->Grid[16 * LocalY + LocalX] = { SelectedSprite, Collision };
+
+				LevelGeometry = {};
+
+				for (auto Chunk : ChunksToDraw) {
+
+					std::vector <iRect> NewGeometry = level.GenerateCollisionGeometryFromChunk(Chunk.X, Chunk.Y);
+					LevelGeometry.insert(LevelGeometry.end(), NewGeometry.begin(), NewGeometry.end());
+
+				}
+			}
+
+			if (MS.Btn2) {
+				int X = MS.x / 32;
+				int Y = MS.y / 32;
+
+				int ChunkX = X / 16;
+				int ChunkY = Y / 16;
+
+				int LocalX = X % 16;
+				int LocalY = Y % 16 + 1;
+
+				Chunk* C = level.GetChunk(ChunkX, ChunkY);
+
+				C->Grid[16 * LocalY + LocalX] = { 0, 0 };
+
+				LevelGeometry = {};
+
+				for (auto Chunk : ChunksToDraw) {
+
+					std::vector <iRect> NewGeometry = level.GenerateCollisionGeometryFromChunk(Chunk.X, Chunk.Y);
+					LevelGeometry.insert(LevelGeometry.end(), NewGeometry.begin(), NewGeometry.end());
+
+				}
+			}
+
+			u32 BackgroundColor = Collision ? 0x00ff0000 : 0x0000ff00;
+
+			if (InputManager::Get().GetKeyState('Q')) {
+				if (!QisDown) {
+					QisDown = true;
+					if (SelectedSprite > 0) SelectedSprite--;
+				}
+			}
+			else {
+				QisDown = false;
+			}
+
+			if (InputManager::Get().GetKeyState('E')) {
+				if (!EisDown) {
+					EisDown = true;
+					if (SelectedSprite < NumSprites - 1) SelectedSprite++;
+				}
+			}
+			else {
+				EisDown = false;
+			}
+
+			if (InputManager::Get().GetKeyState(VK_TAB)) {
+				if (!TabisDown) {
+					TabisDown = true;
+
+					Collision = !Collision;
+				}
+			}
+			else {
+				TabisDown = false;
+			}
+
+			if (InputManager::Get().GetKeyState('S')) {
+				if (!SisDown) {
+					SisDown = true;
+
+					if (InputManager::Get().GetKeyState(VK_CONTROL)) {
+						OutputDebugStringA("Saving Level...");
+
+
+
+						std::ofstream Output("level.bin", std::ofstream::binary);
+						for (int i = 0; i < 256; i++)
+							Output.write((char*)&level.GetChunk(0, 0)->Grid[i], 3);
+
+					}
+				}
+			}
+			else {
+				SisDown = false;
+			}
+
+			Renderer.DrawRectangle(Renderer.Config.RenderResX - 66, Renderer.Config.RenderResY - 66, 36, 36, BackgroundColor);
+
+			if (SelectedSprite != 0) {
+				Renderer.DrawSprite(&level.Sprites[SelectedSprite], Renderer.Config.RenderResX - 64, Renderer.Config.RenderResY - 64);
+			}
 		}
 
 		if(!PlatformLayer.Update(DeltaTime)) GameRunning = false;
-		//Renderer.SetCameraPosition({ (int)Player.Position.X - 512, (int)Player.Position.Y - 300 });
 	}
 
 	return 0;

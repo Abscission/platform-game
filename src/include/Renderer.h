@@ -35,7 +35,7 @@ struct RendererConfig{
 	bool Fullscreen;
 };
 
-class Sprite {
+class _Sprite {
 public:
 	bool Load(AssetFile AssetFile, int id);
 
@@ -47,24 +47,35 @@ public:
 	unsigned int *Data;
 	unsigned int length;
 
-	~Sprite();
+	~_Sprite();
 };
 
-class AnimatedSprite {
+class Sprite {
 public:
+	bool Load(AssetFile Asset, int id);
 	bool Load(AssetFile Asset, int start, int amount);
+
+	bool isAnimated;
 
 	int CurrentFrame;
 	int NumberOfFrames;
 	int Period;
 
+	int Width;
+	int Height;
+
 	u32 CreationTime;
 
-	Sprite* Frames;
+	_Sprite* Frames;
 };
+
 
 bool ResizeSprite(Sprite* Sprite, int W, int H);
 bool ResizeSprite(Sprite* Sprite, int W);
+
+
+bool ResizeSprite(_Sprite* Sprite, int W, int H);
+bool ResizeSprite(_Sprite* Sprite, int W);
 
 class Renderer {
 private:
@@ -72,11 +83,12 @@ private:
 	HINSTANCE Instance;
 	HDC DeviceContext;
 	Win32ScreenBuffer Buffer;
-	RendererConfig Config;
 	IVec2 CameraPos;
 
 public:
 	HWND Window;
+	RendererConfig Config;
+
 	bool OpenWindow(int Width, int Height, char* Title);
 
 	void SetCameraPosition(IVec2 Position);
@@ -88,15 +100,17 @@ public:
 
 	IVec2 GetCameraPosition() { return CameraPos; };
 
+	void DrawSprite(_Sprite* Spr, int X, int Y);
+	void DrawSprite(_Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY);
+	void DrawSprite(_Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend);
+	
 	void DrawSprite(Sprite* Spr, int X, int Y);
 	void DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY);
 	void DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend);
-	
-	void DrawSprite(AnimatedSprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend);
 
-	void DrawSpriteWC(Sprite* Spr, int X, int Y);
+	//void DrawSpriteWC(_Sprite* Spr, int X, int Y);
 	
-	void DrawSpriteRectangle(int X, int Y, int Width, int Height, Sprite* Spr);
+	void DrawSpriteRectangle(int X, int Y, int Width, int Height, _Sprite* Spr);
 
 	void DrawRectangle(int X, int Y, int Width, int Height, int Color);
 	
