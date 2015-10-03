@@ -5,6 +5,7 @@
 #include "Types.h"
 #include <vector>
 
+#include "Types.h"
 #include "List.h"
 #include "Renderer.h"
 #include "GameObject.h"
@@ -19,8 +20,7 @@ struct Chunk {
 	u16 Y;
 	GridSquare Grid[16*16];
 
-	DoubleLinkedList<GameObject> Entities;
-	//GameObject* Entities[32];
+	std::vector<iRect>* Geometry;
 
 	Chunk* Collission;
 };
@@ -31,13 +31,14 @@ private:
 public:
 
 	//These may be private when done!
-
+	
 	std::vector<Sprite> Sprites;
 	u32 LookupLocation(u16 X, u16 Y);
 	Chunk** Chunks;
 
 	//Public here
 
+	std::vector<IVec2> ExistingChunks;
 	DoubleLinkedList<GameObject> Entities;
 
 	IVec2 GetChunkFromLocation(IVec2 Location) {
@@ -52,12 +53,17 @@ public:
 	u16 Width;
 	u16 Height;
 
-	void SetChunk(u16 X, u16 Y, Chunk* C);
+	Chunk* SetChunk(u16 X, u16 Y, Chunk* C);
 	Chunk* GetChunk(u16 X, u16 Y);
 
 	std::vector<iRect> GenerateCollisionGeometryFromChunk(u16 X, u16 Y);
+	std::vector<iRect> GenerateCollisionGeometryFromChunk(Chunk* C);
+
+	void SetChunkGeometry(Chunk* C);
 
 	void LoadFromAsset(Asset asset);
+
+	void Update(double DeltaTime, std::vector<IVec2>& Geometry);
 
 	void UpdateChunk(u16 X, u16 Y, double DeltaTime, std::vector<iRect>& Geometry);
 
@@ -65,5 +71,5 @@ public:
 
 	void DrawChunk(Renderer* Renderer, u16 X, u16 Y);
 
-	void DrawChunkEntities(Renderer* Renderer, u16 X, u16 Y);
+	void DrawChunkCollisionGeometry(Renderer* Renderer, u16 X, u16 Y);
 };

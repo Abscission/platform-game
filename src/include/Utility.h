@@ -28,6 +28,7 @@ Win32FileContents ReadEntireFile(const char * Filename);
 //Sum all the integers between A and B
 #define SUMBETWEEN(A, B) (SUMTO(B) - SUMTO(A - 1))
 
+u32 rgba(u8 r, u8 g, u8 b, u8 a);
 
 //Asserions
 #ifdef _DEBUG

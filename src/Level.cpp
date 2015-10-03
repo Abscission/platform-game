@@ -29,13 +29,13 @@ u32 Level::LookupLocation(u16 X, u16 Y) {
 	return (Y * UINT16_MAX + X) % UINT16_MAX;
 }
 
-void Level::SetChunk(u16 X, u16 Y, Chunk* C) {
+Chunk* Level::SetChunk(u16 X, u16 Y, Chunk* C) {
 
 	//Create and initialize a new chunk
 	Chunk* NewChunk = new Chunk();
 	memcpy((void*)NewChunk, (void*)C, sizeof(*C));
 
-	NewChunk->Entities = {};
+	//NewChunk->Entities = {};
 
 	NewChunk->X = X;
 	NewChunk->Y = Y;
@@ -59,60 +59,99 @@ void Level::SetChunk(u16 X, u16 Y, Chunk* C) {
 	}
 
 	*ch = NewChunk;
+
+	ExistingChunks.push_back({ X, Y });
+
+	SetChunkGeometry(*ch);
+
+	return *ch;
 }
 
 Chunk* Level::GetChunk(u16 X, u16 Y){
 	Chunk* Location = Chunks[LookupLocation(X, Y)];
+	
 	if (Location == nullptr) {
 		Chunk* C = MemoryManager::AllocateMemory<Chunk>(1);
-		C->Entities = *(new DoubleLinkedList<GameObject>());
-		SetChunk(X, Y, C);
-		return C;
+		return SetChunk(X, Y, C);
 	}
 	while (Location->X != X || Location->Y != Y) {
 		if (Location->Collission == nullptr) {
-			Chunk* C = MemoryManager::AllocateMemory<Chunk>(1);
-			C->Entities = *(new DoubleLinkedList<GameObject>());
-			SetChunk(X, Y, C);
-			return C;
+  			Chunk* C = MemoryManager::AllocateMemory<Chunk>(1);
+			return SetChunk(X, Y, C);
 		}
+
 		Location = Location->Collission;
 	}
 	return Location;
 }
 
-#define ChunkLoc(x,y) (y*16+x)
+#define ChunkLoc(x,y) ((y)*16+(x))
 
 std::vector<iRect> Level::GenerateCollisionGeometryFromChunk(u16 X, u16 Y) {
 	Chunk* C = GetChunk(X, Y);
+	return GenerateCollisionGeometryFromChunk(C);
+}
 
+std::vector<iRect> Level::GenerateCollisionGeometryFromChunk(Chunk* C) {
 	std::vector<iRect> CollisionGeometry;
 
 	if (C == nullptr) {
-		return CollisionGeometry;
+		return{};
 	}
+
+	u16 X = C->X;
+	u16 Y = C->Y;
 
 	bool Visited[16 * 16] = {};
 
 	for (int y = 0; y < 16; y++) {
 		for (int x = 0; x < 16; x++) {
-			if (C->Grid[ChunkLoc(x, y)].Collision &!Visited[ChunkLoc(x, y)]) {
+			if (C->Grid[ChunkLoc(x, y)].Collision &! Visited[ChunkLoc(x, y)]) {
 				int Top = (y + Y * 16) * 32;
 				int Left = (x + X * 16) * 32;
 				int Width = 32;
+				int Height = 32;
 
-				int n = 0;
-				while (C->Grid[ChunkLoc(x + (++n), y)].Collision) {
+				int n = 1;
+				while (C->Grid[ChunkLoc(x + n, y)].Collision &! Visited[ChunkLoc(x + n, y)]) {
+					if (x + n >= 16) break;
 					Visited[ChunkLoc(x + n, y)] = true;
+					n++;
 					Width += 32;
 				}
 
-				CollisionGeometry.push_back({ Left, Top, Width, 32} );
+				int m = 1;
+				while (C->Grid[ChunkLoc(x, y + m)].Collision &! Visited[ChunkLoc(x, y + m)]) {
+					if (y + m >= 16) break;
+
+					bool wide = true;
+					for (int i = 0; i < Width / 32; i++) {
+						if (!C->Grid[ChunkLoc(x + i, y + m)].Collision) {
+							wide = false;
+							break;
+						}
+					}
+
+					if (!wide) break;
+
+					for (int i = 0; i < Width / 32; i++)
+						Visited[ChunkLoc(x + i, y + m)] = true;
+					m++;
+					Height += 32;
+				}
+
+				CollisionGeometry.push_back({ Left, Top, Width, Height });
 			}
 		}
 	}
 
 	return CollisionGeometry;
+}
+
+void Level::SetChunkGeometry(Chunk* C) {
+	if (C->Geometry) delete C->Geometry;
+	C->Geometry = new std::vector<iRect>;
+	*C->Geometry = GenerateCollisionGeometryFromChunk(C);
 }
 
 void Level::LoadFromAsset(Asset asset) {
@@ -134,6 +173,8 @@ void Level::LoadFromAsset(Asset asset) {
 
 	u32 NumberOfAssetFiles = *(u32*)&data[fp];
 	fp += 4;
+
+	Sprites.push_back({});
 
 	for (int i = 0; i < NumberOfAssetFiles; i++) {
 		char * AssetFileName = (char *)(data + fp);
@@ -171,7 +212,7 @@ void Level::LoadFromAsset(Asset asset) {
 
 		Chunk Chunk = Chunks[i];
 
-		Chunks[i].Entities = *(new DoubleLinkedList<GameObject>());
+		//Chunks[i].Entities = *(new DoubleLinkedList<GameObject>());
 
 		for (int j = 0; j < 256; j++) {
 			Chunk.Grid[j] = { *(u16*)&data[fp], *(u8*)&data[fp + 2] };
@@ -179,6 +220,28 @@ void Level::LoadFromAsset(Asset asset) {
 		}
 
 		SetChunk(X, Y, &Chunk);
+		
+	}
+}
+
+void Level::Update(double DeltaTime, std::vector<IVec2>& Chunks) {
+
+	std::vector<iRect> Geometry;
+
+	for (auto C : Chunks) {
+		auto Chunk = GetChunk(C.X, C.Y);
+
+		if (Chunk == nullptr) continue;
+
+		//std::vector<iRect> ChunkGeometry = GenerateCollisionGeometryFromChunk(Chunk);
+		Geometry.insert(Geometry.end(), Chunk->Geometry->begin(), Chunk->Geometry->end());
+	}
+
+	auto Entity = Entities.First;
+
+	while (Entity != nullptr) {
+		Entity->Item->Update(DeltaTime, Geometry);
+		Entity = Entity->Next;
 	}
 }
 
@@ -189,19 +252,19 @@ void Level::UpdateChunk(u16 X, u16 Y, double DeltaTime, std::vector<iRect>& Geom
 		return;
 	}
 
-	auto Entity = C->Entities.First;
+	//auto Entity = C->Entities.First;
 
-	while (Entity != nullptr) {
-		Entity->Item->Update(DeltaTime, Geometry);
-		Entity = Entity->Next;
-	}
+	//while (Entity != nullptr) {
+	//	Entity->Item->Update(DeltaTime, Geometry);
+	//	Entity = Entity->Next;
+	//}
 }
 
 void Level::SpawnEntity(GameObject * Object, u32 X, u32 Y) {
 	Object->Position = { (float)X, (float)Y };
 	Entities.Insert(Object);
 	
-	int ChunkX = X / 16;
+	/*int ChunkX = X / 16;
 	int ChunkY = Y / 16;
 
 	Chunk* C = GetChunk(ChunkX, ChunkY);
@@ -209,8 +272,8 @@ void Level::SpawnEntity(GameObject * Object, u32 X, u32 Y) {
 	if (C == nullptr) {
 		return;
 	}
-
-	C->Entities.Insert(Object);
+	*/
+	//C->Entities.Insert(Object);
 }
 
 void Level::DrawChunk(Renderer* Renderer, u16 X, u16 Y) {
@@ -228,7 +291,19 @@ void Level::DrawChunk(Renderer* Renderer, u16 X, u16 Y) {
 		}
 	}
 }
+void Level::DrawChunkCollisionGeometry(Renderer * Renderer, u16 X, u16 Y){
+	Chunk* C = GetChunk(X, Y);
 
+	if (C == nullptr) {
+		return;
+	}
+
+	for (auto R : *C->Geometry) {
+		Renderer->DrawRectangleBlendWS(R.X + 2, R.Y + 2, R.W - 4, R.H - 4, rgba(255, 0, 255, 128));
+	}
+}
+
+/*
 void Level::DrawChunkEntities(Renderer * Renderer, u16 X, u16 Y){
 	Chunk* C = GetChunk(X, Y);
 
@@ -236,10 +311,11 @@ void Level::DrawChunkEntities(Renderer * Renderer, u16 X, u16 Y){
 		return;
 	}
 
-	auto Entity = C->Entities.First;
+	//auto Entity = C->Entities.First;
 
 	while (Entity != nullptr) {
 		Entity->Item->Draw(Renderer);
 		Entity = Entity->Next;
 	}
 }
+*/

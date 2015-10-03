@@ -64,7 +64,7 @@ void Player::Update(double DeltaTime, std::vector<iRect> Collision) {
 	}
 
 	//Respawn
-	if (Position.Y > 2000) {
+	if (Position.Y > 20000) {
 		Position = { 50, -100 };
 		Velocity = { 0, 0 };
 	}

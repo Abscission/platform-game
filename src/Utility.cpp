@@ -57,3 +57,8 @@ std::string Trim(std::string str) {
 
 	return str;
 }
+
+u32 rgba(u8 r, u8 g, u8 b, u8 a) {
+	float alpha = a / 255.f;
+	return a << 24 | (int)(r * alpha) << 16 | (int)(g * alpha) << 8 | (int)(b * alpha);
+}

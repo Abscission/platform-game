@@ -28,6 +28,20 @@ typedef double float64;
 struct IVec2 {
 	int X;
 	int Y;
+
+	inline IVec2 operator+(const IVec2& b) {
+		IVec2 a = *this;
+		a.X += b.X;
+		a.Y += b.Y;
+		return a;
+	}
+
+	inline IVec2 operator-(const IVec2& b) {
+		IVec2 a = *this;
+		a.X -= b.X;
+		a.Y -= b.Y;
+		return a;
+	}
 };
 
 struct V2_16 {

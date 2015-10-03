@@ -19,6 +19,44 @@ bool ShouldClose = false;
 static int MonitorCount;
 static Rect Monitors[8];
 
+
+DWORD WINAPI SlaveThreadProc(LPVOID sArgs) {
+	SlaveArgs* Args = (SlaveArgs*) sArgs;
+	
+	OutputDebugStringA("Spawning renderer helper thread!");
+
+	while (!*Args->ShouldClose) {
+		if (Args->Buffer1->shouldDraw) {
+			Args->Buffer1->isDrawing = true;
+			Args->Buffer1->shouldDraw = false;
+
+			StretchDIBits(*Args->DeviceContext, 0, 0, Args->Config->WindowResX, Args->Config->WindowResY, 0, 0, Args->Buffer1->Width, Args->Buffer1->Height, Args->Buffer1->Memory, &Args->Buffer1->Info, DIB_RGB_COLORS, SRCCOPY);
+
+			for (int i = 0; i < Args->Renderer->Config.RenderResX * Args->Renderer->Config.RenderResY; i++) Args->Buffer1->Memory[i] = rgba(102, 102, 204, 255);
+			//Args->Renderer->DrawRectangle(0, 0, Args->Config->RenderResX, Args->Config->RenderResY, rgba(102, 102, 204, 255));
+
+			Args->Buffer1->isDrawing = false;
+		}
+
+		if (Args->Buffer2->shouldDraw) {
+			Args->Buffer2->isDrawing = true;
+			Args->Buffer2->shouldDraw = false;
+
+			StretchDIBits(*Args->DeviceContext, 0, 0, Args->Config->WindowResX, Args->Config->WindowResY, 0, 0, Args->Buffer2->Width, Args->Buffer2->Height, Args->Buffer2->Memory, &Args->Buffer2->Info, DIB_RGB_COLORS, SRCCOPY);
+			//Args->Renderer->DrawRectangle(0, 0, Args->Config->RenderResX, Args->Config->RenderResY, rgba(102, 102, 204, 255));
+
+			for (int i = 0; i < Args->Renderer->Config.RenderResX * Args->Renderer->Config.RenderResY; i++) Args->Buffer2->Memory[i] = rgba(102, 102, 204, 255);
+
+
+			Args->Buffer2->isDrawing = false;
+		}
+	}
+
+	OutputDebugStringA("Killing renderer helper thread!");
+
+	return 1;
+}
+
 //The window callback, this is what processes messages from our windows
 LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPARAM lParam) {
 
@@ -212,6 +250,11 @@ void Renderer::SetCameraPosition(IVec2 Position) {
 
 bool Renderer::Initialize() {
 
+	Buffer1 = new Win32ScreenBuffer;
+	Buffer2 = new Win32ScreenBuffer;
+
+	Buffer = Buffer1;
+
 	SetCameraPosition({ 0, 0 });
 
 	ConfigFile GraphicsConfig("config/Graphics.ini");
@@ -268,27 +311,53 @@ bool Renderer::Initialize() {
 	this->OpenWindow(Config.WindowResX, Config.WindowResY, "Title");
 	this->DeviceContext = GetWindowDC(this->Window);
 
+	while (ShowCursor(false) >= 0);
 
 	//Create a DIB to render to
-	if (Buffer.Memory) {
-		VirtualFree(Buffer.Memory, 0, MEM_RELEASE);
+	if (Buffer->Memory) {
+		VirtualFree(Buffer->Memory, 0, MEM_RELEASE);
 	}
 
-	Buffer.Width = Config.RenderResX;
-	Buffer.Height = Config.RenderResY;
-	Buffer.BytesPerPixel = 4;
+	Buffer->Width = Config.RenderResX;
+	Buffer->Height = Config.RenderResY;
+	Buffer->BytesPerPixel = 4;
 
-	Buffer.Info.bmiHeader.biSize = sizeof(Buffer.Info.bmiHeader);
-	Buffer.Info.bmiHeader.biWidth = Buffer.Width;
-	Buffer.Info.bmiHeader.biHeight = -Buffer.Height;
-	Buffer.Info.bmiHeader.biPlanes = 1;
-	Buffer.Info.bmiHeader.biBitCount = 32;
-	Buffer.Info.bmiHeader.biCompression = BI_RGB;
+	Buffer->Info.bmiHeader.biSize = sizeof(Buffer->Info.bmiHeader);
+	Buffer->Info.bmiHeader.biWidth = Buffer->Width;
+	Buffer->Info.bmiHeader.biHeight = -Buffer->Height;
+	Buffer->Info.bmiHeader.biPlanes = 1;
+	Buffer->Info.bmiHeader.biBitCount = 32;
+	Buffer->Info.bmiHeader.biCompression = BI_RGB;
 
-	int MemorySize = Buffer.Width * Buffer.Height * Buffer.BytesPerPixel;
+	if (Buffer2->Memory) {
+		VirtualFree(Buffer->Memory, 0, MEM_RELEASE);
+	}
 
-//	BM = CreateDIBSection(DeviceContext, &Buffer.Info, DIB_RGB_COLORS, (void**)&Buffer.Memory, NULL, 0);
-	Buffer.Memory = (int*)MemoryManager::AllocateMemory(MemorySize);
+	Buffer2->Width = Config.RenderResX;
+	Buffer2->Height = Config.RenderResY;
+	Buffer2->BytesPerPixel = 4;
+
+	Buffer2->Info.bmiHeader.biSize = sizeof(Buffer->Info.bmiHeader);
+	Buffer2->Info.bmiHeader.biWidth = Buffer->Width;
+	Buffer2->Info.bmiHeader.biHeight = -Buffer->Height;
+	Buffer2->Info.bmiHeader.biPlanes = 1;
+	Buffer2->Info.bmiHeader.biBitCount = 32;
+	Buffer2->Info.bmiHeader.biCompression = BI_RGB;
+
+	int MemorySize = Buffer->Width * Buffer->Height * Buffer->BytesPerPixel;
+
+//	BM = CreateDIBSection(DeviceContext, &Buffer->Info, DIB_RGB_COLORS, (void**)&Buffer->Memory, NULL, 0);
+	Buffer->Memory = (int*)MemoryManager::AllocateMemory(MemorySize);
+	Buffer2->Memory = (int*)MemoryManager::AllocateMemory(MemorySize);
+
+	SlaveArguments.Buffer1 = Buffer1;
+	SlaveArguments.Buffer2 = Buffer2;
+	SlaveArguments.Config = &Config;
+	SlaveArguments.DeviceContext = &DeviceContext;
+	SlaveArguments.Renderer = this;
+	SlaveArguments.ShouldClose = &ShouldClose;
+
+	//CreateThread(NULL, 0, SlaveThreadProc, (void*)&SlaveArguments, 0, 0);
 
 	return 0;
 }
@@ -296,25 +365,103 @@ bool Renderer::Initialize() {
 bool Renderer::Refresh() {
 	//Now update the screen
 	//Stretch to the screen
-	StretchDIBits(DeviceContext, 0, 0, Config.WindowResX, Config.WindowResY, 0, 0, Buffer.Width, Buffer.Height, Buffer.Memory, &Buffer.Info, DIB_RGB_COLORS, SRCCOPY);
+	StretchDIBits(DeviceContext, 0, 0, Config.WindowResX, Config.WindowResY, 0, 0, Buffer->Width, Buffer->Height, Buffer->Memory, &Buffer->Info, DIB_RGB_COLORS, SRCCOPY);
 	
-	DrawRectangle(0, 0, Config.RenderResX, Config.RenderResY, 0xbbbbbbff);
-
+	DrawRectangle(0, 0, Config.RenderResX, Config.RenderResY, rgba(102,102,204,255));
 	return !ShouldClose;
 }
 
-void Renderer::DrawRectangle(int X, int Y, int Width, int Height, int Color) {
-	for (int y = 0; y < Height; y++){
-		int Down = Buffer.Width * (Y + y);
+void Renderer::DrawRectangle(int X, int Y, int Width, int Height, unsigned int Color) {
+
+	if (X < 0) {
+		Width += X;
+		X = 0;
+		if (Width <= 0) return;
+	}
+
+	if (Y < 0) {
+		Height += Y;
+		Y = 0;
+		if (Height <= 0) return;
+	}
+
+	if (X + Width > Buffer->Width) {
+		Width = Buffer->Width - X;
+		X = Buffer->Width - Width;
+
+		if (Width <= 0) return;
+	}
+
+	if (Y + Height > Buffer->Height) {
+		Height = Buffer->Height - Y;
+		Y = Buffer->Height - Height;
+
+		if (Height <= 0) return;
+	}
+
+	for (int y = 0; y < Height; y++) {
+		int Down = Buffer->Width * (Y + y);
 		for (int x = 0; x < Width; x++) {
-			((int*)Buffer.Memory)[Down + (X + x)] = Color;
+			((unsigned int*)Buffer->Memory)[Down + (X + x)] = Color;
 		}
 	}
 }
 
+void Renderer::DrawRectangleBlend(int X, int Y, int Width, int Height, unsigned int Color) {
+
+	if (X < 0) {
+		Width += X;
+		X = 0;
+		if (Width <= 0) return;
+	}
+
+	if (Y < 0) {
+		Height += Y;
+		Y = 0;
+		if (Height <= 0) return;
+	}
+
+	if (X + Width > Buffer->Width) {
+		Width = Buffer->Width - X;
+		X = Buffer->Width - Width;
+
+		if (Width <= 0) return;
+	}
+
+	if (Y + Height > Buffer->Height) {
+		Height = Buffer->Height - Y;
+		Y = Buffer->Height - Height;
+
+		if (Height <= 0) return;
+	}
+
+	for (int y = 0; y < Height; y++){
+		int Down = Buffer->Width * (Y + y);
+		for (int x = 0; x < Width; x++) {
+			Blend(&Color, (unsigned int*)(Buffer->Memory + Down + (X + x)));
+		}
+	}
+}
+
+void Renderer::DrawRectangleWS(int X, int Y, int Width, int Height, unsigned int Color) {
+	X -= CameraPos.X;
+	Y -= CameraPos.Y;
+
+	DrawRectangle(X, Y, Width, Height, Color);
+}
+
+void Renderer::DrawRectangleBlendWS(int X, int Y, int Width, int Height, unsigned int Color) {
+
+	X -= CameraPos.X;
+	Y -= CameraPos.Y;
+
+	DrawRectangleBlend(X, Y, Width, Height, Color);
+
+}
+
 void Renderer::DrawSpriteRectangle(int X, int Y, int Width, int Height, _Sprite* Spr) {
 	for (int y = Y; y < Y + Height; y+= Spr->Width){
-		int Down = Buffer.Width * (Y + y);
+		int Down = Buffer->Width * (Y + y);
 		for (int x = X; x < X + Width; x += Spr->Width) {
 
 			x -= CameraPos.X;
@@ -350,59 +497,7 @@ void Renderer::DrawSprite(_Sprite* Spr, int SrcX, int SrcY, int Width, int Heigh
 	DstX -= CameraPos.X;
 	DstY -= CameraPos.Y;
 
-	if (DstX < 0) {
-		SrcX -= DstX;
-		Width += DstX;
-
-		DstX = 0;
-		if (Width <= 0) return;
-	}
-
-	if (DstY < 0){	
-		SrcY -= DstY;
-		Height += DstY;
-
-		DstY = 0;
-		if (Height <= 0) return;
-	}
-
-	if (DstX + Width > Buffer.Width) {
-		Width = Buffer.Width - DstX;
-		DstX = Buffer.Width - Width;
-
-		if (Width <= 0) return;
-	}
-
-	if (DstY + Height > Buffer.Height) {
-		Height = Buffer.Height - DstY;
-		DstY = Buffer.Height - Height;
-
-		if (Height <= 0) return;
-	}
-
-	for (register int y = SrcY; y < (SrcY + Height); y++){
-		if ((ShouldBlend && Spr->hasTransparency) || true) {
-			//If the pixel should be drawn with transparency itterate over each pixel
-			for (register int x = SrcX; x < (SrcX + Width); x++) {
-				unsigned int ARGB = Spr->Data[y * Spr->Width + x];
-				unsigned char* SA = ((unsigned char*)&ARGB) + 3;
-
-				if (*SA == 0) { //If the pixel is fully transparent, skip to the next loop itteration as no rendering is needed
-					continue;
-				}
-				else if (*SA == 255) { //If the pixel has no transparency, copy it into the destination
-					((unsigned int*)Buffer.Memory)[((y - SrcY) + DstY) * Buffer.Width + ((x - SrcX) + DstX)] = ARGB;
-				}
-				else { //Otherwise blend it properly
-					Blend(&ARGB, &((unsigned int*)Buffer.Memory)[((y - SrcY) + DstY) * Buffer.Width + ((x - SrcX) + DstX)]);
-				}
-			}
-		}
-		else { 
-			//If the sprite has no transparency, or we are drawing without blending enabled, use memcpy to copy entire rows at once for speed
-			memcpy((void*)&((unsigned int*)Buffer.Memory)[((y - SrcY) + DstY) * Buffer.Width + DstX], (void*)&(Spr->Data[y * Spr->Width]), Width * 4);
-		}
-	}
+	DrawSpriteSS(Spr, SrcX, SrcY, Width, Height, DstX, DstY, ShouldBlend);
 }
 
 void Renderer::DrawSprite(Sprite * Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend) {
@@ -415,6 +510,91 @@ void Renderer::DrawSprite(Sprite * Spr, int SrcX, int SrcY, int Width, int Heigh
 		Frame = 0;
 	}
 	DrawSprite(Spr->Frames + Frame, SrcX, SrcY, Width, Height, DstX, DstY, Blend);
+}
+
+
+void Renderer::DrawSpriteSS(Sprite * Spr, int X, int Y) {
+	DrawSpriteSS(Spr, 0, 0, Spr->Width, Spr->Height, X, Y, true);
+}
+
+void Renderer::DrawSpriteSS(Sprite * Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY) {
+	DrawSpriteSS(Spr, SrcX, SrcY, Width, Height, DstX, DstY, true);
+}
+
+void Renderer::DrawSpriteSS(Sprite * Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend) {
+	int Frame;
+
+	if (Spr->isAnimated) {
+		Frame = ((GetTickCount() - Spr->CreationTime) / (Spr->Period / Spr->NumberOfFrames)) % Spr->NumberOfFrames;
+	}
+	else {
+		Frame = 0;
+	}
+	DrawSpriteSS(Spr->Frames + Frame, SrcX, SrcY, Width, Height, DstX, DstY, Blend);
+}
+
+void Renderer::DrawSpriteSS(_Sprite * Spr, int X, int Y) {
+	DrawSpriteSS(Spr, 0, 0, Spr->Width, Spr->Height, X, Y, true);
+}
+
+void Renderer::DrawSpriteSS(_Sprite * Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY) {
+	DrawSpriteSS(Spr, SrcX, SrcY, Width, Height, DstX, DstY, true);
+}
+
+void Renderer::DrawSpriteSS(_Sprite * Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool ShouldBlend) {
+	if (DstX < 0) {
+		SrcX -= DstX;
+		Width += DstX;
+
+		DstX = 0;
+		if (Width <= 0) return;
+	}
+
+	if (DstY < 0) {
+		SrcY -= DstY;
+		Height += DstY;
+
+		DstY = 0;
+		if (Height <= 0) return;
+	}
+
+	if (DstX + Width > Buffer->Width) {
+		Width = Buffer->Width - DstX;
+		DstX = Buffer->Width - Width;
+
+		if (Width <= 0) return;
+	}
+
+	if (DstY + Height > Buffer->Height) {
+		Height = Buffer->Height - DstY;
+		DstY = Buffer->Height - Height;
+
+		if (Height <= 0) return;
+	}
+
+	for (register int y = SrcY; y < (SrcY + Height); y++) {
+		if ((ShouldBlend && Spr->hasTransparency) || true) {
+			//If the pixel should be drawn with transparency itterate over each pixel
+			for (register int x = SrcX; x < (SrcX + Width); x++) {
+				unsigned int ARGB = Spr->Data[y * Spr->Width + x];
+				unsigned char* SA = ((unsigned char*)&ARGB) + 3;
+
+				if (*SA == 0) { //If the pixel is fully transparent, skip to the next loop itteration as no rendering is needed
+					continue;
+				}
+				else if (*SA == 255) { //If the pixel has no transparency, copy it into the destination
+					((unsigned int*)Buffer->Memory)[((y - SrcY) + DstY) * Buffer->Width + ((x - SrcX) + DstX)] = ARGB;
+				}
+				else { //Otherwise blend it properly
+					Blend(&ARGB, &((unsigned int*)Buffer->Memory)[((y - SrcY) + DstY) * Buffer->Width + ((x - SrcX) + DstX)]);
+				}
+			}
+		}
+		else {
+			//If the sprite has no transparency, or we are drawing without blending enabled, use memcpy to copy entire rows at once for speed
+			memcpy((void*)&((unsigned int*)Buffer->Memory)[((y - SrcY) + DstY) * Buffer->Width + DstX], (void*)&(Spr->Data[y * Spr->Width]), Width * 4);
+		}
+	}
 }
 
 bool Sprite::Load(AssetFile Asset, int id)

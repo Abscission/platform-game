@@ -96,17 +96,18 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	// END TEMPORARY SECTION
 
 	Level level = {};
-	AssetFile LevelAsset("assets/testlevel00.aaf");
+	AssetFile LevelAsset("assets/Level.aaf");
 	level.LoadFromAsset(LevelAsset.GetAsset(0));
 
-	static IVec2 ChunksToDraw[3] = { { 0, 0 }, {0, 1}, {1, 0} };
+	std::vector<IVec2> ChunksToDraw = { { 0, 0 }, {0, 1}, {1, 0}, {1, 1} };
 
-	level.SpawnEntity(&Player, 0, 0);
+	level.SpawnEntity(&Player, 512 * 32, 512);
 
 	std::vector <iRect> LevelGeometry = {};
 
 	for (auto Chunk : ChunksToDraw) {
 
+		
 		std::vector <iRect> NewGeometry = level.GenerateCollisionGeometryFromChunk(Chunk.X, Chunk.Y);
 		LevelGeometry.insert(LevelGeometry.end(), NewGeometry.begin(), NewGeometry.end());
 
@@ -121,12 +122,17 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	int NumSprites = level.Sprites.size();
 
 	bool EditMode = false;
+	bool Paused = false;
+	bool CameraPan = false;
+	bool DrawGeometry = false;
 
 	bool EisDown;
 	bool QisDown;
 	bool SisDown;
 	bool TabisDown;
 	bool F2isDown;
+	bool PisDown;
+	bool CisDown;
 
 	bool GameRunning = true;
 	while (GameRunning) {
@@ -146,6 +152,8 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 		DeltaTime = static_cast<double>(_DeltaTime.QuadPart);
 		DeltaTime *= 1.0e-6;
 
+		if (Paused) DeltaTime = 0;
+
 		Frames++;
 		if ((elapsedTime += DeltaTime) > 1) {
 			//Ghetto Framerate Counter
@@ -164,21 +172,42 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 			GameRunning = false;
 		}
 
-		//Update Level HERE
+		IVec2 CameraPos = Renderer.GetCameraPosition();
 
 
-		for (int i = 0; i < 3; i++) {
-			level.UpdateChunk(ChunksToDraw[i].X, ChunksToDraw[i].Y, DeltaTime, LevelGeometry);
+		ChunksToDraw.clear();
+
+		int camerafirstchunkx = CameraPos.X / 512;
+		int camerafirstchunky = CameraPos.Y / 512;
+	
+		for (int i = 0; i < Renderer.Config.RenderResX / 512 + 2; i++) {
+			for (int j = 0; j < Renderer.Config.RenderResY / 512 + 2; j++) {
+				ChunksToDraw.push_back({ MAX(0, camerafirstchunkx + i),  MAX(0, camerafirstchunky + j) });
+			}
 		}
 
-		for (int i = 0; i < 3; i++) {
-			level.DrawChunk(&Renderer, ChunksToDraw[i].X, ChunksToDraw[i].Y);
+		level.Update(DeltaTime, ChunksToDraw);
+
+		for (auto C : ChunksToDraw) {
+			level.DrawChunk(&Renderer, C.X, C.Y);
 		}
 
-		for (int i = 0; i < 3; i++) {
-			level.DrawChunkEntities(&Renderer, ChunksToDraw[i].X, ChunksToDraw[i].Y);
+		auto E = level.Entities.First;
+		while (E != nullptr) {
+			E->Item->Draw(&Renderer);
+			E = E->Next;
 		}
 
+
+		if (InputManager::Get().GetKeyState('P')) {
+			if (!PisDown) {
+				PisDown = true;
+				Paused = !Paused;
+			}
+		}
+		else {
+			PisDown = false;
+		}
 
 		if (InputManager::Get().GetKeyState(VK_F2)) {
 			if (!F2isDown) {
@@ -194,52 +223,70 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 		if (EditMode) {
 
+			if (InputManager::Get().GetKeyState(VK_LEFT)) {
+				CameraPan = true;
+				Renderer.SetCameraPosition(CameraPos + IVec2{ -10, 0 });
+			}
+
+			if (InputManager::Get().GetKeyState(VK_RIGHT)) {
+				CameraPan = true;
+				Renderer.SetCameraPosition(CameraPos + IVec2{ 10, 0 });
+			}
+
+			if (InputManager::Get().GetKeyState(VK_UP)) {
+				CameraPan = true;
+				Renderer.SetCameraPosition(CameraPos + IVec2{ 0, -10 });
+			}
+
+			if (InputManager::Get().GetKeyState(VK_DOWN)) {
+				CameraPan = true;
+				Renderer.SetCameraPosition(CameraPos + IVec2{ 0, 10 });
+			}
+
+
+
+
 			if (MS.Btn1) {
-				int X = MS.x / 32;
-				int Y = MS.y / 32;
+				int X = (MS.x + CameraPos.X) / 32;
+				int Y = (MS.y + CameraPos.Y + 32) / 32;
 
-				int ChunkX = X / 16;
-				int ChunkY = Y / 16;
+				if (!(X < 0 || Y < 0)) {
 
-				int LocalX = X % 16;
-				int LocalY = Y % 16 + 1;
+					int ChunkX = X / 16;
+					int ChunkY = Y / 16;
 
-				Chunk* C = level.GetChunk(ChunkX, ChunkY);
+					int LocalX = X % 16;
+					int LocalY = Y % 16;
 
-				C->Grid[16 * LocalY + LocalX] = { SelectedSprite, Collision };
+					Chunk* C = level.GetChunk(ChunkX, ChunkY);
 
-				LevelGeometry = {};
-
-				for (auto Chunk : ChunksToDraw) {
-
-					std::vector <iRect> NewGeometry = level.GenerateCollisionGeometryFromChunk(Chunk.X, Chunk.Y);
-					LevelGeometry.insert(LevelGeometry.end(), NewGeometry.begin(), NewGeometry.end());
-
+					if (C != nullptr) {
+						C->Grid[16 * LocalY + LocalX] = { SelectedSprite, Collision };
+						level.SetChunkGeometry(C);
+					}
 				}
 			}
 
 			if (MS.Btn2) {
-				int X = MS.x / 32;
-				int Y = MS.y / 32;
+				int X = (MS.x + CameraPos.X) / 32;
+				int Y = (MS.y + CameraPos.Y + 32) / 32;
 
-				int ChunkX = X / 16;
-				int ChunkY = Y / 16;
+				if (!(X < 0 || Y < 0)) {
 
-				int LocalX = X % 16;
-				int LocalY = Y % 16 + 1;
+					int ChunkX = X / 16;
+					int ChunkY = Y / 16;
 
-				Chunk* C = level.GetChunk(ChunkX, ChunkY);
+					int LocalX = X % 16;
+					int LocalY = Y % 16;
 
-				C->Grid[16 * LocalY + LocalX] = { 0, 0 };
+					Chunk* C = level.GetChunk(ChunkX, ChunkY);
 
-				LevelGeometry = {};
-
-				for (auto Chunk : ChunksToDraw) {
-
-					std::vector <iRect> NewGeometry = level.GenerateCollisionGeometryFromChunk(Chunk.X, Chunk.Y);
-					LevelGeometry.insert(LevelGeometry.end(), NewGeometry.begin(), NewGeometry.end());
-
+					if (C != nullptr) {
+						C->Grid[16 * LocalY + LocalX] = { 0, 0 };
+						level.SetChunkGeometry(C);
+					}
 				}
+
 			}
 
 			u32 BackgroundColor = Collision ? 0x00ff0000 : 0x0000ff00;
@@ -275,6 +322,17 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 				TabisDown = false;
 			}
 
+			if (InputManager::Get().GetKeyState('C')) {
+				if (!CisDown) {
+					CisDown = true;
+
+					DrawGeometry = !DrawGeometry;
+				}
+			}
+			else {
+				CisDown = false;
+			}
+
 			if (InputManager::Get().GetKeyState('S')) {
 				if (!SisDown) {
 					SisDown = true;
@@ -295,10 +353,45 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 				SisDown = false;
 			}
 
+			if (DrawGeometry) {
+				for (auto C : ChunksToDraw) {
+					level.DrawChunkCollisionGeometry(&Renderer, C.X, C.Y);
+				}
+			}
+
 			Renderer.DrawRectangle(Renderer.Config.RenderResX - 66, Renderer.Config.RenderResY - 66, 36, 36, BackgroundColor);
 
+			for (int i = 0; i < Renderer.Config.RenderResX / 32; i++) {
+				Renderer.DrawRectangleBlend((i * 32) - Mod(CameraPos.X, 32) - 1, 0, (CameraPos.X + 32 * i - Mod(CameraPos.X, 32)) % 512 == 0 ? 3 : 1, Renderer.Config.RenderResY, 0x33333333);
+			}
+
+			for (int i = 0; i < Renderer.Config.RenderResY / 32; i++) {
+				Renderer.DrawRectangleBlend(0, (i * 32) - Mod(CameraPos.Y, 32) - 1, Renderer.Config.RenderResX, (CameraPos.Y + 32 * i - Mod(CameraPos.Y, 32)) % 512 == 0 ? 3 : 1, 0x33333333);
+			}
+
 			if (SelectedSprite != 0) {
-				Renderer.DrawSprite(&level.Sprites[SelectedSprite], Renderer.Config.RenderResX - 64, Renderer.Config.RenderResY - 64);
+				Renderer.DrawSpriteSS(&level.Sprites[SelectedSprite], Renderer.Config.RenderResX - 64, Renderer.Config.RenderResY - 64);
+			}
+
+			Renderer.DrawRectangle(MS.x - 16, MS.y + 32 - 1, 32, 2, 0xffffff);
+			Renderer.DrawRectangle(MS.x - 1, MS.y + 32 - 16, 2, 32, 0xffffff);
+		}
+
+		if (!CameraPan) {
+			if (Player.Position.X < Renderer.GetCameraPosition().X + 400) {
+				Renderer.SetCameraPosition(Player.Position.X - 400, Renderer.GetCameraPosition().Y);
+			}
+
+			if (Player.Position.X > (Renderer.GetCameraPosition().X + Renderer.Config.RenderResX) - 400) {
+				Renderer.SetCameraPosition(Player.Position.X + 400 - Renderer.Config.RenderResX, Renderer.GetCameraPosition().Y);
+			}
+
+			if (Player.Position.Y < Renderer.GetCameraPosition().Y + 300) {
+				Renderer.SetCameraPosition(Renderer.GetCameraPosition().X, Player.Position.Y - 300);
+			}
+
+			if (Player.Position.Y > (Renderer.GetCameraPosition().Y + Renderer.Config.RenderResY) - 300) {
+				Renderer.SetCameraPosition(Renderer.GetCameraPosition().X, Player.Position.Y + 300 - Renderer.Config.RenderResY);
 			}
 		}
 

@@ -76,20 +76,20 @@ void GameObject::Update(double DeltaTime, std::vector<iRect> CollisionGeometry){
 	//Then do a more precise collision test to see weather we did.
 	//If we did hit we should bounce off
 	for (auto Box : CollisionGeometry) {
-		if (CheckCollisionAABB(BroadPhase, (iRect)Box)) {
+		if (CheckCollisionAABB(BroadPhase, Box)) {
 			//This is the normal of the object we hit, if any
 			Vector2 Normal;
 
 			float CollisionTime = CheckCollisionSweptAABB(Hitbox, Box, DeltaPosition, Normal);
 			DeltaPosition *= CollisionTime;
 
-			if (CollisionTime < 100.0 * DeltaTime) {
-				if (abs(Normal.X) > 0){
-					wallJumpDirection = -Sign(Velocity.X);
-
-					canJump = true;
-				}
-			}
+			//if (CollisionTime < 100.0 * DeltaTime) {
+			//	if (abs(Normal.X) > 0){
+			//		wallJumpDirection = -Sign(Velocity.X);
+			//
+			//		canJump = true;
+			//	}
+			//}
 
 			if (CollisionTime < 1.0) {
 				if (abs(Normal.X) > 0){

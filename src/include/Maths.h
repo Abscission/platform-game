@@ -33,6 +33,11 @@ inline int Sign(float X) {
 	return X > 0 ? 1 : -1;
 }
 
+inline int Mod(int a, int b) {
+	int r = a % b;
+	return r < 0 ? r + b : r;
+}
+
 //Checks for collisions between two axis aligned bounding boxes
 inline bool CheckCollisionAABB(Rect a, Rect b){
 	if (a.X < b.X + b.W &&
@@ -93,11 +98,26 @@ inline float CheckCollisionSweptAABB(Rect A, Rect B, Vector2 Velocity, Vector2& 
 		yExit = yInvExit / Velocity.Y;
 	}
 
+	if (yEntry > 1.0f) yEntry = -std::numeric_limits<float>::infinity();
+	if (xEntry > 1.0f) xEntry = -std::numeric_limits<float>::infinity();
+
 	float entryTime = std::fmax(xEntry, yEntry);
 	float exitTime = std::fmax(xExit, yExit);
 
+	if (entryTime > exitTime) return 1.0f;
+
+	if (xEntry < 0.0f && yEntry < 0.0f) return 1.0f;
+
+	if (xEntry < 0.0f) {
+		if (A.X + A.W < B.X || A.X > B.X + B.W) return 1.0f;
+	}
+
+	if (yEntry < 0.0f) {
+		if (A.Y + A.H < B.Y || A.Y > B.Y + B.H) return 1.0f;
+	}
+
 	//If there is no collision
-	if (entryTime > exitTime || xEntry < 0.0f && yEntry < 0.0f || xEntry > 1.0f || yEntry > 1.0f) {
+	if (false) { //if (entryTime > exitTime || xEntry < 0.0f && yEntry < 0.0f || xEntry > 1.0f || yEntry > 1.0f) {
 		Normal.X = 0.0f;
 		Normal.Y = 0.0f;
 		return 1.0f;

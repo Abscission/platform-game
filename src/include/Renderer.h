@@ -24,6 +24,8 @@ struct Win32ScreenBuffer {
 	int Height;
 	int *Memory;
 	int BytesPerPixel;
+	bool isDrawing;
+	bool shouldDraw;
 };
 
 struct RendererConfig{
@@ -69,7 +71,6 @@ public:
 	_Sprite* Frames;
 };
 
-
 bool ResizeSprite(Sprite* Sprite, int W, int H);
 bool ResizeSprite(Sprite* Sprite, int W);
 
@@ -77,12 +78,30 @@ bool ResizeSprite(Sprite* Sprite, int W);
 bool ResizeSprite(_Sprite* Sprite, int W, int H);
 bool ResizeSprite(_Sprite* Sprite, int W);
 
+class Renderer;
+
+struct SlaveArgs {
+	Win32ScreenBuffer* Buffer1;
+	Win32ScreenBuffer* Buffer2;
+	RendererConfig* Config;
+	HDC* DeviceContext;
+	Renderer* Renderer;
+	bool* ShouldClose;
+};
+
 class Renderer {
 private:
 	HBITMAP BM;
 	HINSTANCE Instance;
 	HDC DeviceContext;
-	Win32ScreenBuffer Buffer;
+	Win32ScreenBuffer* Buffer;
+
+	Win32ScreenBuffer* Buffer1;
+	Win32ScreenBuffer* Buffer2;
+
+	SlaveArgs SlaveArguments;
+
+
 	IVec2 CameraPos;
 
 public:
@@ -108,12 +127,26 @@ public:
 	void DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY);
 	void DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend);
 
+	void DrawSpriteSS(_Sprite* Spr, int X, int Y);
+	void DrawSpriteSS(_Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY);
+	void DrawSpriteSS(_Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend);
+
+	void DrawSpriteSS(Sprite* Spr, int X, int Y);
+	void DrawSpriteSS(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY);
+	void DrawSpriteSS(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend);
+
 	//void DrawSpriteWC(_Sprite* Spr, int X, int Y);
 	
 	void DrawSpriteRectangle(int X, int Y, int Width, int Height, _Sprite* Spr);
 
-	void DrawRectangle(int X, int Y, int Width, int Height, int Color);
-	
+	void DrawRectangle(int X, int Y, int Width, int Height, unsigned int Color);
+	void DrawRectangleBlend(int X, int Y, int Width, int Height, unsigned int Color);
+
+	void DrawRectangleWS(int X, int Y, int Width, int Height, unsigned int Color);
+	void DrawRectangleBlendWS(int X, int Y, int Width, int Height, unsigned int Color);
+
+
 	bool Initialize();
 	bool Refresh();
 };
+
