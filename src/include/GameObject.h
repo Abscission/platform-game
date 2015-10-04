@@ -19,9 +19,10 @@ protected:
 	Vector2 Acceleration;
 
 	Vector2 TargetVelocity;
+
 public:
 	Vector2 Position;
-
+	Vector2 SpawnPosition;
 
 	//Constructors for GameObject
 	GameObject();

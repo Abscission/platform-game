@@ -8,7 +8,7 @@
 #include "Utility.h"
 
 void InputManager::Update(){
-	memcpy(KeyStatePrevious, KeyStateCurrent, 255); //Copy previous frames keystate into KeyStatePrevious 
+	memcpy(&KeyStatePrevious[0], &KeyStateCurrent[0], 255); //Copy previous frames keystate into KeyStatePrevious 
 	GetKeyboardState(this->KeyStateCurrent);
 }
 
@@ -17,7 +17,7 @@ bool InputManager::GetKeyState(unsigned char Key){
 }
 
 bool InputManager::GetKeyDown(unsigned char Key){
-	return (KeyStateCurrent[Key] & 0xF0) &! (KeyStatePrevious[Key] & 0xF0);
+	return (KeyStateCurrent[Key] & 0xF0) != 0 &! (KeyStatePrevious[Key] & 0xF0) != 0;
 }
 
 bool InputManager::GetKeyUp(unsigned char Key){
@@ -57,4 +57,21 @@ ControllerState InputManager::GetControllerState(){
 		return{};
 	}
 }
+
+std::string InputManager::GetTypedText() {
+	const char Keys[] = { '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', VK_OEM_COMMA, VK_OEM_PERIOD, '/', ' ' };
+	const char Keys_Lower[] = { '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\\', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', ' ' };
+	const char Keys_Upper[] = { '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '|', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', ' ' };
+
+	std::string ret = "";
+
+	for (int i = 0; i < 47; i++) {
+		if (InputManager::GetKeyDown(Keys[i])) {
+			ret += (InputManager::GetKeyState(VK_SHIFT) ? Keys_Upper[i] : Keys_Lower[i]);
+		}
+	}
+
+	return ret;
+}
+
 

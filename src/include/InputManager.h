@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <string>
 #include <Windows.h>
 #include "Types.h"
 
@@ -42,6 +43,9 @@ public:
 		static InputManager IM;
 		return IM;
 	}
+
+
+	std::string GetTypedText();
 
 	//This should be run once per frame to update the keyboard states
 	void Update();

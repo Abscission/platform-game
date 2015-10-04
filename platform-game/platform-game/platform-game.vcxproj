@@ -169,6 +169,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\AssetManager.cpp" />
     <ClCompile Include="..\..\src\Config.cpp" />
+    <ClCompile Include="..\..\src\Font.cpp" />
+    <ClCompile Include="..\..\src\Forms.cpp" />
     <ClCompile Include="..\..\src\GameObject.cpp" />
     <ClCompile Include="..\..\src\InputManager.cpp" />
     <ClCompile Include="..\..\src\Interpreter.cpp" />
@@ -185,6 +187,8 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\include\AssetManager.h" />
     <ClInclude Include="..\..\src\include\Config.h" />
+    <ClInclude Include="..\..\src\include\Font.h" />
+    <ClInclude Include="..\..\src\include\Forms.h" />
     <ClInclude Include="..\..\src\include\GameObject.h" />
     <ClInclude Include="..\..\src\include\InputManager.h" />
     <ClInclude Include="..\..\src\include\Interpreter.h" />

@@ -4,6 +4,8 @@
 
 #include "Types.h"
 #include <vector>
+#include <string>
+#include <list>
 
 #include "Types.h"
 #include "List.h"
@@ -19,6 +21,8 @@ struct Chunk {
 	u16 X;
 	u16 Y;
 	GridSquare Grid[16*16];
+
+	bool inIndex;
 
 	std::vector<iRect>* Geometry;
 
@@ -37,6 +41,13 @@ public:
 	Chunk** Chunks;
 
 	//Public here
+
+	std::string Name;
+	std::string Author;
+	std::string Filename;
+
+	std::vector<std::string> AssetFiles;
+	std::list<std::vector<int>> AssetIndices;
 
 	std::vector<IVec2> ExistingChunks;
 	DoubleLinkedList<GameObject> Entities;
@@ -72,4 +83,5 @@ public:
 	void DrawChunk(Renderer* Renderer, u16 X, u16 Y);
 
 	void DrawChunkCollisionGeometry(Renderer* Renderer, u16 X, u16 Y);
+	void Save();
 };

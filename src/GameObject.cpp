@@ -9,16 +9,22 @@
 GameObject::GameObject() {
 	this->Position = { 0, 0 };
 	this->Velocity = { 0, 0 };
+
+	this->SpawnPosition = { 0, 0 };
 }
 
 GameObject::GameObject(Vector2 Position, Vector2 Velocity) {
 	this->Position = Position;
 	this->Velocity = Velocity;
+
+	this->SpawnPosition = Position;
 }
 
 GameObject::GameObject(Vector2 Position){
 	this->Position = Position;
 	this->Velocity = { 0, 0 };
+	
+	this->SpawnPosition = Position;
 }
 
 void GameObject::LoadSprite(AssetFile AssetFile, int id){

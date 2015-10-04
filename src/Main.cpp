@@ -24,9 +24,35 @@
 #include "LogManager.h"
 #include "List.h"
 
+#include "Font.h"
+
+#include "Forms.h"
+
 #include "Test.h"
 
+struct SaveArgs {
+	Level* Level;
+	Form* Form;
+	float* TextTime;
+};
+
+void SaveLevel(void* A) {
+	SaveArgs* Args = (SaveArgs*)A;
+
+	Args->Level->Save();
+	Args->Form->Enabled = false;
+	*Args->TextTime = 200;
+
+}
+
 int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
+	
+	Font Arial;
+	Arial.Load("assets/Arial.aaf", 0, 1);
+
+	Font ArialBlack;
+	ArialBlack.Load("assets/Arial.aaf", 2, 3);
+
 	//Create a platform layer
 	GameLayer PlatformLayer;
 	PlatformLayer.Initialize();
@@ -96,35 +122,35 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	// END TEMPORARY SECTION
 
 	Level level = {};
-	AssetFile LevelAsset("assets/Level.aaf");
+	AssetFile LevelAsset("assets/popcorn.aaf");
 	level.LoadFromAsset(LevelAsset.GetAsset(0));
 
 	std::vector<IVec2> ChunksToDraw = { { 0, 0 }, {0, 1}, {1, 0}, {1, 1} };
 
 	level.SpawnEntity(&Player, 512 * 32, 512);
 
-	std::vector <iRect> LevelGeometry = {};
-
-	for (auto Chunk : ChunksToDraw) {
-
-		
-		std::vector <iRect> NewGeometry = level.GenerateCollisionGeometryFromChunk(Chunk.X, Chunk.Y);
-		LevelGeometry.insert(LevelGeometry.end(), NewGeometry.begin(), NewGeometry.end());
-
-	}
-
 #ifdef _DEBUG
 	Test();
 #endif
+
+	std::string LevelName;
+	std::string LevelAuthor;
+
+	float FontTimer = 0;
 
 	u16 SelectedSprite = 0;
 	u8 Collision = 0;
 	int NumSprites = level.Sprites.size();
 
-	bool EditMode = false;
-	bool Paused = false;
+	bool EditMode = true;
+	bool Paused = true;
 	bool CameraPan = false;
 	bool DrawGeometry = false;
+	bool LevelMetaBox = true;
+
+	bool MetaBoxLevelNameSelected = true;
+	bool MetaBoxLevelAuthorSelected = false;
+
 
 	bool EisDown;
 	bool QisDown;
@@ -134,8 +160,46 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	bool PisDown;
 	bool CisDown;
 
+	Form TestForm(800, 400, &Renderer);
+
+	Label FormTitle(10, 10, "Save Level");
+	FormTitle.SetFont(&Arial);
+	TestForm.Controls.push_back(&FormTitle);
+
+	Label NameLabel(10, 50, "Level Name:");
+	NameLabel.SetFont(&Arial);
+	TestForm.Controls.push_back(&NameLabel);
+
+	Label AuthorLabel(10, 50 + 32 + 10, "Level Author:");
+	AuthorLabel.SetFont(&Arial);
+	TestForm.Controls.push_back(&AuthorLabel);
+	
+	Label FilenameLabel(10, 50 + 64 + 20, "Filename:");
+	FilenameLabel.SetFont(&Arial);
+	TestForm.Controls.push_back(&FilenameLabel);
+
+	TextBox NameTextBox(20 + NameLabel.Pos.W, 50, 200, 36, &level.Name);
+	NameTextBox.SetFont(&ArialBlack);
+	TestForm.Controls.push_back(&NameTextBox);
+
+	TextBox TestTextBox(20 + AuthorLabel.Pos.W, 50 + 32 + 10, 200, 36, &level.Author);
+	TestTextBox.SetFont(&ArialBlack);
+	TestForm.Controls.push_back(&TestTextBox);
+
+	TextBox FilenameBox(20 + FilenameLabel.Pos.W, FilenameLabel.Pos.Y, 200, 36, &level.Filename);
+	FilenameBox.SetFont(&ArialBlack);
+	TestForm.Controls.push_back(&FilenameBox);
+
+	std::string SaveText = "Save";
+	Button Save(300, 300, &ArialBlack, &SaveText, &SaveLevel);
+	SaveArgs A = { &level, &TestForm, &FontTimer };
+	Save.Arg = (void*)&A;
+	TestForm.Controls.push_back(&Save);
+
 	bool GameRunning = true;
 	while (GameRunning) {
+
+		TestForm.Update(Renderer.Window);
 
 		MouseState MS = InputManager::Get().GetMouseState(Renderer.Window);
 
@@ -152,7 +216,6 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 		DeltaTime = static_cast<double>(_DeltaTime.QuadPart);
 		DeltaTime *= 1.0e-6;
 
-		if (Paused) DeltaTime = 0;
 
 		Frames++;
 		if ((elapsedTime += DeltaTime) > 1) {
@@ -165,6 +228,12 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 			Frames = 0;
 		}
 
+		if (FontTimer > 0) {
+			FontTimer -= DeltaTime;
+		}
+
+		if (Paused) DeltaTime = 0;
+
 		InputManager::Get().Update();
 		ControllerState Controller = InputManager::Get().GetControllerState();
 
@@ -173,7 +242,6 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 		}
 
 		IVec2 CameraPos = Renderer.GetCameraPosition();
-
 
 		ChunksToDraw.clear();
 
@@ -221,6 +289,10 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 		}
 
 
+		if (FontTimer > 0) {
+			Arial.RenderString(&Renderer, 10, 10, "Saving Level...");
+		}
+
 		if (EditMode) {
 
 			if (InputManager::Get().GetKeyState(VK_LEFT)) {
@@ -248,7 +320,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 			if (MS.Btn1) {
 				int X = (MS.x + CameraPos.X) / 32;
-				int Y = (MS.y + CameraPos.Y + 32) / 32;
+				int Y = (MS.y + CameraPos.Y) / 32;
 
 				if (!(X < 0 || Y < 0)) {
 
@@ -262,6 +334,12 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 					if (C != nullptr) {
 						C->Grid[16 * LocalY + LocalX] = { SelectedSprite, Collision };
+						
+						if (!C->inIndex) {
+							C->inIndex = true;
+							level.ExistingChunks.push_back({ C->X, C->Y });
+						}
+
 						level.SetChunkGeometry(C);
 					}
 				}
@@ -269,7 +347,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 			if (MS.Btn2) {
 				int X = (MS.x + CameraPos.X) / 32;
-				int Y = (MS.y + CameraPos.Y + 32) / 32;
+				int Y = (MS.y + CameraPos.Y) / 32;
 
 				if (!(X < 0 || Y < 0)) {
 
@@ -337,15 +415,9 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 				if (!SisDown) {
 					SisDown = true;
 
+
 					if (InputManager::Get().GetKeyState(VK_CONTROL)) {
-						OutputDebugStringA("Saving Level...");
-
-
-
-						std::ofstream Output("level.bin", std::ofstream::binary);
-						for (int i = 0; i < 256; i++)
-							Output.write((char*)&level.GetChunk(0, 0)->Grid[i], 3);
-
+						TestForm.Enabled = true;
 					}
 				}
 			}
@@ -363,18 +435,26 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 			for (int i = 0; i < Renderer.Config.RenderResX / 32; i++) {
 				Renderer.DrawRectangleBlend((i * 32) - Mod(CameraPos.X, 32) - 1, 0, (CameraPos.X + 32 * i - Mod(CameraPos.X, 32)) % 512 == 0 ? 3 : 1, Renderer.Config.RenderResY, 0x33333333);
+				//Renderer.DrawRectangle((i * 32) - Mod(CameraPos.X, 32) - 1, 0, (CameraPos.X + 32 * i - Mod(CameraPos.X, 32)) % 512 == 0 ? 3 : 1, Renderer.Config.RenderResY, 0x8780D5);
 			}
 
 			for (int i = 0; i < Renderer.Config.RenderResY / 32; i++) {
 				Renderer.DrawRectangleBlend(0, (i * 32) - Mod(CameraPos.Y, 32) - 1, Renderer.Config.RenderResX, (CameraPos.Y + 32 * i - Mod(CameraPos.Y, 32)) % 512 == 0 ? 3 : 1, 0x33333333);
+				//Renderer.DrawRectangle(0, (i * 32) - Mod(CameraPos.Y, 32) - 1, Renderer.Config.RenderResX, (CameraPos.Y + 32 * i - Mod(CameraPos.Y, 32)) % 512 == 0 ? 3 : 1, 0x8780D5);
+
 			}
 
 			if (SelectedSprite != 0) {
 				Renderer.DrawSpriteSS(&level.Sprites[SelectedSprite], Renderer.Config.RenderResX - 64, Renderer.Config.RenderResY - 64);
 			}
 
-			Renderer.DrawRectangle(MS.x - 16, MS.y + 32 - 1, 32, 2, 0xffffff);
-			Renderer.DrawRectangle(MS.x - 1, MS.y + 32 - 16, 2, 32, 0xffffff);
+			TestForm.Render(&Renderer);
+
+			Renderer.DrawRectangle(MS.x - 17, MS.y - 2, 34, 4, 0x000000);
+			Renderer.DrawRectangle(MS.x - 2, MS.y - 17, 4, 34, 0x000000);
+
+			Renderer.DrawRectangle(MS.x - 16, MS.y - 1, 32, 2, 0xffffff);
+			Renderer.DrawRectangle(MS.x - 1, MS.y - 16, 2, 32, 0xffffff);
 		}
 
 		if (!CameraPan) {
@@ -394,6 +474,8 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 				Renderer.SetCameraPosition(Renderer.GetCameraPosition().X, Player.Position.Y + 300 - Renderer.Config.RenderResY);
 			}
 		}
+
+
 
 		if(!PlatformLayer.Update(DeltaTime)) GameRunning = false;
 	}
