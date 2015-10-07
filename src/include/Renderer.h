@@ -10,6 +10,9 @@
 
 #include <d3d9.h>
 
+#include "immintrin.h"
+
+
 class ImageHeader {
 public:
 	unsigned int Width;
@@ -96,17 +99,18 @@ private:
 	HDC DeviceContext;
 	Win32ScreenBuffer* Buffer;
 
-	Win32ScreenBuffer* Buffer1;
-	Win32ScreenBuffer* Buffer2;
-
 	SlaveArgs SlaveArguments;
 
+	HBITMAP hbmp;
+	HDC HdcMem;
 
 	IVec2 CameraPos;
 
 public:
 	HWND Window;
 	RendererConfig Config;
+	__m256i clearval;
+	__m128i clearval_sse;
 
 	bool OpenWindow(int Width, int Height, char* Title);
 
@@ -134,8 +138,6 @@ public:
 	void DrawSpriteSS(Sprite* Spr, int X, int Y);
 	void DrawSpriteSS(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY);
 	void DrawSpriteSS(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend);
-
-	//void DrawSpriteWC(_Sprite* Spr, int X, int Y);
 	
 	void DrawSpriteRectangle(int X, int Y, int Width, int Height, _Sprite* Spr);
 

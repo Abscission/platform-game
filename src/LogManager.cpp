@@ -25,4 +25,15 @@ void Log::Write(std::string String){
 
 }
 
+void Log::WriteF(std::string Format, ...) {
+	va_list VA;
+
+	va_start(VA, Format);
+	char buffer[1024];
+	vsprintf_s(buffer, Format.c_str(), VA);
+	va_end(VA);
+
+	Write(buffer);
+}
+
 Log GlobalLog("platform-game-log.txt");

@@ -18,6 +18,8 @@ public:
 	///<param name="Alignment">The number of bytes the memory should be aligned to</param>
 	static byte* AllocateMemory(size_t Length);
 
+	//static byte * AllocateMemory(size_t Length, size_t Align);
+
 	template <typename t>
 	static t* AllocateMemory(size_t Count = 1);
 

@@ -9,7 +9,7 @@ Reference Interpreter::Find(ReferenceType RefType, size_t ID) {
 	switch (RefType) {
 	case ref_entity:
 		ref.Type = ref_entity;
-		ref.GameObj = level->Entities.Last->Item;
+		ref.GameObj = level->Entities.back();
 		return ref;
 	case ref_level:
 		ref.Type = ref_level;

@@ -6,10 +6,19 @@
 #include <Utility.h>
 #include <InputManager.h>
 
-Form::Form(int W, int H, class Renderer * R) {
+Form::Form(int W, int H, Renderer * R) {
 	Position = { R->Config.RenderResX / 2 - W / 2, R->Config.RenderResY / 2 - H / 2, W, H };
 	Color = rgba(0x33, 0x33, 0x33, 128);
 }
+
+Form::Form(int X, int Y, int W, int H, Renderer * R) {
+	if (X < 0) X = R->Config.RenderResX + X;
+	if (Y < 0) Y = R->Config.RenderResY + Y;
+
+	Position = { X, Y, W, H };
+	Color = rgba(0x33, 0x33, 0x33, 128);
+}
+
 
 void Form::Update(HWND Window) {
 

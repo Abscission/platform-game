@@ -11,17 +11,20 @@
 
 class GameObject {
 protected:
-	bool isGrounded = false;
 	bool canJump = false;
 	int wallJumpDirection;
 
-	Vector2 Velocity;
 	Vector2 Acceleration;
 
 	Vector2 TargetVelocity;
 
 public:
+	bool destroy = false;
+
 	Vector2 Position;
+	Vector2 Velocity;
+	bool isGrounded = false;
+
 	Vector2 SpawnPosition;
 
 	//Constructors for GameObject
@@ -47,7 +50,19 @@ public:
 	///Advance a GameObjects state to a new point in time
 	///</summary>
 	///<param name="DeltaTime">The amount of time to advance in seconds typically the time taken to render the last frame</param>
-	virtual void Update(double DeltaTime, std::vector<iRect> CollisionGeometry);
+	virtual void Update(double DeltaTime);
 
-	void Draw(Renderer*);
+	virtual void Draw(Renderer*);
+};
+
+
+class Pickup : public GameObject {
+private:
+	float32 timer;
+	float OffsetY;
+public:
+	Pickup();
+	virtual void Update(double DeltaTime) final;
+	virtual void Draw(Renderer*) final;
+
 };

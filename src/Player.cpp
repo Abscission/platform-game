@@ -11,21 +11,23 @@ Player::Player() {
 	GetBindings();
 }
 
-void Player::GetBindings(){
+//Get key bindings from a config file
+void Player::GetBindings() {
 	ConfigFile ControlsFile("config/bindings.ini");
 	
-	Controls.Left = 'A';// *ControlsFile.Get("Left", (char*)0x41).c_str();
-	Controls.Right = 'D';// *ControlsFile.Get("Right", (char*)0x44).c_str();
-	//Controls.Jump = atoi(ControlsFile.Get("Jump", (char*)0x20).c_str());
-	//Controls.Shift = atoi(ControlsFile.Get("Shift", (char*)0xA0).c_str());
+	char shift [2] = { VK_SHIFT, '\0' };
+
+	Controls.Left = *ControlsFile.Get("Left", "A").c_str();
+	Controls.Right = *ControlsFile.Get("Right", "D").c_str();
+	//Controls.Jump = atoi(ControlsFile.Get("Jump", " ").c_str());
+	//Controls.Shift = atoi(ControlsFile.Get("Shift", shift ).c_str());
 }
 
-void Player::Update(double DeltaTime, std::vector<iRect> Collision) {
 
-	//InputManager InputManager::Get() = InputManager::Get();
+void Player::Update(double DeltaTime) {
 	ControllerState Controller = InputManager::Get().GetControllerState();
 	
-	int MaxSpeed = (InputManager::Get().GetKeyState(/*Controls.Shift*/VK_SHIFT) || Controller.Buttons & 0x2000) ? 400 : 600;
+	int MaxSpeed = (InputManager::Get().GetKeyState(Controls.Shift) || Controller.Buttons & 0x2000) ? 400 : 600;
 
 	if (InputManager::Get().GetKeyState(Controls.Right) || Controller.Buttons & 0x8) {
 		TargetVelocity.X = static_cast<float>(MaxSpeed);
@@ -38,7 +40,7 @@ void Player::Update(double DeltaTime, std::vector<iRect> Collision) {
 	}
 
 	if (JumpTime == 0) {
-		if (InputManager::Get().GetKeyState(/*Controls.Jump*/VK_SPACE) || Controller.Buttons & 0x1000) {
+		if (InputManager::Get().GetKeyState(Controls.Jump) || Controller.Buttons & 0x1000) {
 			if (canJump) {
 				if (!isGrounded) {
 					//walljump
@@ -52,7 +54,7 @@ void Player::Update(double DeltaTime, std::vector<iRect> Collision) {
 	}
 
 	if (JumpTime > 0){
-		if (InputManager::Get().GetKeyState(/*Controls.Jump*/VK_SPACE) || Controller.Buttons & 0x1000) {
+		if (InputManager::Get().GetKeyState(Controls.Jump) || Controller.Buttons & 0x1000) {
 			JumpTime += DeltaTime;
 			if (JumpTime < 1.0f) {
 				Velocity.Y -= 500 * static_cast<float>(DeltaTime);
@@ -69,5 +71,6 @@ void Player::Update(double DeltaTime, std::vector<iRect> Collision) {
 		Velocity = { 0, 0 };
 	}
 
-	GameObject::Update(DeltaTime, Collision);
+	//Update the base GameObject
+	GameObject::Update(DeltaTime);
 }

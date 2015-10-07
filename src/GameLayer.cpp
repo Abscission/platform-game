@@ -70,3 +70,5 @@ bool GameLayer::Update(double DeltaTime) {
 
  	return _Renderer.Refresh();
 }
+
+GameGlobals G;

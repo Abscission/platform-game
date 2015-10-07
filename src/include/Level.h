@@ -2,6 +2,8 @@
 //Copyright (c) 2015 Jason Light
 //License: MIT
 
+#pragma once
+
 #include "Types.h"
 #include <vector>
 #include <string>
@@ -11,6 +13,19 @@
 #include "List.h"
 #include "Renderer.h"
 #include "GameObject.h"
+
+#define ChunkLoc(x,y) ((y)*16+(x))
+
+enum CollisionBits {
+	COLLIDE_NONE = 0,
+	COLLIDE_UP = 1,
+	COLLIDE_LEFT = 2,
+	COLLIDE_DOWN = 4,
+	COLLIDE_RIGHT = 8,
+	COLLIDE_ALL = COLLIDE_UP | COLLIDE_DOWN | COLLIDE_LEFT | COLLIDE_RIGHT,
+	COLLIDE_TRANSPARENT = 16,
+	COLLIDE_LADDER = 32
+};
 
 struct GridSquare {
 	u16 Texture;
@@ -50,7 +65,7 @@ public:
 	std::list<std::vector<int>> AssetIndices;
 
 	std::vector<IVec2> ExistingChunks;
-	DoubleLinkedList<GameObject> Entities;
+	std::list<GameObject*> Entities;
 
 	IVec2 GetChunkFromLocation(IVec2 Location) {
 		return{ Location.X / 16, Location.Y / 16 };
@@ -74,13 +89,13 @@ public:
 
 	void LoadFromAsset(Asset asset);
 
-	void Update(double DeltaTime, std::vector<IVec2>& Geometry);
+	void Update(double DeltaTime);
 
 	void UpdateChunk(u16 X, u16 Y, double DeltaTime, std::vector<iRect>& Geometry);
+	void DrawChunk(Renderer* Renderer, u16 X, u16 Y);
 
 	void SpawnEntity(GameObject* Object, u32 X, u32 Y);
-
-	void DrawChunk(Renderer* Renderer, u16 X, u16 Y);
+	void DespawnEntity(GameObject * Object);
 
 	void DrawChunkCollisionGeometry(Renderer* Renderer, u16 X, u16 Y);
 	void Save();

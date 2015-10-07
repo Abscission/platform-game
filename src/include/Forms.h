@@ -80,6 +80,7 @@ public:
 	std::vector<Control*> Controls;
 
 	Form(int W, int H, Renderer* R);
+	Form(int X, int Y, int W, int H, Renderer * R);
 
 	void Update(HWND Window);
 	void Render(Renderer* R);

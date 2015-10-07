@@ -4,11 +4,12 @@
 
 #pragma once
 
+#include <string>
 #include <Windows.h>
 
 //See http://blog.abscission.net/asset-management/ for info on development
 
-//This pragma ensures the values are packed as tightly as possible, regardless of alignment
+//This pragma ensures the values are packed as tightly as possible, regardless of ideal alignment
 //This allows us to more accurately predict how the written files will look
 #pragma pack(push, 1)
 struct Header {
@@ -57,6 +58,8 @@ private:
 	HANDLE FileMapping;
 
 public:
+	std::string Filename;
+
 	AssetFile(char* Filename);
 	~AssetFile();
 

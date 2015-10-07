@@ -5,6 +5,18 @@
 #pragma once
 
 #include "Renderer.h"
+#include "Player.h"
+#include "Level.h"
+
+struct GameGlobals {
+	Player* player;
+	Renderer* renderer;
+	Level* level;
+	bool debuglos;
+	bool editing;
+};
+
+extern GameGlobals G;
 
 class GameLayer  {
 private:

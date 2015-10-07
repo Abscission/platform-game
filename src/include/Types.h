@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cinttypes>
+#include <cmath>
 
 typedef uint8_t byte;
 
@@ -12,11 +13,13 @@ typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
+typedef uintptr_t uP;
 
 typedef int8_t s8;
 typedef int16_t s16;
 typedef int32_t s32;
 typedef int64_t s64;
+typedef intptr_t sP;
 
 typedef float float32;
 typedef double float64;
@@ -98,11 +101,22 @@ struct Vector2 {
 		return a;
 	}
 
+	inline Vector2 operator/(const float b) {
+		Vector2 a = *this;
+		a.X /= b;
+		a.Y /= b;
+		return a;
+	}
+
 	inline Vector2 operator/(const int b) {
 		Vector2 a = *this;
 		a.X /= b;
 		a.Y /= b;
 		return a;
+	}
+
+	float magnitude() {
+		return sqrt(X * X + Y * Y);
 	}
 
 	float dot(Vector2& b) {

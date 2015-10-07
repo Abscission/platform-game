@@ -94,7 +94,6 @@ Chunk* Level::GetChunk(u16 X, u16 Y){
 	return Location;
 }
 
-#define ChunkLoc(x,y) ((y)*16+(x))
 
 std::vector<iRect> Level::GenerateCollisionGeometryFromChunk(u16 X, u16 Y) {
 	Chunk* C = GetChunk(X, Y);
@@ -165,7 +164,7 @@ void Level::SetChunkGeometry(Chunk* C) {
 
 void Level::LoadFromAsset(Asset asset) {
 	byte* data = (byte*)asset.Memory;
-	u32 fp = 0;
+	size_t fp = 0;
 
 	if (*(u16*)&data[0] != 0x4C41) {
 		GlobalLog.Write("Magic number doesn't match, aborting");
@@ -174,12 +173,12 @@ void Level::LoadFromAsset(Asset asset) {
 
 	fp += 4;
 
-	int NameLength = strlen((const char *)&data[fp]);
+	size_t NameLength = strlen((const char *)&data[fp]);
 	Name = (const char *)&data[fp];
 
 	fp += NameLength + 1;
 
-	int AuthorLength = strlen((const char *)&data[fp]);
+	size_t AuthorLength = strlen((const char *)&data[fp]);
 	Author = (const char *)&data[fp];
 
 	fp += AuthorLength + 1;
@@ -190,7 +189,7 @@ void Level::LoadFromAsset(Asset asset) {
 	Sprites.push_back({});
 
 
-	for (int i = 0; i < NumberOfAssetFiles; i++) {
+	for (register u64 i = 0; i < NumberOfAssetFiles; i++) {
 		char * AssetFileName = (char *)(data + fp);
 		char str[256];
 		sprintf_s(str, "Loading assets from '%s'", AssetFileName);
@@ -208,7 +207,7 @@ void Level::LoadFromAsset(Asset asset) {
 
 		std::vector<int>* Indices = new std::vector<int>;
 
-		for (int j = 0; j < NumberOfAssets; j++) {
+		for (register u64 j = 0; j < NumberOfAssets; j++) {
 			Sprite spr;
 			spr.Load(CurrentAssetFile, *(u32*)&data[fp]);
 			
@@ -227,7 +226,7 @@ void Level::LoadFromAsset(Asset asset) {
 
 	Chunk* Chunks = MemoryManager::AllocateMemory<Chunk>(ChunksToLoad);
 
-	for (int i = 0; i < ChunksToLoad; i++) {
+	for (register u64 i = 0; i < ChunksToLoad; i++) {
 		u16 X = *(u16*)&data[fp];
 		fp += 2;
 
@@ -236,7 +235,7 @@ void Level::LoadFromAsset(Asset asset) {
 
 		Chunk Chunk = Chunks[i];
 
-		for (int j = 0; j < 256; j++) {
+		for (register u64 j = 0; j < 256; j++) {
 			Chunk.Grid[j] = { *(u16*)&data[fp], *(u8*)&data[fp + 2] };
 			fp += 3;
 		}
@@ -246,22 +245,14 @@ void Level::LoadFromAsset(Asset asset) {
 	}
 }
 
-void Level::Update(double DeltaTime, std::vector<IVec2>& Chunks) {
+void Level::Update(double DeltaTime) {
 
-	std::vector<iRect> Geometry;
-
-	for (auto C : Chunks) {
-		auto Chunk = GetChunk(C.X, C.Y);
-		if (Chunk == nullptr) continue;
-		Geometry.insert(Geometry.end(), Chunk->Geometry->begin(), Chunk->Geometry->end());
+	for (auto Entity : Entities) {
+		Entity->Update(DeltaTime);
 	}
 
-	auto Entity = Entities.First;
+	Entities.remove_if([](GameObject* O) { return O->destroy; });
 
-	while (Entity != nullptr) {
-		Entity->Item->Update(DeltaTime, Geometry);
-		Entity = Entity->Next;
-	}
 }
 
 void Level::UpdateChunk(u16 X, u16 Y, double DeltaTime, std::vector<iRect>& Geometry) {
@@ -276,7 +267,11 @@ void Level::SpawnEntity(GameObject * Object, u32 X, u32 Y) {
 	Object->Position = { (float)X, (float)Y };
 	Object->SpawnPosition = Object->Position;
 
-	Entities.Insert(Object);
+	Entities.push_back(Object);
+}
+
+void Level::DespawnEntity(GameObject * Object) {
+	//Entities.Remove(Object);
 }
 
 void Level::DrawChunk(Renderer* Renderer, u16 X, u16 Y) {
@@ -316,11 +311,11 @@ void Level::Save() {
 
 	Output << 'A' << 'L' << '0' << '0' << Name << '\0' << Author << '\0';
 
-	u32 NumberOfAssets = AssetFiles.size();
+	size_t NumberOfAssets = AssetFiles.size();
 
 	Output.write((char*)&NumberOfAssets, 4);
 	
-	int i = 0;
+	u32 i = 0;
 	for (auto IndiceList : AssetIndices) {
 		Output << AssetFiles[i] << '\0';
 
@@ -334,6 +329,13 @@ void Level::Save() {
 		i++;
 	}
 
+	u32 NumEntities = Entities.size();
+	Output.write((char*)&NumEntities, 4);
+
+	for (auto E : Entities) {
+		Output.write((char*)&E->SpawnPosition, 8);
+	}
+
 	u32 NumChunks = ExistingChunks.size();
 	Output.write((char*)&NumChunks, 4);
 
@@ -343,7 +345,7 @@ void Level::Save() {
 		Output.write((char*)&Chunk->X, 2);
 		Output.write((char*)&Chunk->Y, 2);
 
-		for (int i = 0; i < 16 * 16; i++) {
+		for (register size_t i = 0; i < 16 * 16; i++) {
 			Output.write((char*)&Chunk->Grid[i].Texture, 2);
 			Output.write((char*)&Chunk->Grid[i].Collision, 1);
 		}

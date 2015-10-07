@@ -20,7 +20,9 @@ private:
 	Controls Controls;
 	void GetBindings();
 public:
+	bool Dead = false;
+	s64 Score;
 	Player();
-	void Update(double DeltaTime, std::vector<iRect> Collision);
+	virtual void Update(double DeltaTime) final;
 
 };

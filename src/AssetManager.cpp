@@ -10,6 +10,8 @@
 #include "Utility.h"
 
 AssetFile::AssetFile(char* Filename) {
+	this->Filename = Filename;
+
 	//WinAPI functions to create and open a file mapping. At the end, FileHeader is a pointer to the start of the file
 	File = CreateFileA(Filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 

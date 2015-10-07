@@ -7,9 +7,10 @@
 #include <limits>
 #include <Types.h>
 
-#define MAX(A, B) (A > B ? A : B)
-#define MIN(A, B) (A < B ? A : B)
-#define SQR(A) (A*A)
+#define MAX(A, B) ((A) > (B) ? (A) : (B))
+#define MIN(A, B) ((A) < (B) ? (A) : (B))
+#define ABS(A) ((A) < 0 ? -(A) : (A))
+#define SQR(A) ((A)*(A))
 
 ///<summary>
 ///Function to compute the absolute value of a two's complement integer

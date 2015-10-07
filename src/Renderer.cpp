@@ -3,15 +3,14 @@
 //License: MIT
 
 #include "Renderer.h"
-
-//#include <vector>
-
 #include <Windows.h>
 
 #include "Utility.h"
 #include "MemoryManager.h"
 #include "AssetManager.h"
 #include "Config.h"
+#include "GameLayer.h"
+
 #include <intrin.h>
 
 bool ShouldClose = false;
@@ -19,60 +18,18 @@ bool ShouldClose = false;
 static int MonitorCount;
 static Rect Monitors[8];
 
-
-DWORD WINAPI SlaveThreadProc(LPVOID sArgs) {
-	SlaveArgs* Args = (SlaveArgs*) sArgs;
-	
-	OutputDebugStringA("Spawning renderer helper thread!");
-
-	while (!*Args->ShouldClose) {
-		if (Args->Buffer1->shouldDraw) {
-			Args->Buffer1->isDrawing = true;
-			Args->Buffer1->shouldDraw = false;
-
-			StretchDIBits(*Args->DeviceContext, 0, 0, Args->Config->WindowResX, Args->Config->WindowResY, 0, 0, Args->Buffer1->Width, Args->Buffer1->Height, Args->Buffer1->Memory, &Args->Buffer1->Info, DIB_RGB_COLORS, SRCCOPY);
-
-			for (int i = 0; i < Args->Renderer->Config.RenderResX * Args->Renderer->Config.RenderResY; i++) Args->Buffer1->Memory[i] = rgba(102, 102, 204, 255);
-			//Args->Renderer->DrawRectangle(0, 0, Args->Config->RenderResX, Args->Config->RenderResY, rgba(102, 102, 204, 255));
-
-			Args->Buffer1->isDrawing = false;
-		}
-
-		if (Args->Buffer2->shouldDraw) {
-			Args->Buffer2->isDrawing = true;
-			Args->Buffer2->shouldDraw = false;
-
-			StretchDIBits(*Args->DeviceContext, 0, 0, Args->Config->WindowResX, Args->Config->WindowResY, 0, 0, Args->Buffer2->Width, Args->Buffer2->Height, Args->Buffer2->Memory, &Args->Buffer2->Info, DIB_RGB_COLORS, SRCCOPY);
-			//Args->Renderer->DrawRectangle(0, 0, Args->Config->RenderResX, Args->Config->RenderResY, rgba(102, 102, 204, 255));
-
-			for (int i = 0; i < Args->Renderer->Config.RenderResX * Args->Renderer->Config.RenderResY; i++) Args->Buffer2->Memory[i] = rgba(102, 102, 204, 255);
-
-
-			Args->Buffer2->isDrawing = false;
-		}
-	}
-
-	OutputDebugStringA("Killing renderer helper thread!");
-
-	return 1;
-}
-
 //The window callback, this is what processes messages from our windows
 LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPARAM lParam) {
-
-	static bool MouseOver = false;
-
+	//We handle a couple of events
 	switch (Message) {
+
+	//If we see a close event, close the window
 	case WM_CLOSE:
 		DestroyWindow(Window);
 		ShouldClose = true;
 		return 0;
-	case WM_KEYDOWN:
-		switch (wParam){
-		case VK_UP:
-			break;
-		}
 
+	//If the escape key is pressed, also close the window
 	case WM_KEYUP:
 		if (wParam == VK_ESCAPE) {
 			DestroyWindow(Window);
@@ -80,13 +37,13 @@ LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPARAM lPa
 			return 0;
 		}
 
-
+	//Otherwise, have the Default Window Proceedure deal with it
 	default:
 		return DefWindowProc(Window, Message, wParam, lParam);
 	}
 }
 
-//A function to blend two pixels based on the 
+//A function to blend two RGB Pixels. It assumes premultiplied alpha!
 inline void Blend(unsigned int* Source, unsigned int* Dest) {
 	//Get the source channels
 	byte* SA = ((byte*)Source) + 3;
@@ -105,6 +62,16 @@ inline void Blend(unsigned int* Source, unsigned int* Dest) {
 	*DB = *SB + ((*DB * (256 - *SA)) >> 8);
 }
 
+//A function to change the luminance value of an RGB pixel
+u32 Lighten(u32 Color, float amount) {
+	rgba_color color(Color);
+	color.r = (u8)MIN(MAX(0, color.r * amount), 255);
+	color.g = (u8)MIN(MAX(0, color.g * amount), 255);
+	color.b = (u8)MIN(MAX(0, color.b * amount), 255);
+	return color.color;
+}
+
+//Resize a sprite based on width, maintaining the aspect ratio
 bool ResizeSprite(Sprite* Sprite, int W) {
 	for (int i = 0; i <= Sprite->NumberOfFrames; i++)
 		if (!ResizeSprite(&Sprite->Frames[i], W)) return false;
@@ -115,6 +82,7 @@ bool ResizeSprite(Sprite* Sprite, int W) {
 	return true;
 }
 
+//Resize a sprite frame based on width, maintaining the aspect ratio
 bool ResizeSprite(_Sprite* Sprite, int W) {
 	assert(W > 0, "Tried to resize sprite to zero width");
 	assert(Sprite->Width != 0, "Tried to resize invalid sprite");
@@ -122,6 +90,7 @@ bool ResizeSprite(_Sprite* Sprite, int W) {
 	return ResizeSprite(Sprite, W, Sprite->Height * (W / Sprite->Width));
 }
 
+//Resize a sprite frame with Width and Height
 bool ResizeSprite(Sprite* Sprite, int W, int H) {
 	for (int i = 0; i < Sprite->NumberOfFrames; i++)
 		if (!ResizeSprite(&Sprite->Frames[i], W, H)) return false;
@@ -132,7 +101,7 @@ bool ResizeSprite(Sprite* Sprite, int W, int H) {
 	return true;
 }
 
-//A function to resize a sprite using nearest neighbour
+//A function to resize a sprite frame using nearest neighbour
 bool ResizeSprite(_Sprite* Sprite, int W, int H){
 	//Initialize a temporary buffer for the sprite
 	unsigned int *TempBuffer = (unsigned int*)VirtualAlloc(0, W * H * 4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
@@ -173,27 +142,34 @@ bool ResizeSprite(_Sprite* Sprite, int W, int H){
 	return true;
 }
 
+//Function to load a sprite from an asset file
 bool _Sprite::Load(AssetFile AssetFile, int id){
+	//Get the asset from the file
 	Asset BMP = AssetFile.GetAsset(id);
 	
+	//Get pointers to the info we need
 	byte* Memory = (byte*)BMP.Memory;
 	ImageHeader* Header = (ImageHeader*)Memory;
 	
+	//Get the info out of the header
 	this->Width = Header->Width;
 	this->Height = Header->Height;
 	this->length = Header->length;
 	this->hasTransparency = Header->HasTransparency != 0;
 	
+	//Allocate and memcpy the data
 	this->Data = (u32*)VirtualAlloc(0, Header->length, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 	memcpy((void*)this->Data, (void*)(Memory + sizeof(ImageHeader)), Header->length);
 	
 	return true;
 }
 
+//When a sprite is deleted, delete its data
 _Sprite::~_Sprite() {
 	if (this->Data) VirtualFree(this->Data, 0, MEM_RELEASE);
 }
 
+//Function to open the window
 bool Renderer::OpenWindow(int Width, int Height, char* Title){
 	WNDCLASSEX WindClass = {}; //Create a Window Class structure
 	
@@ -213,21 +189,26 @@ bool Renderer::OpenWindow(int Width, int Height, char* Title){
 		}
 	}
 
+	//Set the window style depending on weather or not the game is fullscreen
 	DWORD WindowStyle = Config.Fullscreen ? (WS_POPUP | WS_VISIBLE) : (WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX | WS_VISIBLE);
 	
+	//Set up the ClientRect
 	RECT WindowRect = { 0, 0, Width, Height };
 	AdjustWindowRect(&WindowRect, WindowStyle, false);
 
+	//Create the Window
 	this->Window = CreateWindowExA(WS_EX_OVERLAPPEDWINDOW, "JasonWindowClassName", Title, WindowStyle, 0, 0, WindowRect.right, WindowRect.bottom, 0, 0, Instance, 0);
 	return true;
 }
 
+//A struct to store monitors from the EnumDisplayMonitors function
 struct MonitorEnumResult {
 	HMONITOR Monitors[8];
 	int Primary = 0;
 	int Count = 0;
 };
 
+//This callback will be called once for each monitor attached to the PC, each monitor is assed to the list, and the primary and count values are edited as required
 BOOL CALLBACK MonitorEnumProc(HMONITOR Monitor, HDC DeviceContext, LPRECT Rect, LPARAM Data) {
 	MonitorEnumResult* Monitors = (MonitorEnumResult*)Data;
 	Monitors->Monitors[Monitors->Count++] = Monitor;
@@ -240,6 +221,7 @@ BOOL CALLBACK MonitorEnumProc(HMONITOR Monitor, HDC DeviceContext, LPRECT Rect, 
 	return true;
 }
 
+//Functions to set the camera position, self explanatory.
 void Renderer::SetCameraPosition(int X, int Y) {
 	this->CameraPos = { X, Y };
 }
@@ -248,116 +230,130 @@ void Renderer::SetCameraPosition(IVec2 Position) {
 	this->CameraPos = Position;
 }
 
+
 bool Renderer::Initialize() {
+	Buffer = new Win32ScreenBuffer;
 
-	Buffer1 = new Win32ScreenBuffer;
-	Buffer2 = new Win32ScreenBuffer;
-
-	Buffer = Buffer1;
-
+	//Center the camera
 	SetCameraPosition({ 0, 0 });
 
+	//Get the graphics config file
 	ConfigFile GraphicsConfig("config/Graphics.ini");
 
+	//Get the "Fullscreen" key, default to 1
 	std::string sFullscreen = GraphicsConfig.Get("Fullscreen", "1");
-	
 	Config.Fullscreen = sFullscreen != "0";
 
+	//Get the Resolution
 	std::string sRenderResX = GraphicsConfig.Get("RenderResolutionX");
 	std::string sRenderResY = GraphicsConfig.Get("RenderResolutionY");
 
-	if (sRenderResX != ""){
+	if (sRenderResX != "") {
+		//If the resolution is set, then parse it
 		Config.RenderResX = std::atoi(sRenderResX.c_str());
 	}
 	else {
+		//Otherwise default to 1024 x 768 if windowed, or the resolution of the monitor if fullscreen
 		Config.RenderResX = Config.Fullscreen ? 0 : 1024;
 	}
 
-	if (sRenderResY != ""){
+	//Same for Y resolution
+	if (sRenderResY != "") {
 		Config.RenderResY = std::atoi(sRenderResY.c_str());
 	}
 	else {
 		Config.RenderResY = Config.Fullscreen ? 0 : 768;
 	}
 
+	//If the game should be fullscreen
 	if (Config.Fullscreen) {
+		//Get the Monitor info
 		MonitorEnumResult Monitors;
-
 		EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, (LPARAM)&Monitors);
 
+		//Read which monitor to use from the config, default to the primary
 		int Monitor = std::atoi(GraphicsConfig.Get("Monitor", std::to_string(Monitors.Primary)).c_str());
 
+		//Get the monitornifo for the selected monitor
 		MONITORINFO MonitorInfo;
 		MonitorInfo.cbSize = sizeof(MONITORINFO);
 		GetMonitorInfo(Monitors.Monitors[Monitor], &MonitorInfo);
 
+		//Set the windowres to the monitor resolution
 		Config.WindowResY = MonitorInfo.rcMonitor.bottom - MonitorInfo.rcMonitor.top;
 		Config.WindowResX = MonitorInfo.rcMonitor.right - MonitorInfo.rcMonitor.left;
 
+		//If the render res isn't set, set it to the window res
 		if (Config.RenderResX == 0) Config.RenderResX = Config.WindowResX;
 		if (Config.RenderResY == 0) Config.RenderResY = Config.WindowResY;
 	}
 	else {
+		//If the game is windowed, then make the window the same size as the render resolution
 		Config.WindowResX = Config.RenderResX;
 		Config.WindowResY = Config.RenderResY;
 	}
 
+	//Save the resolution determined
 	GraphicsConfig.Set("RenderResolutionX", std::to_string(Config.RenderResX));
 	GraphicsConfig.Set("RenderResolutionY", std::to_string(Config.RenderResY));
 
+	//Set up the bytes per pixel value
 	Config.BPP = 4;
 
-	Instance = GetModuleHandle(NULL);
+	//Open the Window, and set the Device context and Module Handle
 	this->OpenWindow(Config.WindowResX, Config.WindowResY, "Title");
 	this->DeviceContext = GetWindowDC(this->Window);
+	this->Instance = GetModuleHandle(NULL);
 
+	//Hide the cursor
 	while (ShowCursor(false) >= 0);
 
-	//Create a DIB to render to
-	if (Buffer->Memory) {
-		VirtualFree(Buffer->Memory, 0, MEM_RELEASE);
-	}
+	//Create a DIB to render to by:
 
+	//Setting up the Buffer object
 	Buffer->Width = Config.RenderResX;
 	Buffer->Height = Config.RenderResY;
 	Buffer->BytesPerPixel = 4;
 
+	//Including the BITMAPINFO struct
 	Buffer->Info.bmiHeader.biSize = sizeof(Buffer->Info.bmiHeader);
 	Buffer->Info.bmiHeader.biWidth = Buffer->Width;
 	Buffer->Info.bmiHeader.biHeight = -Buffer->Height;
 	Buffer->Info.bmiHeader.biPlanes = 1;
 	Buffer->Info.bmiHeader.biBitCount = 32;
 	Buffer->Info.bmiHeader.biCompression = BI_RGB;
+	Buffer->Info.bmiHeader.biClrImportant = 0;
+	Buffer->Info.bmiHeader.biClrUsed = 0;
+	Buffer->Info.bmiHeader.biSizeImage = Buffer->Width * Buffer->Height * 4;
 
-	if (Buffer2->Memory) {
-		VirtualFree(Buffer->Memory, 0, MEM_RELEASE);
+	Buffer->Info.bmiColors->rgbRed = 0;
+	Buffer->Info.bmiColors->rgbGreen = 0;
+	Buffer->Info.bmiColors->rgbBlue = 0;
+	Buffer->Info.bmiColors->rgbReserved = 0;
+
+	//CreateDIBSection allocates memory, and gives us a handle we can render
+	hbmp = CreateDIBSection(DeviceContext, &Buffer->Info, DIB_RGB_COLORS, (void**)&Buffer->Memory, NULL, 0);
+
+	//Set up a memory DC for the bitmap
+	HdcMem = CreateCompatibleDC(DeviceContext);
+	SelectObject(HdcMem, hbmp);
+
+	//this is the clear color
+	u32 color = rgba(102, 102, 204, 255);
+
+	if (InstructionSet::AVX()) {
+		//If the CPU supports AVX instructions, we will clear 8 colors (256 bits) at a time,
+		//fill up a value we can use for this with the colors
+		u32* c = (u32*)&clearval;
+		for (int i = 0; i < 8; i++)
+			c[i] = color;
+		}
+	else if (InstructionSet::SSE) {
+		//Otherwise we will use SSE for the same thing, but we can only fill 4 colors (128 bits) at a time
+		u32* c = (u32*)&clearval_sse;
+		for (int i = 0; i < 4; i++)
+			c[i] = color;
 	}
-
-	Buffer2->Width = Config.RenderResX;
-	Buffer2->Height = Config.RenderResY;
-	Buffer2->BytesPerPixel = 4;
-
-	Buffer2->Info.bmiHeader.biSize = sizeof(Buffer->Info.bmiHeader);
-	Buffer2->Info.bmiHeader.biWidth = Buffer->Width;
-	Buffer2->Info.bmiHeader.biHeight = -Buffer->Height;
-	Buffer2->Info.bmiHeader.biPlanes = 1;
-	Buffer2->Info.bmiHeader.biBitCount = 32;
-	Buffer2->Info.bmiHeader.biCompression = BI_RGB;
-
-	int MemorySize = Buffer->Width * Buffer->Height * Buffer->BytesPerPixel;
-
-//	BM = CreateDIBSection(DeviceContext, &Buffer->Info, DIB_RGB_COLORS, (void**)&Buffer->Memory, NULL, 0);
-	Buffer->Memory = (int*)MemoryManager::AllocateMemory(MemorySize);
-	Buffer2->Memory = (int*)MemoryManager::AllocateMemory(MemorySize);
-
-	SlaveArguments.Buffer1 = Buffer1;
-	SlaveArguments.Buffer2 = Buffer2;
-	SlaveArguments.Config = &Config;
-	SlaveArguments.DeviceContext = &DeviceContext;
-	SlaveArguments.Renderer = this;
-	SlaveArguments.ShouldClose = &ShouldClose;
-
-	//CreateThread(NULL, 0, SlaveThreadProc, (void*)&SlaveArguments, 0, 0);
 
 	return 0;
 }
@@ -365,12 +361,31 @@ bool Renderer::Initialize() {
 bool Renderer::Refresh() {
 	//Now update the screen
 	//Stretch to the screen
-	StretchDIBits(DeviceContext, 0, 0, Config.WindowResX, Config.WindowResY, 0, 0, Buffer->Width, Buffer->Height, Buffer->Memory, &Buffer->Info, DIB_RGB_COLORS, SRCCOPY);
-	
-	DrawRectangle(0, 0, Config.RenderResX, Config.RenderResY, rgba(102,102,204,255));
+
+	BitBlt(DeviceContext, 0, 0, Buffer->Width, Buffer->Height, HdcMem, 0, 0, SRCCOPY);
+		
+	if (InstructionSet::AVX()) {
+		//Use AVX instrictions to loop over the buffer, filling it with our color, 256 bits at a time
+		uP len = (Buffer->Width * Buffer->Height) / 8;
+		for (register uP i = 0; i < len; i++)
+			_mm256_stream_si256(&((__m256i*)Buffer->Memory)[i], clearval);
+	}
+	else if (InstructionSet::SSE()) {
+		//Use SSE instrictions to loop over the buffer, filling it with our color, 128 bits at a time
+		uP len = (Buffer->Width * Buffer->Height) / 4;
+		for (register uP i = 0; i < len; i++)
+			_mm_stream_si128(&((__m128i*)Buffer->Memory)[i], clearval_sse);
+	}
+	else {
+		//If the CPU is ancient, just fill it 32 bits at a time (SSE runs on Pentium III, the game probably won't run on any hardware that needs this
+		//But it is here just in case! It may serve a role if alternate archutectures are supported in the future.
+		DrawRectangle(0, 0, Config.RenderResX, Config.RenderResY, rgba(102, 102, 204, 255));
+	}
+
 	return !ShouldClose;
 }
 
+//Here are a bunch of functions to draw rectangles with varying arguments, some WS, some SS, some blend, some don't
 void Renderer::DrawRectangle(int X, int Y, int Width, int Height, unsigned int Color) {
 
 	if (X < 0) {
@@ -473,6 +488,8 @@ void Renderer::DrawSpriteRectangle(int X, int Y, int Width, int Height, _Sprite*
 	}
 }
 
+
+//Function overloads for DrawSprite
 void Renderer::DrawSprite(Sprite* Spr, int X, int Y) {
 	DrawSprite(Spr, 0, 0, Spr->Width, Spr->Height, X, Y, true);
 }
@@ -490,9 +507,7 @@ void Renderer::DrawSprite(_Sprite* Spr, int SrcX, int SrcY, int Width, int Heigh
 }
 
 void Renderer::DrawSprite(_Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool ShouldBlend){
-	//Out of bounds checks
-	//If the sprite is drawn partially offscreen, draw a section
-	//If it is fully offscreen, don't draw it.
+	//Camera transform, then screenspace draw
 
 	DstX -= CameraPos.X;
 	DstY -= CameraPos.Y;
@@ -542,6 +557,10 @@ void Renderer::DrawSpriteSS(_Sprite * Spr, int SrcX, int SrcY, int Width, int He
 }
 
 void Renderer::DrawSpriteSS(_Sprite * Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool ShouldBlend) {
+	//Out of bounds checks
+	//If the sprite is drawn partially offscreen, draw a section
+	//If it is fully offscreen, don't draw it.
+
 	if (DstX < 0) {
 		SrcX -= DstX;
 		Width += DstX;
@@ -597,8 +616,8 @@ void Renderer::DrawSpriteSS(_Sprite * Spr, int SrcX, int SrcY, int Width, int He
 	}
 }
 
-bool Sprite::Load(AssetFile Asset, int id)
-{
+//Function to load a new style static sprite from an assetfile
+bool Sprite::Load(AssetFile Asset, int id) {
 	Frames = MemoryManager::AllocateMemory<_Sprite>(1);
 
 	if (!Frames->Load(Asset, id)) return false;
@@ -613,6 +632,7 @@ bool Sprite::Load(AssetFile Asset, int id)
 	return true;
 }
 
+//Function to load an animated sprite from an asset file
 bool Sprite::Load(AssetFile Asset, int start, int amount) {
 	Frames = MemoryManager::AllocateMemory<_Sprite>(amount);
 
