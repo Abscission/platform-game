@@ -62,3 +62,5 @@ public:
 		return new (&n->item) t();
 	}
 };
+
+void abscission_memcpy(void* dst, void* src, uP len);

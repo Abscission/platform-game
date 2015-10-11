@@ -6,6 +6,7 @@
 
 #include <string>
 #include <Windows.h>
+#include "Types.h"
 
 //See http://blog.abscission.net/asset-management/ for info on development
 
@@ -23,9 +24,6 @@ struct Header {
 	//The length of the data section
 	//This should be the compressed size if compression is enabled
 	int DataLength;
-
-	//Is the data compressed
-	bool Compressed;
 };
 
 struct IndexEntry {
@@ -37,6 +35,9 @@ struct IndexEntry {
 
 	//The length of the asset (compressed length if applicable)
 	int Length;
+
+	//Is the data compressed
+	bool Compressed;
 };
 #pragma pack(pop)
 
@@ -58,6 +59,7 @@ private:
 	HANDLE FileMapping;
 
 public:
+	u64 NumberOfAssets;
 	std::string Filename;
 
 	AssetFile(char* Filename);

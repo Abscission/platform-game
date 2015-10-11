@@ -8,10 +8,13 @@
 #include "AssetManager.h"
 #include <Windows.h>
 
-#include <d3d9.h>
+#include "Utility.h"
 
 #include "immintrin.h"
+#include "ft2build.h"
+#include FT_FREETYPE_H
 
+rgba_color HueShift(const rgba_color& in, float H);
 
 class ImageHeader {
 public:
@@ -25,7 +28,7 @@ struct Win32ScreenBuffer {
 	BITMAPINFO Info;
 	int Width;
 	int Height;
-	int *Memory;
+	u32 *Memory;
 	int BytesPerPixel;
 	bool isDrawing;
 	bool shouldDraw;
@@ -36,6 +39,8 @@ struct RendererConfig{
 	int RenderResY;
 	int WindowResX;
 	int WindowResY;
+	int DPI_X;
+	int DPI_Y;
 	int BPP;
 	bool Fullscreen;
 };
@@ -147,6 +152,7 @@ public:
 	void DrawRectangleWS(int X, int Y, int Width, int Height, unsigned int Color);
 	void DrawRectangleBlendWS(int X, int Y, int Width, int Height, unsigned int Color);
 
+	void DrawGlyph(FT_Bitmap* Glyph, int X, int Y, u32 C);
 
 	bool Initialize();
 	bool Refresh();

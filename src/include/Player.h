@@ -20,9 +20,12 @@ private:
 	Controls Controls;
 	void GetBindings();
 public:
-	bool Dead = false;
 	s64 Score;
+	u32 Color;
+	bool Dead = false;
 	Player();
+	virtual void LoadSprite(AssetFile AssetFile, int id);
 	virtual void Update(double DeltaTime) final;
+	void UpdateColor();
 
 };

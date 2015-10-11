@@ -6,9 +6,16 @@
 #include <cstdlib>
 #include "InputManager.h"
 #include "Config.h"
+#include "Utility.h"
+#include "GameLayer.h"
 
 Player::Player() {
 	GetBindings();
+}
+
+void Player::LoadSprite(AssetFile AssetFile, int id) {
+	GameObject::LoadSprite(AssetFile, id);
+	//UpdateColor();
 }
 
 //Get key bindings from a config file
@@ -23,6 +30,13 @@ void Player::GetBindings() {
 	//Controls.Shift = atoi(ControlsFile.Get("Shift", shift ).c_str());
 }
 
+void Player::UpdateColor() {
+	for (register uP c = 0; c < Spr->Width * Spr->Height; c++) {
+		if (Spr->Frames->Data[c] == rgba(255, 255, 0, 255)) {
+			Spr->Frames->Data[c] = Color;
+		}
+	}
+}
 
 void Player::Update(double DeltaTime) {
 	ControllerState Controller = InputManager::Get().GetControllerState();
@@ -62,6 +76,12 @@ void Player::Update(double DeltaTime) {
 		}
 		else {
 			JumpTime = 0;
+		}
+	}
+
+	if (InputManager::Get().GetKeyDown('E')) {
+		for (auto Entity : G.level->Entities) {
+			if (CheckCollisionAABB({ Position.X, Position.Y, (float)Spr->Width, (float)Spr->Height }, { Entity->Position.X, Entity->Position.Y, (float)Entity->Spr->Width, (float)Entity->Spr->Height })) Entity->OnInteract();
 		}
 	}
 

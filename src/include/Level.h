@@ -87,6 +87,8 @@ public:
 
 	void SetChunkGeometry(Chunk* C);
 
+	void LoadInfoFromAsset(Asset asset);
+
 	void LoadFromAsset(Asset asset);
 
 	void Update(double DeltaTime);

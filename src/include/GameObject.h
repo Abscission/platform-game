@@ -39,8 +39,9 @@ public:
 	///</summary>
 	///<param name="AssetFile">The AAF file from which to load the image</param>
 	///<param name="id">The index of the asset from which to get the texture</param>
-	void LoadSprite(AssetFile AssetFile, int id);
-
+	virtual void LoadSprite(AssetFile AssetFile, int id);
+	virtual void LoadSprite(AssetFile AssetFile, int id, int amount);
+	virtual void OnInteract() {};
 
 	Sprite* Spr;
 	
@@ -65,4 +66,26 @@ public:
 	virtual void Update(double DeltaTime) final;
 	virtual void Draw(Renderer*) final;
 
+};
+
+class EndFlag : public GameObject {
+private:
+
+public:
+	virtual void Update(double DeltaTime) final;
+	virtual void Draw(Renderer*) final;
+
+};
+
+class HelpSign : public GameObject {
+private:
+	std::string Text;
+	std::string ShortText;
+
+	bool Open;
+public:
+	HelpSign(std::string Text);
+	virtual void Update(double) final {};
+	virtual void Draw(Renderer*) final;
+	virtual void OnInteract() final;
 };

@@ -29,14 +29,6 @@ LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPARAM lPa
 		ShouldClose = true;
 		return 0;
 
-	//If the escape key is pressed, also close the window
-	case WM_KEYUP:
-		if (wParam == VK_ESCAPE) {
-			DestroyWindow(Window);
-			ShouldClose = true;
-			return 0;
-		}
-
 	//Otherwise, have the Default Window Proceedure deal with it
 	default:
 		return DefWindowProc(Window, Message, wParam, lParam);
@@ -46,20 +38,13 @@ LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPARAM lPa
 //A function to blend two RGB Pixels. It assumes premultiplied alpha!
 inline void Blend(unsigned int* Source, unsigned int* Dest) {
 	//Get the source channels
-	byte* SA = ((byte*)Source) + 3;
-	byte* SB = ((byte*)Source) + 2;
-	byte* SG = ((byte*)Source) + 1;
-	byte* SR = ((byte*)Source);
-
-	//Get the destination channels
-	byte* DB = ((byte*)Dest) + 2;
-	byte* DG = ((byte*)Dest) + 1; 
-	byte* DR = ((byte*)Dest);
+	rgba_color* S = (rgba_color*)Source;
+	rgba_color* D = (rgba_color*)Dest;
 
 	//Set the destination color based on the source and destination channel
-	*DR = *SR + ((*DR * (256 - *SA)) >> 8);
-	*DG = *SG + ((*DG * (256 - *SA)) >> 8);
-	*DB = *SB + ((*DB * (256 - *SA)) >> 8);
+	D->r = S->r + ((D->r * (256 - S->a)) >> 8);
+	D->g = S->g + ((D->g * (256 - S->a)) >> 8);
+	D->b = S->b + ((D->b * (256 - S->a)) >> 8);
 }
 
 //A function to change the luminance value of an RGB pixel
@@ -151,6 +136,21 @@ bool _Sprite::Load(AssetFile AssetFile, int id){
 	byte* Memory = (byte*)BMP.Memory;
 	ImageHeader* Header = (ImageHeader*)Memory;
 	
+	if (Memory == nullptr || Header->Width == 0 || Header->Height == 0 || Header->length == 0) {
+		const u32 InvalidSpriteColor = rgba(255, 0, 128, 255);
+		this->Data = (u32*)malloc(32*32*4);
+
+		this->Width = 32;
+		this->Height = 32;
+		this->length = 32 * 32 * 4;
+
+		for (int i = 0; i < 32 * 32; i++) {
+			Data[i] = InvalidSpriteColor;
+		}
+
+		return false;
+	}
+
 	//Get the info out of the header
 	this->Width = Header->Width;
 	this->Height = Header->Height;
@@ -305,6 +305,12 @@ bool Renderer::Initialize() {
 	this->DeviceContext = GetWindowDC(this->Window);
 	this->Instance = GetModuleHandle(NULL);
 
+	SetProcessDPIAware(); //true
+	HDC screen = GetDC(NULL);
+	Config.DPI_X = GetDeviceCaps(screen, LOGPIXELSX);
+	Config.DPI_Y = GetDeviceCaps(screen, LOGPIXELSY);
+	ReleaseDC(NULL, screen);
+
 	//Hide the cursor
 	while (ShowCursor(false) >= 0);
 
@@ -339,7 +345,8 @@ bool Renderer::Initialize() {
 	SelectObject(HdcMem, hbmp);
 
 	//this is the clear color
-	u32 color = rgba(102, 102, 204, 255);
+	u32 color = rgba(99, 148, 255, 255);
+
 
 	if (InstructionSet::AVX()) {
 		//If the CPU supports AVX instructions, we will clear 8 colors (256 bits) at a time,
@@ -360,13 +367,14 @@ bool Renderer::Initialize() {
 
 bool Renderer::Refresh() {
 	//Now update the screen
-	//Stretch to the screen
+	//Blit to the screen
 
 	BitBlt(DeviceContext, 0, 0, Buffer->Width, Buffer->Height, HdcMem, 0, 0, SRCCOPY);
 		
 	if (InstructionSet::AVX()) {
 		//Use AVX instrictions to loop over the buffer, filling it with our color, 256 bits at a time
 		uP len = (Buffer->Width * Buffer->Height) / 8;
+
 		for (register uP i = 0; i < len; i++)
 			_mm256_stream_si256(&((__m256i*)Buffer->Memory)[i], clearval);
 	}
@@ -474,14 +482,27 @@ void Renderer::DrawRectangleBlendWS(int X, int Y, int Width, int Height, unsigne
 
 }
 
+void Renderer::DrawGlyph(FT_Bitmap* Glyph, int X, int Y, u32 C) {
+	rgba_color Color(C);
+	for (register u64 y = 0; y < Glyph->rows; y++) {
+		u64 row = Y + y;
+		for (u64 x = 0; x < Glyph->width; x++) {
+			u64 col = X + x;
+			if (col < 0 || row < 0 || col >= Config.RenderResX || row >= Config.RenderResY) continue;
+
+			uint8_t a = Glyph->buffer[y * Glyph->pitch + x];
+			u32 c = rgba(Color.r, Color.g, Color.b, a);
+			Blend(&c, &Buffer->Memory[col + row * Buffer->Width]);
+		}
+	}
+}
+
 void Renderer::DrawSpriteRectangle(int X, int Y, int Width, int Height, _Sprite* Spr) {
 	for (int y = Y; y < Y + Height; y+= Spr->Width){
 		int Down = Buffer->Width * (Y + y);
 		for (int x = X; x < X + Width; x += Spr->Width) {
-
 			x -= CameraPos.X;
 			y -= CameraPos.Y;
-
 
 			DrawSprite(Spr, 0, 0, Spr->Width, Spr->Height, x, y);
 		}
@@ -578,21 +599,17 @@ void Renderer::DrawSpriteSS(_Sprite * Spr, int SrcX, int SrcY, int Width, int He
 	}
 
 	if (DstX + Width > Buffer->Width) {
-		Width = Buffer->Width - DstX;
-		DstX = Buffer->Width - Width;
-
+   		Width = Buffer->Width - DstX;
 		if (Width <= 0) return;
 	}
 
 	if (DstY + Height > Buffer->Height) {
 		Height = Buffer->Height - DstY;
-		DstY = Buffer->Height - Height;
-
 		if (Height <= 0) return;
 	}
 
 	for (register int y = SrcY; y < (SrcY + Height); y++) {
-		if ((ShouldBlend && Spr->hasTransparency) || true) {
+		if (ShouldBlend && Spr->hasTransparency) {
 			//If the pixel should be drawn with transparency itterate over each pixel
 			for (register int x = SrcX; x < (SrcX + Width); x++) {
 				unsigned int ARGB = Spr->Data[y * Spr->Width + x];
@@ -602,7 +619,7 @@ void Renderer::DrawSpriteSS(_Sprite * Spr, int SrcX, int SrcY, int Width, int He
 					continue;
 				}
 				else if (*SA == 255) { //If the pixel has no transparency, copy it into the destination
-					((unsigned int*)Buffer->Memory)[((y - SrcY) + DstY) * Buffer->Width + ((x - SrcX) + DstX)] = ARGB;
+					((u32*)Buffer->Memory)[((y - SrcY) + DstY) * Buffer->Width + ((x - SrcX) + DstX)] = ARGB;
 				}
 				else { //Otherwise blend it properly
 					Blend(&ARGB, &((unsigned int*)Buffer->Memory)[((y - SrcY) + DstY) * Buffer->Width + ((x - SrcX) + DstX)]);
@@ -611,7 +628,8 @@ void Renderer::DrawSpriteSS(_Sprite * Spr, int SrcX, int SrcY, int Width, int He
 		}
 		else {
 			//If the sprite has no transparency, or we are drawing without blending enabled, use memcpy to copy entire rows at once for speed
-			memcpy((void*)&((unsigned int*)Buffer->Memory)[((y - SrcY) + DstY) * Buffer->Width + DstX], (void*)&(Spr->Data[y * Spr->Width]), Width * 4);
+			memcpy((void*)&((u32*)Buffer->Memory)[((y - SrcY) + DstY) * Buffer->Width + DstX], (void*)&Spr->Data[y * Spr->Width + SrcX], Width * 4);
+
 		}
 	}
 }
@@ -620,7 +638,9 @@ void Renderer::DrawSpriteSS(_Sprite * Spr, int SrcX, int SrcY, int Width, int He
 bool Sprite::Load(AssetFile Asset, int id) {
 	Frames = MemoryManager::AllocateMemory<_Sprite>(1);
 
-	if (!Frames->Load(Asset, id)) return false;
+	bool Success = true;
+
+	if (!Frames->Load(Asset, id)) Success = false;
 
 	Width = Frames->Width;
 	Height = Frames->Height;
@@ -629,7 +649,7 @@ bool Sprite::Load(AssetFile Asset, int id) {
 	NumberOfFrames = 0;
 	isAnimated = false;
 
-	return true;
+	return Success;
 }
 
 //Function to load an animated sprite from an asset file
@@ -638,16 +658,22 @@ bool Sprite::Load(AssetFile Asset, int start, int amount) {
 
 	for (int i = 0; i < amount; i++) {
 		if (!Frames[i].Load(Asset, start + i)) return false;
-		ResizeSprite(Frames + i, 48);
 	}
 
 	Width = Frames->Width;
 	Height = Frames->Height;
 
 	CurrentFrame = 0;
-	NumberOfFrames = amount;
-	isAnimated = true;
 
-	CreationTime = GetTickCount();
+	if (amount == 1) {
+		NumberOfFrames = 0;
+		isAnimated = false;
+	}
+	else {
+		isAnimated = true;
+		NumberOfFrames = amount;
+		CreationTime = GetTickCount();
+	}
+
 	return true;
 }

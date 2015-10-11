@@ -5,15 +5,16 @@
 #include <Forms.h>
 #include <Utility.h>
 #include <InputManager.h>
+#include <GameLayer.h>
 
-Form::Form(int W, int H, Renderer * R) {
-	Position = { R->Config.RenderResX / 2 - W / 2, R->Config.RenderResY / 2 - H / 2, W, H };
+Form::Form(int W, int H) {
+	Position = { G.renderer->Config.RenderResX / 2 - W / 2, G.renderer->Config.RenderResY / 2 - H / 2, W, H };
 	Color = rgba(0x33, 0x33, 0x33, 128);
 }
 
-Form::Form(int X, int Y, int W, int H, Renderer * R) {
-	if (X < 0) X = R->Config.RenderResX + X;
-	if (Y < 0) Y = R->Config.RenderResY + Y;
+Form::Form(int X, int Y, int W, int H) {
+	if (X < 0) X = G.renderer->Config.RenderResX + X;
+	if (Y < 0) Y = G.renderer->Config.RenderResY + Y;
 
 	Position = { X, Y, W, H };
 	Color = rgba(0x33, 0x33, 0x33, 128);
@@ -45,29 +46,39 @@ void Form::Update(HWND Window) {
 	}
 }
 
-void Form::Render(Renderer* R) {
+void Form::Render() {
 	if (Enabled) {
-		R->DrawRectangleBlend(Position.X, Position.Y, Position.W, Position.H, Color);
+		G.renderer->DrawRectangleBlend(Position.X, Position.Y, Position.W, Position.H, Color);
 
 		for (auto Control : Controls) {
-			Control->Draw(R, this);
+			Control->Draw(this);
 		}
 	}
 }
 
 void Label::SetFont(Font * font){
 	this->font = font;
-	Pos = font->GetStringRect(Pos.X, Pos.Y, Text.c_str());
+	iRect StringRect = font->GetStringRect(Pos.X, Pos.Y, Text.c_str(), TextSize);
+	Pos.W = (int)StringRect.W;
+	Pos.H = (int)StringRect.H;
 }
 
-Label::Label(int x, int y, std::string text) {
+Label::Label(int x, int y, std::string text, int size, Font* font) {
 	Pos.X = x;
 	Pos.Y = y;
+
+	this->font = font;
+	this->TextSize = size;
 	Text = text;
+
+	iRect StringRect = font->GetStringRect(x, y, Text.c_str(), size);
+	Pos.W = (int)StringRect.W;
+	Pos.H = (int)StringRect.H;
+
 }
 
-void Label::Draw(Renderer* R, Form* F) {
-	font->RenderString(R, F->Position.X + Pos.X, F->Position.Y + Pos.Y, Text.c_str());
+void Label::Draw(Form* F) {
+	font->RenderString(F->Position.X + Pos.X, F->Position.Y + Pos.Y, Text.c_str(), TextSize, Color);
 }
 
 void TextBox::SetFont(Font * font) {
@@ -89,18 +100,17 @@ void TextBox::Update(Form * F) {
 	}
 }
 
-void TextBox::Draw(Renderer * R, Form * F) {
-	R->DrawRectangle(F->Position.X + Pos.X, F->Position.Y + Pos.Y, Pos.W, Pos.H, 0xffffff);
-	int xoffset = font->RenderString(R, F->Position.X + Pos.X + 10, F->Position.Y + Pos.Y, Text->c_str());
+void TextBox::Draw( Form * F) {
+	G.renderer->DrawRectangle(F->Position.X + Pos.X, F->Position.Y + Pos.Y, Pos.W, Pos.H, Background);
+	int xoffset = font->RenderString(F->Position.X + Pos.X + 10, F->Position.Y + Pos.Y, Text->c_str(), TextSize, Color).W;
 
 	if (isActive) {
 		if ((GetTickCount() / (1000 / 2)) % 2 == 0)
-			R->DrawRectangle(F->Position.X + Pos.X + xoffset + 10, F->Position.Y + Pos.Y + 2, 2, 32, 0x000000);
+			G.renderer->DrawRectangle(F->Position.X + Pos.X + xoffset + 10, F->Position.Y + Pos.Y + 2, 2, 32, Color);
 	}
 }
 
-Button::Button(int x, int y, Font* f, std::string* text, void_func callback)
-{
+Button::Button(int x, int y, Font* f, std::string* text, void_func callback) {
 	font = f;
 	ClickHandler = callback;
 	Pos.X = x;
@@ -110,13 +120,11 @@ Button::Button(int x, int y, Font* f, std::string* text, void_func callback)
 	Text = text;
 }
 
-void Button::Draw(Renderer * R, Form * F) {
-
-	R->DrawRectangle(F->Position.X + Pos.X, F->Position.Y + Pos.Y, Pos.W, Pos.H, 0xffffff);
-	font->RenderString(R, F->Position.X + Pos.X + 5, F->Position.Y + Pos.Y + 5, Text->c_str());
+void Button::Draw(Form * F) {
+	G.renderer->DrawRectangle(F->Position.X + Pos.X, F->Position.Y + Pos.Y, Pos.W, Pos.H, 0xffffff);
+	font->RenderString(F->Position.X + Pos.X + 5, F->Position.Y + Pos.Y + 5, Text->c_str());
 }
 
-void Button::OnClick(void* A)
-{
+void Button::OnClick(void* A) {
 	this->ClickHandler(A);
 }

@@ -2,7 +2,6 @@
 //Copyright (c) 2015 Jason Light
 //License: MIT
 
-
 #pragma once
 
 #include <string>
@@ -10,48 +9,26 @@
 #include <AssetManager.h>
 #include <Renderer.h>
 
-#pragma pack(push, 1)
-struct fontInfo {
-	s16 fontSize;
-	u8 bitField;
-	u8 charSet;
-	u16 stretchH;
-	u8 aa;
-	u8 paddingUp;
-	u8 paddingRight;
-	u8 paddingDown;
-	u8 paddingLeft;
-	u8 spacingHoriz;
-	u8 spacingVert;
-	u8 outline;
-};
+#include "ft2build.h"
+#include FT_FREETYPE_H
 
-struct charInfo {
-	u32 id;
-	u16 x;
-	u16 y;
-	u16 w;
-	u16 h;
-	s16 xoffset;
-	s16 yoffset;
-	s16 xadvance;
-	u8 page;
-	u8 chnl;
-};
-#pragma pack(pop)
 
 class Font {
 private:
-	fontInfo Info;
-	charInfo* Characters;
-	Sprite* BitmapData;
+	static FT_Library Freetype;
+	static bool FreetypeLoaded;
+	FT_Face FontFace;
+
 public:
 
-	u32 fontSize;
+	Font();
+
+	u32 FontSize;
 	std::string name;
 
-	bool Load(AssetFile AssetFile, int BmfIndex, int TextureIndex);
+	bool Load(AssetFile AssetFile, int Index);
 
-	iRect Font::GetStringRect(int X, int Y, const char * str);
-	int RenderString(Renderer* renderer, int X, int Y, const char * string);
+	iRect Font::GetStringRect(int X, int Y, const char * str, int size=0);
+	iRect RenderString(int X, int Y, const char * string, int size=0, u32 C=0);
 };
+

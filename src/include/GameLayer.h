@@ -7,13 +7,19 @@
 #include "Renderer.h"
 #include "Player.h"
 #include "Level.h"
+#include "Font.h"
 
 struct GameGlobals {
 	Player* player;
 	Renderer* renderer;
 	Level* level;
+	screen Screen;
+	Font* font;
+	Font* font_italic;
 	bool debuglos;
 	bool editing;
+	bool GUIOpen;
+	screen LastScreen;
 };
 
 extern GameGlobals G;

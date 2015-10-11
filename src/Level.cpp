@@ -112,8 +112,8 @@ std::vector<iRect> Level::GenerateCollisionGeometryFromChunk(Chunk* C) {
 
 	bool Visited[16 * 16] = {};
 
-	for (int y = 0; y < 16; y++) {
-		for (int x = 0; x < 16; x++) {
+	for (register uP y = 0; y < 16; y++) {
+		for (register uP x = 0; x < 16; x++) {
 			if (C->Grid[ChunkLoc(x, y)].Collision &! Visited[ChunkLoc(x, y)]) {
 				int Top = (y + Y * 16) * 32;
 				int Left = (x + X * 16) * 32;
@@ -162,6 +162,29 @@ void Level::SetChunkGeometry(Chunk* C) {
 	*C->Geometry = GenerateCollisionGeometryFromChunk(C);
 }
 
+void Level::LoadInfoFromAsset(Asset asset) {
+	byte* data = (byte*)asset.Memory;
+	size_t fp = 0;
+
+	if (*(u16*)&data[0] != 0x4C41) {
+		GlobalLog.Write("Magic number doesn't match, aborting");
+		return;
+	}
+
+	fp += 4;
+
+	size_t NameLength = strlen((const char *)&data[fp]);
+	Name = (const char *)&data[fp];
+
+	fp += NameLength + 1;
+
+	size_t AuthorLength = strlen((const char *)&data[fp]);
+	Author = (const char *)&data[fp];
+
+	fp += AuthorLength + 1;
+}
+
+
 void Level::LoadFromAsset(Asset asset) {
 	byte* data = (byte*)asset.Memory;
 	size_t fp = 0;
@@ -189,7 +212,7 @@ void Level::LoadFromAsset(Asset asset) {
 	Sprites.push_back({});
 
 
-	for (register u64 i = 0; i < NumberOfAssetFiles; i++) {
+	for (register uP i = 0; i < NumberOfAssetFiles; i++) {
 		char * AssetFileName = (char *)(data + fp);
 		char str[256];
 		sprintf_s(str, "Loading assets from '%s'", AssetFileName);
@@ -207,7 +230,7 @@ void Level::LoadFromAsset(Asset asset) {
 
 		std::vector<int>* Indices = new std::vector<int>;
 
-		for (register u64 j = 0; j < NumberOfAssets; j++) {
+		for (register uP j = 0; j < NumberOfAssets; j++) {
 			Sprite spr;
 			spr.Load(CurrentAssetFile, *(u32*)&data[fp]);
 			
@@ -226,7 +249,7 @@ void Level::LoadFromAsset(Asset asset) {
 
 	Chunk* Chunks = MemoryManager::AllocateMemory<Chunk>(ChunksToLoad);
 
-	for (register u64 i = 0; i < ChunksToLoad; i++) {
+	for (register uP i = 0; i < ChunksToLoad; i++) {
 		u16 X = *(u16*)&data[fp];
 		fp += 2;
 
@@ -235,7 +258,7 @@ void Level::LoadFromAsset(Asset asset) {
 
 		Chunk Chunk = Chunks[i];
 
-		for (register u64 j = 0; j < 256; j++) {
+		for (register uP j = 0; j < 256; j++) {
 			Chunk.Grid[j] = { *(u16*)&data[fp], *(u8*)&data[fp + 2] };
 			fp += 3;
 		}
@@ -281,10 +304,10 @@ void Level::DrawChunk(Renderer* Renderer, u16 X, u16 Y) {
 		return;
 	}
 
-	for (int x = 0; x < 16; x++) {
+	for (register uP x = 0; x < 16; x++) {
 		for (int y = 0; y < 16; y++) {
 			if (C->Grid[y * 16 + x].Texture != NULL) {
-				Renderer->DrawSprite(&Sprites[C->Grid[y * 16 + x].Texture], 32 * (16 * X + x), 32 * (16 * Y + y));
+				Renderer->DrawSprite(&Sprites[C->Grid[y * 16 + x].Texture],0, 0, 32, 32, 32 * (16 * X + x), 32 * (16 * Y + y), false);
 			}
 		}
 	}

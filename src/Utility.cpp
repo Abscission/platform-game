@@ -66,3 +66,88 @@ u32 rgba(u8 r, u8 g, u8 b, u8 a) {
 }
 
 const InstructionSet::InstructionSet_Internal InstructionSet::CPU_Rep;
+
+hsv_color RGBtoHSV(rgba_color rgb) {
+	float min, max, delta;
+	min = MIN3(rgb.r, rgb.g, rgb.b);
+	max = MAX3(rgb.r, rgb.g, rgb.b);
+
+	hsv_color ret;
+	ret.a = rgb.a;
+
+	ret.v = max;				// v
+	delta = max - min;
+	if (max != 0)
+		ret.s = delta / max;		// s
+	else {
+		// r = g = b = 0		// s = 0, v is undefined
+		ret.s = 0;
+		ret.h = -1;
+		return ret;
+	}
+	if (rgb.r == max)
+		ret.h = (rgb.g - rgb.b) / delta;		// between yellow & magenta
+	else if (rgb.g == max)
+		ret.h = 2 + (rgb.b - rgb.r) / delta;	// between cyan & yellow
+	else
+		ret.h = 4 + (rgb.r - rgb.g) / delta;	// between magenta & cyan
+	ret.h *= 60;				// degrees
+	if (ret.h < 0)
+		ret.h += 360;
+
+	return ret;
+}
+
+rgba_color HSVtoRGB(hsv_color in) {
+
+	rgba_color ret = 0;
+	ret.a = in.a;
+
+	int i;
+	float f, p, q, t;
+	if (in.s == 0) {
+		// achromatic (grey)
+		ret.r = ret.g = ret.b = in.v;
+		return ret;
+	}
+	in.h /= 60;			// sector 0 to 5
+	i = floor(in.h);
+	f = in.h - i;			// factorial part of h
+	p = in.v * (1 - in.s);
+	q = in.v * (1 - in.s * f);
+	t = in.v * (1 - in.s * (1 - f));
+	switch (i) {
+	case 0:
+		ret.r = in.v;
+		ret.g = t;
+		ret.b = p;
+		break;
+	case 1:
+		ret.r = q;
+		ret.g = in.v;
+		ret.b = p;
+		break;
+	case 2:
+		ret.r = p;
+		ret.g = in.v;
+		ret.b = t;
+		break;
+	case 3:
+		ret.r = p;
+		ret.g = q;
+		ret.b = in.v;
+		break;
+	case 4:
+		ret.r = t;
+		ret.g = p;
+		ret.b = in.v;
+		break;
+	default:		// case 5:
+		ret.r = in.v;
+		ret.g = p;
+		ret.b = q;
+		break;
+	}
+
+	return ret;
+}

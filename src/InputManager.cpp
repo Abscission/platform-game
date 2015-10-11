@@ -13,15 +13,15 @@ void InputManager::Update(){
 }
 
 bool InputManager::GetKeyState(unsigned char Key){
-	return (KeyStateCurrent[Key] & 0xF0) != 0;
+	return (KeyStateCurrent[Key] & 0xF0) != 0;  //If the key is down
 }
 
 bool InputManager::GetKeyDown(unsigned char Key){
-	return (KeyStateCurrent[Key] & 0xF0) != 0 &! (KeyStatePrevious[Key] & 0xF0) != 0;
+	return (KeyStateCurrent[Key] & 0xF0) != 0 &! (KeyStatePrevious[Key] & 0xF0) != 0; //If the key is down, but wasn't last frame
 }
 
 bool InputManager::GetKeyUp(unsigned char Key){
-	return ((KeyStatePrevious[Key] & 0xF0) &! (KeyStateCurrent[Key] & 0xF0));
+	return ((KeyStatePrevious[Key] & 0xF0) &! (KeyStateCurrent[Key] & 0xF0)); //If the key is up, but wasn't last frame
 } 
 
 MouseState InputManager::GetMouseState(HWND Window){

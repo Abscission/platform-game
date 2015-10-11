@@ -12,6 +12,10 @@
 #define ABS(A) ((A) < 0 ? -(A) : (A))
 #define SQR(A) ((A)*(A))
 
+inline float clamp(float a, float maxi, float mini) {
+	return MAX(MIN(a, mini), maxi);
+}
+
 ///<summary>
 ///Function to compute the absolute value of a two's complement integer
 ///See: http://en.wikipedia.org/wiki/Two%27s_complement

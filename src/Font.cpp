@@ -1,92 +1,101 @@
-#include <Font.h>
+#include "Font.h"
+#include "LogManager.h"
+#include "MemoryManager.h"
+#include "GameLayer.h"
+#include "Utility.h"
 
-#include <LogManager.h>
-#include <MemoryManager.h>
+#include FT_GLYPH_H 
 
-bool Font::Load(AssetFile AssetFile, int BmfIndex, int TextureIndex) {
-	GlobalLog.Write("Reading font from asset file");
-
-	Asset FontAsset = AssetFile.GetAsset(BmfIndex);
-	u8* Buffer = (u8*)FontAsset.Memory;
-
-	int fp = 0;
-
-	if (Buffer[0] != 'B' || Buffer[1] != 'M' || Buffer[2] != 'F') {
-		GlobalLog.Write("Invalid bitmap font");
-		return false;
-	}
-
-	fp += 3;
-
-	if (Buffer[3] != 3) {
-		GlobalLog.Write("Unrecognized bitmap font version");
-		return false;
-	}
-
-	fp += 1;
-	
-	while (fp < FontAsset.Length) {
-		u8 BlockType = Buffer[fp++];
-		u32 BlockSize = *(u32*)&Buffer[fp];
-		fp += 4;
-
-		if (BlockType == 1) {
-			//Info Block
-			memcpy((void*)&Info, (void*)(Buffer + 4), 14);
-
-			fp += 14;
-
-			int NameLen = BlockSize - 14;
-			char* FontName = (char*)malloc(NameLen);
-
-			strcpy_s(FontName, NameLen, (const char *)Buffer + fp);
-			this->name = FontName;
-
-			fp += NameLen;
+Font::Font() {
+	if (!FreetypeLoaded) {
+		FT_Error error = FT_Init_FreeType(&Freetype);
+		if (error) {
 		}
-		else if (BlockType == 4) {
-			//Characters Block
-			int numChars = BlockSize / sizeof(charInfo);
-			Characters = MemoryManager::AllocateMemory<charInfo>(numChars);
-
-			for (int i = 0; i < numChars; i++) {
-				memcpy((void*)(Characters + i), (void*)(Buffer + fp), sizeof(charInfo));
-				fp += sizeof(charInfo);
-			}
-		}
-		else {
-
-			GlobalLog.Write("Unknown BMF Block Type!");
-			fp += BlockSize;
-		}
+		FreetypeLoaded = true;
 	}
+}
 
-	BitmapData = MemoryManager::AllocateMemory<Sprite>(1);
-	BitmapData->Load(AssetFile, TextureIndex);
+bool Font::Load(AssetFile AssetFile, int Index) {
+	Asset asset = AssetFile.GetAsset(Index);
 
+	FT_Error error = FT_New_Memory_Face(Freetype, (u8*)asset.Memory, asset.Length, 0, &FontFace);
+	error = FT_Set_Pixel_Sizes(FontFace, 30, 30);
 	return true;
 }
 
-int Font::RenderString(Renderer* renderer, int X, int Y, const char * str) {
-	int length = strlen(str);
-	int OrigX = X;
+iRect Font::RenderString(int X, int Y, const char * str, int Size, u32 C) {
+	FT_GlyphSlot Slot = FontFace->glyph;
+	size_t length = strlen(str);
+	FT_Vector Kerning;
+	int initialX = X;
+
+	if (Size != 0 && Size != FontSize) {
+		FT_Set_Pixel_Sizes(FontFace, Size, Size);
+		FontSize = Size;
+	}
+
+	iRect StringRect = GetStringRect(X, Y, str);
+
+	int Baseline = ((StringRect.Y + StringRect.H) - Y);
+
+	Y += Baseline;
 
 	for (int i = 0; i < length; i++) {
-		charInfo* c = &Characters[str[i] - 32];
-		renderer->DrawSpriteSS(BitmapData, c->x, c->y, c->w, c->h, X, Y + c->yoffset, true);
-		X += c->xadvance;
+		FT_Error error = FT_Load_Char(FontFace, str[i], FT_LOAD_RENDER);
+		if (error) continue;
+
+		G.renderer->DrawGlyph(&Slot->bitmap, X + Slot->bitmap_left, Y - Slot->bitmap_top, C);
+
+		FT_Get_Kerning(FontFace, str[i], str[i + 1], FT_KERNING_DEFAULT, &Kerning);
+
+		X += (Kerning.x >> 6) + (Slot->advance.x >> 6);
+		Y += (Kerning.y >> 6) + (Slot->advance.y >> 6);
 	}
 
-	return X - OrigX;
+	return{ StringRect.X, StringRect.Y, X - initialX, StringRect.H };
 }
 
-iRect Font::GetStringRect(int X, int Y, const char * str) {
-	int Height = Info.fontSize;
-	int Width = 0;
+iRect Font::GetStringRect(int X, int Y, const char * str, int Size) { 
+	int W = 0;
+	int H = 0;
 
-	for (int i = 0; i < strlen(str); i++) {
-		Width += Characters[str[i] - 32].xadvance;
+	if (Size != 0 && Size != FontSize) {
+		FT_Set_Pixel_Sizes(FontFace, Size, Size);
+		FontSize = Size;
 	}
 
-	return{ X, Y, Width, Height };
+	size_t Length = strlen(str);
+
+	FT_BBox BBox;
+	FT_BBox GlyphBBox;
+	FT_Glyph Glyph;
+	FT_Vector Kerning;
+
+	BBox.xMin = BBox.yMin = 32000;
+	BBox.xMax = BBox.yMax = -32000;
+
+	for (register u64 i = 0; i < Length; i++) {
+		FT_Load_Glyph(FontFace, str[i], FT_LOAD_DEFAULT);
+		FT_Get_Glyph(FontFace->glyph, &Glyph);
+		FT_Glyph_Get_CBox(Glyph, ft_glyph_bbox_pixels, &GlyphBBox);
+		
+		GlyphBBox.xMin += X;
+		GlyphBBox.xMax += X;
+		GlyphBBox.yMin += Y;
+		GlyphBBox.yMax += Y;
+
+		if (GlyphBBox.xMin < BBox.xMin) BBox.xMin = GlyphBBox.xMin;
+		if (GlyphBBox.yMin < BBox.yMin) BBox.yMin = GlyphBBox.yMin;
+		if (GlyphBBox.xMax > BBox.xMax) BBox.xMax = GlyphBBox.xMax;
+		if (GlyphBBox.yMax > BBox.yMax) BBox.yMax = GlyphBBox.yMax;
+
+		FT_Get_Kerning(FontFace, str[i], str[i + 1], FT_KERNING_DEFAULT, &Kerning);
+
+		X += (Kerning.x >> 6) + (FontFace->glyph->advance.x >> 6);
+	}
+
+	return{ BBox.xMin, BBox.yMin, BBox.xMax - BBox.xMin, BBox.yMax - BBox.yMin };
 }
+
+FT_Library Font::Freetype;
+bool Font::FreetypeLoaded;

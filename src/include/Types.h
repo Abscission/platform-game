@@ -155,3 +155,11 @@ struct iRect {
 	}
 
 };
+
+enum screen {
+	MAIN_MENU,
+	LEVEL_SELECT,
+	OPTIONS_MENU,
+	KEY_BINDINGS,
+	IN_GAME
+};

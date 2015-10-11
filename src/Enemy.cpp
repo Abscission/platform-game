@@ -62,9 +62,6 @@ void Enemy::Update(double DeltaTime) {
 	}
 
 	switch (State) {
-	case AI_IDLE:
-
-		break;
 	case AI_ALERT:
 		//If the ai can see the player, it should become aggressive
 
@@ -83,7 +80,7 @@ void Enemy::Update(double DeltaTime) {
 		}
 
 		//If the AI is far away from the player it should move toward it
-		if (ABS(Dist.X) > 16) {
+		if (ABS(Dist.X) > 16 && isGrounded) {
 			s8 Direction = Position.X < (G.player->Position.X + 16) ? 1 : -1;
 			TargetVelocity.X = Direction * MaxSpeed;
 		}

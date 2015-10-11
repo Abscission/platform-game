@@ -31,6 +31,11 @@ Win32FileContents ReadEntireFile(const char * Filename);
 //Sum all the integers between A and B
 #define SUMBETWEEN(A, B) (SUMTO(B) - SUMTO(A - 1))
 
+#define MIN(A, B) ((A) < (B) ? (A) : (B))
+#define MAX(A, B) ((A) > (B) ? (A) : (B))
+#define MIN3(A,B,C) (MIN(MIN(A,B),C))
+#define MAX3(A,B,C) (MAX(MAX(A,B),C))
+
 u32 rgba(u8 r, u8 g, u8 b, u8 a);
 
 //Asserions
@@ -41,6 +46,7 @@ u32 rgba(u8 r, u8 g, u8 b, u8 a);
 #define assertnoreason(n);
 #define assert(n, d);
 #endif
+
 
 //Quick way to deal with RGBA colors
 union rgba_color {
@@ -56,9 +62,28 @@ union rgba_color {
 		this->g = g;
 		this->b= b;
 		this->a = a;
-
 	}
 };
+
+//Color constants
+const rgba_color Red = { 255, 0, 0, 255 };
+const rgba_color Green = { 255, 0, 0, 255 };
+const rgba_color Blue = { 255, 0, 0, 255 };
+const rgba_color White = { 255, 255, 255, 255 };
+const rgba_color Black = { 0, 0, 0, 255 };
+const rgba_color Abscission = { 99, 148, 255, 255 };
+
+struct hsv_color {
+	float h;
+	float s;
+	float v;
+	float a;
+
+};
+
+
+hsv_color RGBtoHSV(rgba_color rgb);
+rgba_color HSVtoRGB(hsv_color in);
 
 //CPU instruction detection code from Microsoft
 //See: https://msdn.microsoft.com/en-us/library/hskdteyh.aspx

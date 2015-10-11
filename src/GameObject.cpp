@@ -3,9 +3,10 @@
 //License: MIT
 
 #include "GameObject.h"
+#include <sstream>
 #include "MemoryManager.h"
 #include "Renderer.h"
-
+#include "InputManager.h"
 #include "GameLayer.h"
 
 GameObject::GameObject() {
@@ -35,6 +36,14 @@ void GameObject::LoadSprite(AssetFile AssetFile, int id){
 		Spr = MemoryManager::AllocateMemory<Sprite>(1);
 	}
 	Spr->Load(AssetFile, id);
+}
+
+void GameObject::LoadSprite(AssetFile AssetFile, int id, int amount) {
+	//Create the sprite if it doesn't exist
+	if (!Spr) {
+		Spr = MemoryManager::AllocateMemory<Sprite>(1);
+	}
+	Spr->Load(AssetFile, id, amount);
 }
 
 void GameObject::ApplyForce(Vector2 Force) {
@@ -153,4 +162,55 @@ void Pickup::Update(double DeltaTime) {
 
 void Pickup::Draw(Renderer* renderer) {
 	renderer->DrawSprite(Spr, Position.X, Position.Y + OffsetY);
+}
+
+void EndFlag::Update(double DeltaTime) {
+	if (CheckCollisionAABB({ Position.X, Position.Y, (float)Spr->Width, (float)Spr->Height }, { G.player->Position.X, G.player->Position.Y, (float)G.player->Spr->Width, (float)G.player->Spr->Height })) {
+		G.Screen = MAIN_MENU;
+	}
+}
+
+void EndFlag::Draw(Renderer* renderer) {
+	GameObject::Draw(renderer);
+}
+
+HelpSign::HelpSign(std::string Text){
+	this->Text = Text;
+	this->ShortText = Text.substr(0, 7);
+	LoadSprite("assets/assets.aaf", 6);
+	ResizeSprite(this->Spr, 64);
+}
+
+void HelpSign::Draw(Renderer * R) {
+	GameObject::Draw(R);
+	G.font->RenderString(Position.X - R->GetCameraPosition().X + 8, Position.Y - R->GetCameraPosition().Y + 8, ShortText.c_str(), 12, 0x543300);
+
+	if (Open) {
+
+		if (!CheckCollisionAABB({ Position.X, Position.Y, (float)Spr->Width, (float)Spr->Height }, { G.player->Position.X, G.player->Position.Y, (float)G.player->Spr->Width, (float)G.player->Spr->Height }) || InputManager::Get().GetKeyDown(VK_ESCAPE)) {
+			Open = false;
+			G.GUIOpen = false;
+		}
+		R->DrawRectangle(R->Config.RenderResX / 2 - 320, R->Config.RenderResY / 2 - 240, 640, 480, 0xB77400);
+
+		std::vector<std::string> ToDraw;
+		std::stringstream ss(Text);
+		std::string Temp;
+
+		while (getline(ss, Temp, '\n')) {
+			ToDraw.push_back(Temp);
+		}
+
+		int yOffset = 0;
+		for (auto Str : ToDraw) {
+			G.font->RenderString(R->Config.RenderResX / 2 - 320 + 32, R->Config.RenderResY / 2 - 240 + 32 + (yOffset++) * 36, Str.c_str(), 16, 0x543300);
+		}
+	}
+}
+
+void HelpSign::OnInteract() {
+	if (!G.GUIOpen) {
+		G.GUIOpen = true;
+		Open = true;
+	}
 }

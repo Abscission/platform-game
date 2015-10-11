@@ -5,8 +5,7 @@
 #include "Level.h"
 
 enum AI_State {
-	AI_IDLE,
-	AI_ALERT,
+	AI_ALERT = 0,
 	AI_AGGRO
 };
 
