@@ -78,12 +78,13 @@ struct hsv_color {
 	float s;
 	float v;
 	float a;
-
 };
 
 
 hsv_color RGBtoHSV(rgba_color rgb);
 rgba_color HSVtoRGB(hsv_color in);
+
+void toLower(char* in);
 
 //CPU instruction detection code from Microsoft
 //See: https://msdn.microsoft.com/en-us/library/hskdteyh.aspx

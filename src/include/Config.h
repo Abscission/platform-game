@@ -2,8 +2,12 @@
 //License: MIT
 
 #pragma once
+#include<Windows.h>
+
 #include <string>
 #include <map>
+
+
 
 class ConfigFile {
 private:
@@ -33,3 +37,5 @@ public:
 	///<param name="Val">Value for the config entery</param>
 	bool Set(std::string Key, std::string Val);
 };
+
+char get_vk_code(std::string key);

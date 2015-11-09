@@ -115,10 +115,10 @@ std::vector<iRect> Level::GenerateCollisionGeometryFromChunk(Chunk* C) {
 	for (register uP y = 0; y < 16; y++) {
 		for (register uP x = 0; x < 16; x++) {
 			if (C->Grid[ChunkLoc(x, y)].Collision &! Visited[ChunkLoc(x, y)]) {
-				int Top = (y + Y * 16) * 32;
-				int Left = (x + X * 16) * 32;
-				int Width = 32;
-				int Height = 32;
+				uP Top = (y + Y * 16) * 32;
+				uP Left = (x + X * 16) * 32;
+				uP Width = 32;
+				uP Height = 32;
 
 				int n = 1;
 				while (C->Grid[ChunkLoc(x + n, y)].Collision &! Visited[ChunkLoc(x + n, y)]) {
@@ -148,7 +148,7 @@ std::vector<iRect> Level::GenerateCollisionGeometryFromChunk(Chunk* C) {
 					Height += 32;
 				}
 
-				CollisionGeometry.push_back({ Left, Top, Width, Height });
+				CollisionGeometry.push_back({ (int)Left, (int)Top, (int)Width, (int)Height });
 			}
 		}
 	}
@@ -305,9 +305,9 @@ void Level::DrawChunk(Renderer* Renderer, u16 X, u16 Y) {
 	}
 
 	for (register uP x = 0; x < 16; x++) {
-		for (int y = 0; y < 16; y++) {
+		for (register uP y = 0; y < 16; y++) {
 			if (C->Grid[y * 16 + x].Texture != NULL) {
-				Renderer->DrawSprite(&Sprites[C->Grid[y * 16 + x].Texture],0, 0, 32, 32, 32 * (16 * X + x), 32 * (16 * Y + y), false);
+				Renderer->DrawSprite(&Sprites[C->Grid[y * 16 + x].Texture], 0, 0, 32, 32, 32 * (16 * X + x), 32 * (16 * Y + y), false);
 			}
 		}
 	}
@@ -352,14 +352,14 @@ void Level::Save() {
 		i++;
 	}
 
-	u32 NumEntities = Entities.size();
+	u32 NumEntities = (u32)Entities.size();
 	Output.write((char*)&NumEntities, 4);
 
 	for (auto E : Entities) {
 		Output.write((char*)&E->SpawnPosition, 8);
 	}
 
-	u32 NumChunks = ExistingChunks.size();
+	u32 NumChunks = (u32)ExistingChunks.size();
 	Output.write((char*)&NumChunks, 4);
 
 	for (auto C : ExistingChunks) {

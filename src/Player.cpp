@@ -24,8 +24,8 @@ void Player::GetBindings() {
 	
 	char shift [2] = { VK_SHIFT, '\0' };
 
-	Controls.Left = *ControlsFile.Get("Left", "A").c_str();
-	Controls.Right = *ControlsFile.Get("Right", "D").c_str();
+	Controls.Left = get_vk_code(ControlsFile.Get("Left", "A"));
+	Controls.Right = get_vk_code(ControlsFile.Get("Right", "D"));
 	//Controls.Jump = atoi(ControlsFile.Get("Jump", " ").c_str());
 	//Controls.Shift = atoi(ControlsFile.Get("Shift", shift ).c_str());
 }

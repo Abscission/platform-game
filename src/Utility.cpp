@@ -4,6 +4,16 @@
 
 #include "Utility.h"
 
+void toLower(char* in) {
+
+	while (*in != NULL) {
+		if (*in >= 'A' && *in <= 'Z') {
+			*in += 'A' - 'a';
+		}
+		in++;
+	}
+}
+
 void DisplayMessage(HRESULT Code) {
 	//Make a buffer for the error's text
 	LPTSTR ErrorText = NULL;

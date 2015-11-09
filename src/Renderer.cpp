@@ -355,7 +355,7 @@ bool Renderer::Initialize() {
 		for (int i = 0; i < 8; i++)
 			c[i] = color;
 		}
-	else if (InstructionSet::SSE) {
+	else if (InstructionSet::SSE()) {
 		//Otherwise we will use SSE for the same thing, but we can only fill 4 colors (128 bits) at a time
 		u32* c = (u32*)&clearval_sse;
 		for (int i = 0; i < 4; i++)
@@ -515,10 +515,6 @@ void Renderer::DrawSprite(Sprite* Spr, int X, int Y) {
 	DrawSprite(Spr, 0, 0, Spr->Width, Spr->Height, X, Y, true);
 }
 
-void Renderer::DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY) {
-	DrawSprite(Spr, SrcX, SrcY, Width, Height, DstX, DstY, true);
-}
-
 void Renderer::DrawSprite(_Sprite* Spr, int X, int Y) {
 	DrawSprite(Spr, 0, 0, Spr->Width, Spr->Height, X, Y, true);
 }
@@ -551,10 +547,6 @@ void Renderer::DrawSprite(Sprite * Spr, int SrcX, int SrcY, int Width, int Heigh
 
 void Renderer::DrawSpriteSS(Sprite * Spr, int X, int Y) {
 	DrawSpriteSS(Spr, 0, 0, Spr->Width, Spr->Height, X, Y, true);
-}
-
-void Renderer::DrawSpriteSS(Sprite * Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY) {
-	DrawSpriteSS(Spr, SrcX, SrcY, Width, Height, DstX, DstY, true);
 }
 
 void Renderer::DrawSpriteSS(Sprite * Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend) {

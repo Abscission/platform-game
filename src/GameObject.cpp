@@ -161,7 +161,7 @@ void Pickup::Update(double DeltaTime) {
 }
 
 void Pickup::Draw(Renderer* renderer) {
-	renderer->DrawSprite(Spr, Position.X, Position.Y + OffsetY);
+	renderer->DrawSprite(Spr, (int)Position.X, (int)Position.Y + (int)OffsetY);
 }
 
 void EndFlag::Update(double DeltaTime) {
@@ -183,7 +183,7 @@ HelpSign::HelpSign(std::string Text){
 
 void HelpSign::Draw(Renderer * R) {
 	GameObject::Draw(R);
-	G.font->RenderString(Position.X - R->GetCameraPosition().X + 8, Position.Y - R->GetCameraPosition().Y + 8, ShortText.c_str(), 12, 0x543300);
+	G.font->RenderString((int)(Position.X - R->GetCameraPosition().X + 8), (int)(Position.Y - R->GetCameraPosition().Y + 8), ShortText.c_str(), 12, 0x543300);
 
 	if (Open) {
 

@@ -63,6 +63,13 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	Ariali.Load("assets/arial.aaf", 1);
 	G.font_italic = &Ariali;
 
+	char test [] = { 'A', 'S', 'd', '0', '=', 0 };
+
+	toLower(test);
+
+	GlobalLog.WriteF("%s", test);
+
+
 	//Create a platform layer
 	GameLayer PlatformLayer;
 	PlatformLayer.Initialize();
@@ -75,10 +82,10 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 	AssetFile Mario("assets/assets.aaf");
 
-	Player player;
-	player.LoadSprite(Mario, 0);
-	player.Color = rgba(255,0,0,255);
-	ResizeSprite(player.Spr, 48);
+	G.player = new Player();
+	G.player->LoadSprite(Mario, 0);
+	G.player->Color = rgba(255,0,0,255);
+	ResizeSprite(G.player->Spr, 48);
 
 	float counter = 1.f;
 	LARGE_INTEGER Time;
@@ -103,7 +110,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 	std::vector<IVec2> ChunksToDraw;
 
-	level->SpawnEntity(&player, 512 * 32, 512);
+	level->SpawnEntity(G.player, 512 * 32, 512);
 
 #ifdef _DEBUG
 	Test();
@@ -169,7 +176,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	TextureBrowser.Enabled = false;
 
 	G.level = level;
-	G.player = &player;
+	G.player = G.player;
 
 	G.GUIOpen = false;
 
@@ -185,7 +192,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	
 	AssetFile level_asset("assets/Levels.aaf");
 	Level* Levels = new Level[level_asset.NumberOfAssets];
-	int NumLevels = level_asset.NumberOfAssets;
+	u64 NumLevels = level_asset.NumberOfAssets;
 
 	for (int i = 0; i < level_asset.NumberOfAssets; i++) {
 		Levels[i].LoadInfoFromAsset(level_asset.GetAsset(i));
@@ -261,25 +268,25 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 			Arial.RenderString(40, 40, "Level Select", 72, 0xffffff);
 
 			iRect StringRect = Arial.RenderString(200, 200, "Choose player color (A and D to select): ", 32, 0xffffffff);
-			Renderer.DrawRectangleBlend(220 + StringRect.W, 200, 32, 32, player.Color);
+			Renderer.DrawRectangleBlend(220 + StringRect.W, 200, 32, 32, G.player->Color);
 			if (InputManager::Get().GetKeyState('D')) {
-				hsv_color C = RGBtoHSV(player.Color);
-				C.h += DeltaTime * 100;
+				hsv_color C = RGBtoHSV(G.player->Color);
+				C.h += (float)(DeltaTime * 100);
 				if (C.h > 360) 
 					C.h = 0;
-				player.Color = HSVtoRGB(C).color;
+				G.player->Color = HSVtoRGB(C).color;
 			}
 
 			if (InputManager::Get().GetKeyState('A')) {
-				hsv_color C = RGBtoHSV(player.Color);
-				C.h -= DeltaTime * 100;
+				hsv_color C = RGBtoHSV(G.player->Color);
+				C.h -= (float)(DeltaTime * 100);
 				if (C.h < 0)
 					C.h = 360;
-				player.Color = HSVtoRGB(C).color;
+				G.player->Color = HSVtoRGB(C).color;
 			}
 			
 			if (InputManager::Get().GetKeyDown(VK_RETURN)) {
-				player.UpdateColor();
+				G.player->UpdateColor();
 				G.Screen = IN_GAME;
 			}
 
@@ -322,13 +329,13 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 				//Things that use DeltaTime, but shouldn't pause go here
 
 				if (FontTimer > 0) {
-					FontTimer -= DeltaTime;
+					FontTimer -= (float)DeltaTime;
 				}
 
 				//Zero out the deltatime for everything else
-				if ((Paused && G.editing) || player.Dead || PauseMenu) DeltaTime = 0;
+				if ((Paused && G.editing) || G.player->Dead || PauseMenu) DeltaTime = 0;
 
-				Timer += DeltaTime;
+				Timer += (float)DeltaTime;
 
 				//Kill the game if start is pressed
 				if (Controller.Buttons & 0x10) {
@@ -366,8 +373,9 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 				level->Update(DeltaTime);
 
 				//And draw all the chunks
-				for (auto C : ChunksToDraw) {
-					level->DrawChunk(&Renderer, C.X, C.Y);
+#pragma loop(hint_parallel(8))
+				for (register uP i = 0; i < ChunksToDraw.size(); i++) {
+					level->DrawChunk(&Renderer, ChunksToDraw[i].X, ChunksToDraw[i].Y);
 				}
 
 				//Draw the entities too
@@ -455,10 +463,15 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 										P = new Pickup();
 										break;
 									case ENTITY_PLAYER:
-										P = new Player();
-										P->LoadSprite("assets/assets.aaf", 0);
+										if (G.player) delete G.player;
+
+										G.player = new Player();
+										G.player->LoadSprite("assets/assets.aaf", 0);
+										level->DespawnEntity(G.player);
+										P = (GameObject*)G.player;
 										break;
 									default:
+										P = new GameObject();
 										assert(false, "This shouldn't happen!");
 									}
 
@@ -614,24 +627,24 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 					int ResY = Renderer.Config.RenderResY;
 
 
-					if (player.Position.X < Renderer.GetCameraPosition().X + ResX / 4) {
-						Renderer.SetCameraPosition(player.Position.X - ResX / 4, Renderer.GetCameraPosition().Y);
+					if (G.player->Position.X < Renderer.GetCameraPosition().X + ResX / 4) {
+						Renderer.SetCameraPosition((int)(G.player->Position.X - ResX / 4), Renderer.GetCameraPosition().Y);
 					}
 
-					if (player.Position.X > (Renderer.GetCameraPosition().X + Renderer.Config.RenderResX) - ResX / 4) {
-						Renderer.SetCameraPosition(player.Position.X + ResX / 4 - Renderer.Config.RenderResX, Renderer.GetCameraPosition().Y);
+					if (G.player->Position.X > (Renderer.GetCameraPosition().X + Renderer.Config.RenderResX) - ResX / 4) {
+						Renderer.SetCameraPosition((int)(G.player->Position.X + ResX / 4 - Renderer.Config.RenderResX), Renderer.GetCameraPosition().Y);
 					}
 
-					if (player.Position.Y < Renderer.GetCameraPosition().Y + ResY / 4) {
-						Renderer.SetCameraPosition(Renderer.GetCameraPosition().X, player.Position.Y - ResY / 4);
+					if (G.player->Position.Y < Renderer.GetCameraPosition().Y + ResY / 4) {
+						Renderer.SetCameraPosition(Renderer.GetCameraPosition().X, (int)(G.player->Position.Y - ResY / 4));
 					}
 
-					if (player.Position.Y > (Renderer.GetCameraPosition().Y + Renderer.Config.RenderResY) - ResY / 4) {
-						Renderer.SetCameraPosition(Renderer.GetCameraPosition().X, player.Position.Y + ResY / 4 - Renderer.Config.RenderResY);
+					if (G.player->Position.Y > (Renderer.GetCameraPosition().Y + Renderer.Config.RenderResY) - ResY / 4) {
+						Renderer.SetCameraPosition(Renderer.GetCameraPosition().X, (int)(G.player->Position.Y + ResY / 4 - Renderer.Config.RenderResY));
 					}
 				}
 
-				if (player.Dead) {
+				if (G.player->Dead) {
 					Crosshair = true;
 
 					const char * Message = "You Died";
@@ -650,7 +663,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 					if (MS.Btn1) {
 						if (MS.x > Renderer.Config.RenderResX / 2 - 250 / 2 && MS.x < Renderer.Config.RenderResX / 2 - 250 / 2 + 250) {
 							if (MS.y > Renderer.Config.RenderResY / 2 + 32 && MS.y < Renderer.Config.RenderResY / 2 + 32 + 34) {
-								player.Dead = false;
+								G.player->Dead = false;
 							}
 						}
 					}

@@ -104,18 +104,17 @@ private:
 	HDC DeviceContext;
 	Win32ScreenBuffer* Buffer;
 
-	SlaveArgs SlaveArguments;
-
 	HBITMAP hbmp;
 	HDC HdcMem;
 
 	IVec2 CameraPos;
 
+	__m256i clearval;
+	__m128i clearval_sse;
+
 public:
 	HWND Window;
 	RendererConfig Config;
-	__m256i clearval;
-	__m128i clearval_sse;
 
 	bool OpenWindow(int Width, int Height, char* Title);
 
@@ -133,16 +132,14 @@ public:
 	void DrawSprite(_Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend);
 	
 	void DrawSprite(Sprite* Spr, int X, int Y);
-	void DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY);
-	void DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend);
+	void DrawSprite(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend=true);
 
 	void DrawSpriteSS(_Sprite* Spr, int X, int Y);
 	void DrawSpriteSS(_Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY);
 	void DrawSpriteSS(_Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend);
 
 	void DrawSpriteSS(Sprite* Spr, int X, int Y);
-	void DrawSpriteSS(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY);
-	void DrawSpriteSS(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend);
+	void DrawSpriteSS(Sprite* Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool Blend=true);
 	
 	void DrawSpriteRectangle(int X, int Y, int Width, int Height, _Sprite* Spr);
 
