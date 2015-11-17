@@ -70,3 +70,67 @@ public:
 	///<summary>Find out where the mouse cursor is and if a mouse button is pressed</summary>
 	MouseState GetMouseState(HWND Window);
 };
+
+enum Binding {
+	//Movement
+	KB_Left,
+	KB_Right,
+	KB_Jump,
+	KB_Walk,
+	KB_Stop,
+	//Level Editer
+	KB_Editor,
+	KB_CycleForward,
+	KB_CycleBackward,
+	KB_ToggleCollision,
+	KB_ToggleObject,
+	KB_CollistionDebug,
+	KB_LineOfSightDebug,
+
+	KB_Length
+};
+
+const char* BindingNames[] {
+	//Movement
+	"left",
+	"right",
+	"jump",
+	"walk",
+	"stop",
+	//Level Editer
+	"editer_toggle",
+	"editer_cycle_forward",
+	"editer_cycle_backward",
+	"editer_object_toggle",
+	"editer_collision_toggle",
+	"editer_collision_debug",
+	"editer_line_of_sight_debug"
+};
+
+const char* DefaultBindings[] {
+	//Movement
+	"a",
+	"d",
+	"space",
+	"shift",
+	nullptr,
+	//Level Editer
+	"f2",
+	"e",
+	"q",
+	"o",
+	"tab",
+	"c",
+	"z"
+};
+
+class KeyBinds {
+private:
+	char PrimaryBindings[KB_Length];
+	char AltBindings[KB_Length];
+
+public:
+	KeyBinds();
+
+	bool GetKey(Binding KB);
+};

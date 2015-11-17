@@ -5,6 +5,7 @@
 #include "InputManager.h"
 #include <Windows.h>
 #include <Xinput.h>
+#include "Config.h"
 #include "Utility.h"
 
 void InputManager::Update(){
@@ -74,4 +75,23 @@ std::string InputManager::GetTypedText() {
 	return ret;
 }
 
+KeyBinds::KeyBinds(){
+	ConfigFile ControlsFile("config/bindings.ini");
+
+	for (int i = 0; i < KB_Length; i++) {
+		if (DefaultBindings[i])
+			PrimaryBindings[i] = get_vk_code(ControlsFile.Get(BindingNames[i], DefaultBindings[i]));
+		else
+			PrimaryBindings[i] = get_vk_code(ControlsFile.Get(BindingNames[i]));
+
+		char AltBindName[256];
+		sprintf_s(AltBindName, "alt_%s", BindingNames[i]);
+		AltBindings[i] = get_vk_code(ControlsFile.Get(AltBindName));
+	}
+}
+
+bool KeyBinds::GetKey(Binding KB){
+	InputManager& IM = InputManager::Get();
+	return IM.GetKeyState(PrimaryBindings[KB]) || IM.GetKeyState(AltBindings[KB]);
+}
 
