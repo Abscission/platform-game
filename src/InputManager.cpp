@@ -95,4 +95,14 @@ bool KeyBinds::GetKey(Binding KB){
 	return IM.GetKeyState(PrimaryBindings[KB]) || IM.GetKeyState(AltBindings[KB]);
 }
 
+bool KeyBinds::GetKeyUp(Binding KB){
+	InputManager& IM = InputManager::Get();
+	return IM.GetKeyUp(PrimaryBindings[KB] || IM.GetKeyUp(AltBindings[KB]));
+}
+
+bool KeyBinds::GetKeyDown(Binding KB){
+	InputManager& IM = InputManager::Get();
+	return IM.GetKeyDown(PrimaryBindings[KB]) || IM.GetKeyDown(AltBindings[KB]);
+}
+
 KeyBinds Bindings;

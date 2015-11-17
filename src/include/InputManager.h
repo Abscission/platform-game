@@ -78,10 +78,17 @@ enum Binding {
 	KB_Jump,
 	KB_Walk,
 	KB_Stop,
+	//Game
+	KB_Attack,
+	KB_AttackSecondary,
+	KB_Inventory,
+	//
 	KB_Interact,
 	KB_Pause,
 	//Level Editer
 	KB_Editor,
+	KB_EditorAndPause,
+	KB_EditorPause,
 	KB_CycleForward,
 	KB_CycleBackward,
 	KB_ToggleCollision,
@@ -99,16 +106,22 @@ static const char* BindingNames[] {
 	"jump",
 	"walk",
 	"stop",
+	//Game
+	"attack",
+	"attack_secondary",
+	"inventory",
 	"interact",
 	"pause",
 	//Level Editer
-	"editer_toggle",
-	"editer_cycle_forward",
-	"editer_cycle_backward",
-	"editer_object_toggle",
-	"editer_collision_toggle",
-	"editer_collision_debug",
-	"editer_line_of_sight_debug"
+	"editor_toggle",
+	"editor_toggle_and_pause"
+	"editor_pause"
+	"editor_cycle_forward",
+	"editor_cycle_backward",
+	"editor_object_toggle",
+	"editor_collision_toggle",
+	"editor_collision_debug",
+	"editor_line_of_sight_debug"
 };
 
 static const char* DefaultBindings[] {
@@ -118,10 +131,16 @@ static const char* DefaultBindings[] {
 	"space",
 	"shift",
 	nullptr,
+	//Game
+	"left_mouse",
+	"right_mouse",
+	"i",
 	"e",
 	"escape",
 	//Level Editer
 	"f2",
+	"f3",
+	"p",
 	"e",
 	"q",
 	"o",
@@ -139,6 +158,8 @@ public:
 	KeyBinds();
 
 	bool GetKey(Binding KB);
+	bool GetKeyUp(Binding KB);
+	bool GetKeyDown(Binding KB);
 };
 
 extern KeyBinds Bindings;
