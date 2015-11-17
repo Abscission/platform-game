@@ -9,25 +9,9 @@
 #include "Utility.h"
 #include "GameLayer.h"
 
-Player::Player() {
-	GetBindings();
-}
-
 void Player::LoadSprite(AssetFile AssetFile, int id) {
 	GameObject::LoadSprite(AssetFile, id);
 	//UpdateColor();
-}
-
-//Get key bindings from a config file
-void Player::GetBindings() {
-	ConfigFile ControlsFile("config/bindings.ini");
-	
-	char shift [2] = { VK_SHIFT, '\0' };
-
-	Controls.Left = get_vk_code(ControlsFile.Get("Left", "A"));
-	Controls.Right = get_vk_code(ControlsFile.Get("Right", "D"));
-	//Controls.Jump = atoi(ControlsFile.Get("Jump", " ").c_str());
-	//Controls.Shift = atoi(ControlsFile.Get("Shift", shift ).c_str());
 }
 
 void Player::UpdateColor() {
@@ -41,12 +25,12 @@ void Player::UpdateColor() {
 void Player::Update(double DeltaTime) {
 	ControllerState Controller = InputManager::Get().GetControllerState();
 	
-	int MaxSpeed = (InputManager::Get().GetKeyState(Controls.Shift) || Controller.Buttons & 0x2000) ? 400 : 600;
+	int MaxSpeed = (Bindings.GetKey(KB_Walk) || Controller.Buttons & 0x2000) ? 400 : 600;
 
-	if (InputManager::Get().GetKeyState(Controls.Right) || Controller.Buttons & 0x8) {
+	if (Bindings.GetKey(KB_Right) || Controller.Buttons & 0x8) {
 		TargetVelocity.X = static_cast<float>(MaxSpeed);
 	}
-	else if (InputManager::Get().GetKeyState(Controls.Left) || Controller.Buttons & 0x4) {
+	else if (Bindings.GetKey(KB_Left) || Controller.Buttons & 0x4) {
 		TargetVelocity.X = -static_cast<float>(MaxSpeed);
 	}
 	else {
@@ -54,7 +38,7 @@ void Player::Update(double DeltaTime) {
 	}
 
 	if (JumpTime == 0) {
-		if (InputManager::Get().GetKeyState(Controls.Jump) || Controller.Buttons & 0x1000) {
+		if (Bindings.GetKey(KB_Jump) || Controller.Buttons & 0x1000) {
 			if (canJump) {
 				if (!isGrounded) {
 					//walljump
@@ -68,7 +52,7 @@ void Player::Update(double DeltaTime) {
 	}
 
 	if (JumpTime > 0){
-		if (InputManager::Get().GetKeyState(Controls.Jump) || Controller.Buttons & 0x1000) {
+		if (Bindings.GetKey(KB_Jump) || Controller.Buttons & 0x1000) {
 			JumpTime += DeltaTime;
 			if (JumpTime < 1.0f) {
 				Velocity.Y -= 500 * static_cast<float>(DeltaTime);

@@ -32,6 +32,15 @@ struct GridSquare {
 	u8 Collision;
 };
 
+inline bool operator==(GridSquare& a, GridSquare& b) {
+	if (a.Texture == b.Texture && a.Collision == b.Collision) return true;
+	return false;
+}
+
+inline bool operator!=(GridSquare& a, GridSquare& b) {
+	return !(a == b);
+}
+
 struct Chunk {
 	u16 X;
 	u16 Y;
@@ -95,6 +104,9 @@ public:
 
 	void UpdateChunk(u16 X, u16 Y, double DeltaTime, std::vector<iRect>& Geometry);
 	void DrawChunk(Renderer* Renderer, u16 X, u16 Y);
+
+	void FloodFill(u32 X, u32 Y, GridSquare ToFill);
+	void FloodFill(Chunk* C, u16 LocalX, u16 LocalY, GridSquare ToFill, GridSquare Target);
 
 	void SpawnEntity(GameObject* Object, u32 X, u32 Y);
 	void DespawnEntity(GameObject * Object);

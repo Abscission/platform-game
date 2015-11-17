@@ -109,8 +109,9 @@ private:
 
 	IVec2 CameraPos;
 
-	__m256i clearval;
+	uP clearval;
 	__m128i clearval_sse;
+	__m256i clearval_avx;
 
 public:
 	HWND Window;
@@ -120,6 +121,8 @@ public:
 
 	void SetCameraPosition(IVec2 Position);
 	void SetCameraPosition(int X, int Y);
+	
+	void SetClearColor(u32 Color);
 
 	IVec2 TransformPosition(IVec2 Position) {
 		return{ Position.X - CameraPos.X, Position.Y - CameraPos.Y };

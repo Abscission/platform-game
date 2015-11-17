@@ -8,7 +8,7 @@ void toLower(char* in) {
 
 	while (*in != NULL) {
 		if (*in >= 'A' && *in <= 'Z') {
-			*in += 'A' - 'a';
+			*in += 'a' - 'A';
 		}
 		in++;
 	}

@@ -23,6 +23,7 @@ bool ConfigFile::Load(std::string Filename) {
 		}
 		else {
 			Key = Line.substr(0, Delimiter);
+			toLower((char*)Key.c_str());
 			Val = Line.substr(Delimiter + 1, std::string::npos);
 
 			Configs.insert(std::pair<std::string, std::string>(Key, Val));
@@ -77,6 +78,7 @@ std::string ConfigFile::Get(std::string Key) {
 }
 
 bool ConfigFile::Set(std::string Key, std::string Val){
+	toLower((char*)Key.c_str());
 	Configs[Key] = Val;
 	Save(Filename);
 	return true;

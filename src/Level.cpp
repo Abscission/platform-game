@@ -312,6 +312,37 @@ void Level::DrawChunk(Renderer* Renderer, u16 X, u16 Y) {
 		}
 	}
 }
+
+void Level::FloodFill(u32 X, u32 Y, GridSquare ToFill) {
+	//Get the coordinate of the chunk
+	u16 ChunkX = X / 16;
+	u16 ChunkY = Y / 16;
+
+	//And the coordinate within the chunk
+	u16 LocalX = X % 16;
+	u16 LocalY = Y % 16;
+
+	Chunk* Chunk = GetChunk(ChunkX, ChunkY);
+
+	if (Chunk != nullptr) {
+		FloodFill(Chunk, LocalX, LocalY, ToFill, Chunk->Grid[LocalY * 16 + LocalX]);
+	}
+}
+
+void Level::FloodFill(Chunk * C, u16 LocalX, u16 LocalY, GridSquare ToFill, GridSquare Target) {
+	GridSquare& S = C->Grid[LocalY * 16 + LocalX];
+
+	if (S == ToFill) return;
+	if (S != Target) return;
+
+	S = ToFill;
+
+	if (LocalX != 0) FloodFill(C, LocalX - 1, LocalY, ToFill, Target);
+	if (LocalX != 15) FloodFill(C, LocalX + 1, LocalY, ToFill, Target);
+	if (LocalY != 0) FloodFill(C, LocalX, LocalY - 1, ToFill, Target);
+	if (LocalY != 15) FloodFill(C, LocalX, LocalY + 1, ToFill, Target);
+}
+
 void Level::DrawChunkCollisionGeometry(Renderer * Renderer, u16 X, u16 Y){
 	Chunk* C = GetChunk(X, Y);
 
@@ -350,13 +381,6 @@ void Level::Save() {
 		}
 
 		i++;
-	}
-
-	u32 NumEntities = (u32)Entities.size();
-	Output.write((char*)&NumEntities, 4);
-
-	for (auto E : Entities) {
-		Output.write((char*)&E->SpawnPosition, 8);
 	}
 
 	u32 NumChunks = (u32)ExistingChunks.size();

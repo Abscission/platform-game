@@ -78,6 +78,8 @@ enum Binding {
 	KB_Jump,
 	KB_Walk,
 	KB_Stop,
+	KB_Interact,
+	KB_Pause,
 	//Level Editer
 	KB_Editor,
 	KB_CycleForward,
@@ -90,13 +92,15 @@ enum Binding {
 	KB_Length
 };
 
-const char* BindingNames[] {
+static const char* BindingNames[] {
 	//Movement
 	"left",
 	"right",
 	"jump",
 	"walk",
 	"stop",
+	"interact",
+	"pause",
 	//Level Editer
 	"editer_toggle",
 	"editer_cycle_forward",
@@ -107,13 +111,15 @@ const char* BindingNames[] {
 	"editer_line_of_sight_debug"
 };
 
-const char* DefaultBindings[] {
+static const char* DefaultBindings[] {
 	//Movement
 	"a",
 	"d",
 	"space",
 	"shift",
 	nullptr,
+	"e",
+	"escape",
 	//Level Editer
 	"f2",
 	"e",
@@ -134,3 +140,5 @@ public:
 
 	bool GetKey(Binding KB);
 };
+
+extern KeyBinds Bindings;

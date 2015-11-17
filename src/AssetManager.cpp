@@ -32,7 +32,10 @@ AssetFile::AssetFile(char* Filename) {
 	//Open the actual mapping
 	void* Mapping = MapViewOfFile(FileMapping, FILE_MAP_READ, 0, 0, sizeof(Header));
 
-	assert(Mapping != 0, "File mapping invalid"); //Check it's valid
+	if (Mapping == 0) {
+		GlobalLog.WriteF("Unable to load file %s: Mapping Invalid", Filename);
+		exit(1);
+	}
 
 	FileHeader = new Header; //Create the header
 	memcpy((void*)FileHeader, Mapping, sizeof(Header)); //Copy the header

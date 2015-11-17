@@ -226,6 +226,28 @@ void Renderer::SetCameraPosition(int X, int Y) {
 	this->CameraPos = { X, Y };
 }
 
+void Renderer::SetClearColor(u32 Color) {
+	if (InstructionSet::AVX()) {
+		//If the CPU supports AVX instructions, we will clear 8 colors (256 bits) at a time,
+		//fill up a value we can use for this with the colors
+		u32* c = (u32*)&clearval_avx;
+		for (int i = 0; i < 8; i++)
+			c[i] = Color;
+	}
+	else if (InstructionSet::SSE()) {
+		//Otherwise we will use SSE for the same thing, but we can only fill 4 colors (128 bits) at a time
+		u32* c = (u32*)&clearval_sse;
+		for (int i = 0; i < 4; i++)
+			c[i] = Color;
+	}
+	else {
+		//If no extensions are supported, we will fill one general purpose register at a time:
+		u32* c = (u32*)&clearval;
+		for (int i = 0; i < sizeof(clearval); i++)
+			c[i] = Color;
+	}
+}
+
 void Renderer::SetCameraPosition(IVec2 Position) {
 	this->CameraPos = Position;
 }
@@ -251,6 +273,7 @@ bool Renderer::Initialize() {
 	if (sRenderResX != "") {
 		//If the resolution is set, then parse it
 		Config.RenderResX = std::atoi(sRenderResX.c_str());
+		if (Config.RenderResX <= 0) Config.RenderResX = Config.Fullscreen ? 0 : 1024;
 	}
 	else {
 		//Otherwise default to 1024 x 768 if windowed, or the resolution of the monitor if fullscreen
@@ -260,6 +283,8 @@ bool Renderer::Initialize() {
 	//Same for Y resolution
 	if (sRenderResY != "") {
 		Config.RenderResY = std::atoi(sRenderResY.c_str());
+		if (Config.RenderResY <= 0) Config.RenderResY = Config.Fullscreen ? 0 : 768;
+
 	}
 	else {
 		Config.RenderResY = Config.Fullscreen ? 0 : 768;
@@ -346,21 +371,7 @@ bool Renderer::Initialize() {
 
 	//this is the clear color
 	u32 color = rgba(99, 148, 255, 255);
-
-
-	if (InstructionSet::AVX()) {
-		//If the CPU supports AVX instructions, we will clear 8 colors (256 bits) at a time,
-		//fill up a value we can use for this with the colors
-		u32* c = (u32*)&clearval;
-		for (int i = 0; i < 8; i++)
-			c[i] = color;
-		}
-	else if (InstructionSet::SSE()) {
-		//Otherwise we will use SSE for the same thing, but we can only fill 4 colors (128 bits) at a time
-		u32* c = (u32*)&clearval_sse;
-		for (int i = 0; i < 4; i++)
-			c[i] = color;
-	}
+	SetClearColor(color);
 
 	return 0;
 }
@@ -373,21 +384,24 @@ bool Renderer::Refresh() {
 		
 	if (InstructionSet::AVX()) {
 		//Use AVX instrictions to loop over the buffer, filling it with our color, 256 bits at a time
-		uP len = (Buffer->Width * Buffer->Height) / 8;
+		uP len = (Buffer->Width * Buffer->Height * Buffer->BytesPerPixel) / sizeof(clearval_avx);
 
 		for (register uP i = 0; i < len; i++)
-			_mm256_stream_si256(&((__m256i*)Buffer->Memory)[i], clearval);
+			_mm256_stream_si256(&((__m256i*)Buffer->Memory)[i], clearval_avx);
 	}
 	else if (InstructionSet::SSE()) {
 		//Use SSE instrictions to loop over the buffer, filling it with our color, 128 bits at a time
-		uP len = (Buffer->Width * Buffer->Height) / 4;
+		uP len = (Buffer->Width * Buffer->Height * Buffer->BytesPerPixel) / sizeof(clearval_sse);
 		for (register uP i = 0; i < len; i++)
 			_mm_stream_si128(&((__m128i*)Buffer->Memory)[i], clearval_sse);
 	}
 	else {
-		//If the CPU is ancient, just fill it 32 bits at a time (SSE runs on Pentium III, the game probably won't run on any hardware that needs this
+		//If the CPU is ancient, just fill it one poitner bits at a time (SSE runs on Pentium III, the game probably won't run on any hardware that needs this
 		//But it is here just in case! It may serve a role if alternate archutectures are supported in the future.
-		DrawRectangle(0, 0, Config.RenderResX, Config.RenderResY, rgba(102, 102, 204, 255));
+
+		uP len = (Buffer->Width * Buffer->Height * Buffer->BytesPerPixel) / sizeof(clearval);
+		for (register uP i = 0; i < len; i++)
+			((uP*)Buffer->Memory)[i] = clearval;
 	}
 
 	return !ShouldClose;

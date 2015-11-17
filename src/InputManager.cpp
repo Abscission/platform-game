@@ -95,3 +95,4 @@ bool KeyBinds::GetKey(Binding KB){
 	return IM.GetKeyState(PrimaryBindings[KB]) || IM.GetKeyState(AltBindings[KB]);
 }
 
+KeyBinds Bindings;

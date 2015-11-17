@@ -464,10 +464,11 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 										break;
 									case ENTITY_PLAYER:
 										if (G.player) delete G.player;
+										level->DespawnEntity(G.player);
 
 										G.player = new Player();
 										G.player->LoadSprite("assets/assets.aaf", 0);
-										level->DespawnEntity(G.player);
+										ResizeSprite(G.player->Spr, 64);
 										P = (GameObject*)G.player;
 										break;
 									default:
@@ -500,8 +501,14 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 								//If it succeeded
 								if (C != nullptr) {
-									//Set the block at the grid location to the currently selected sprite and collision values
-									C->Grid[16 * LocalY + LocalX] = { SelectedSprite, Collision };
+
+									if (!InputManager::Get().GetKeyState(VK_SHIFT)) {
+										//Set the block at the grid location to the currently selected sprite and collision values
+										C->Grid[16 * LocalY + LocalX] = { SelectedSprite, Collision };
+									}
+									else {
+										level->FloodFill(X, Y, { SelectedSprite, Collision });
+									}
 
 									//If the chunk isn't listed as existing, list it now. This is for level saving purposes.
 									if (!C->inIndex) {
@@ -532,7 +539,12 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 							Chunk* C = level->GetChunk(ChunkX, ChunkY);
 
 							if (C != nullptr) {
-								C->Grid[16 * LocalY + LocalX] = { 0, 0 };
+								if (!InputManager::Get().GetKeyState(VK_SHIFT)) {
+									C->Grid[16 * LocalY + LocalX] = { 0, 0 };
+								}
+								else {
+									level->FloodFill(X, Y, { 0, 0 });
+								}
 								level->SetChunkGeometry(C);
 							}
 						}
@@ -592,7 +604,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 							Spr.Load("assets/assets.aaf", 1);
 							break;
 						case ENTITY_PLAYER:
-							Spr.Load("assets/assets.aaf", 1);
+							Spr.Load("assets/assets.aaf", 0);
 							break;
 						}
 						Renderer.DrawSpriteSS(&Spr, Renderer.Config.RenderResX - 64, Renderer.Config.RenderResY - 64);
@@ -663,6 +675,8 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 					if (MS.Btn1) {
 						if (MS.x > Renderer.Config.RenderResX / 2 - 250 / 2 && MS.x < Renderer.Config.RenderResX / 2 - 250 / 2 + 250) {
 							if (MS.y > Renderer.Config.RenderResY / 2 + 32 && MS.y < Renderer.Config.RenderResY / 2 + 32 + 34) {
+								G.player->Position = G.player->SpawnPosition;
+								G.player->Score = MIN(G.player->Score - 200, 0);
 								G.player->Dead = false;
 							}
 						}
