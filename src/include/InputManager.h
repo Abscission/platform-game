@@ -74,45 +74,76 @@ public:
 enum Binding {
 	//Movement
 	///<summary>Default: a</summary>
+	///<summary>Move the player to the left</summary>
 	KB_Left,
 	///<summary>Default: d</summary>
+	///<summary>Move the player to the right</summary>
 	KB_Right,
 	///<summary>Default: space</summary>
+	///<summary>Make the player jump</summary>
 	KB_Jump,
 	///<summary>Default: shift</summary>
+	///<summary>Slow the player to a walk</summary>
 	KB_Walk,
 	///<summary>Default: unbound</summary>
+	///<summary>Stop all player movement</summary>
 	KB_Stop,
 	//Game
 	///<summary>Default: left click</summary>
+	///<summary>Player primary attack</summary>
 	KB_Attack,
 	///<summary>Default: right click</summary>
+	///<summary>Player secondary attack</summary>
 	KB_AttackSecondary,
 	///<summary>Default: i</summary>
+	///<summary>Open the players inventory</summary>
 	KB_Inventory,
 	///<summary>Default: e</summary>
+	///<summary>Interact with a player chosen object</summary>
 	KB_Interact,
 	///<summary>Default: escape</summary>
+	///<summary>Pause the game</summary>
 	KB_Pause,
 	//Level Editer
 	///<summary>Default: f2</summary>
+	///<summary>Toggle to open the editer</summary>
 	KB_Editor,
 	///<summary>Default: f3</summary>
+	///<summary>Toggle to open the editer and pause/ close editer and unpause</summary>
 	KB_EditorAndPause,
 	///<summary>Default: p</summary>
+	///<summary>Pause the game in the editor</summary>
 	KB_EditorPause,
 	///<summary>Default: e</summary>
+	///<summary>Cycle the selected texure forwards</summary>
 	KB_CycleForward,
 	///<summary>Default: q</summary>
+	///<summary>Cycle the selected texure backwards</summary>
 	KB_CycleBackward,
 	///<summary>Default: o</summary>
+	///<summary>Toggle if the placed texure has collisions</summary>
 	KB_ToggleCollision,
 	///<summary>Default: tab</summary>
+	///<summary>Toggle if the placed texure is an objects</summary>
 	KB_ToggleObject,
 	///<summary>Default: c</summary>
+	///<summary>Toggle to show the collision debug overlay</summary>
 	KB_CollisionDebug,
 	///<summary>Default: z</summary>
+	///<summary>Toggle the line of sight debug overlay</summary>
 	KB_LineOfSightDebug,
+	///<summary>Default: left arrow</summary>
+	///<summary>Pan the camera to the left</summary>
+	KB_PanLeft,
+	///<summary>Default: right arrow</summary>
+	///<summary>Pan the camera to the right</summary>
+	KB_PanRight,
+	///<summary>Default: up arrow</summary>
+	///<summary>Pan the camera up</summary>
+	KB_PanUp,
+	///<summary>Default: down arrow</summary>
+	///<summary>Pan the camera down</summary>
+	KB_PanDown,
 
 	KB_Length
 };
@@ -140,6 +171,10 @@ static const char* BindingNames[] {
 	"editor_collision_toggle",
 	"editor_collision_debug",
 	"editor_line_of_sight_debug"
+	"editor_pan_left"
+	"editor_pan_right"
+	"editor_pan_up"
+	"editor_pan_down"
 };
 
 static const char* DefaultBindings[] {
@@ -165,6 +200,10 @@ static const char* DefaultBindings[] {
 	"tab",
 	"c",
 	"z"
+	"left"
+	"right"
+	"up"
+	"down"
 };
 
 class KeyBinds {
