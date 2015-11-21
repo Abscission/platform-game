@@ -55,7 +55,7 @@ public:
 	///<returns>A boolean with the keys state</returns>
 	bool GetKeyState(unsigned char Key);
 
-	///<summary>Find out if a key has just been released</summary>
+	///<summary>Find out if a key has just been pressed</summary>
 	///<param name="Key">The key to test</param>
 	bool GetKeyDown(unsigned char Key);
 
@@ -73,27 +73,45 @@ public:
 
 enum Binding {
 	//Movement
+	///<summary>Default: a</summary>
 	KB_Left,
+	///<summary>Default: d</summary>
 	KB_Right,
+	///<summary>Default: space</summary>
 	KB_Jump,
+	///<summary>Default: shift</summary>
 	KB_Walk,
+	///<summary>Default: unbound</summary>
 	KB_Stop,
 	//Game
+	///<summary>Default: left click</summary>
 	KB_Attack,
+	///<summary>Default: right click</summary>
 	KB_AttackSecondary,
+	///<summary>Default: i</summary>
 	KB_Inventory,
-	//
+	///<summary>Default: e</summary>
 	KB_Interact,
+	///<summary>Default: escape</summary>
 	KB_Pause,
 	//Level Editer
+	///<summary>Default: f2</summary>
 	KB_Editor,
+	///<summary>Default: f3</summary>
 	KB_EditorAndPause,
+	///<summary>Default: p</summary>
 	KB_EditorPause,
+	///<summary>Default: e</summary>
 	KB_CycleForward,
+	///<summary>Default: q</summary>
 	KB_CycleBackward,
+	///<summary>Default: o</summary>
 	KB_ToggleCollision,
+	///<summary>Default: tab</summary>
 	KB_ToggleObject,
-	KB_CollistionDebug,
+	///<summary>Default: c</summary>
+	KB_CollisionDebug,
+	///<summary>Default: z</summary>
 	KB_LineOfSightDebug,
 
 	KB_Length
@@ -157,8 +175,15 @@ private:
 public:
 	KeyBinds();
 
+	///<summary>Find out the state of a key</summary>
+	///<param name="KB">The key to test</param>
+	///<returns>A boolean with the keys state</returns>
 	bool GetKey(Binding KB);
+	///<summary>Find out if a key has just been released</summary>
+	///<param name="KB">The key to test</param>
 	bool GetKeyUp(Binding KB);
+	///<summary>Find out if a key has just been pressed</summary>
+	///<param name="KB">The key to test</param>
 	bool GetKeyDown(Binding KB);
 };
 
