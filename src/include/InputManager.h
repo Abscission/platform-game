@@ -85,9 +85,6 @@ enum Binding {
 	///<summary>Default: shift</summary>
 	///<summary>Slow the player to a walk</summary>
 	KB_Walk,
-	///<summary>Default: unbound</summary>
-	///<summary>Stop all player movement</summary>
-	KB_Stop,
 	//Game
 	///<summary>Default: left click</summary>
 	///<summary>Player primary attack</summary>
@@ -121,11 +118,11 @@ enum Binding {
 	///<summary>Cycle the selected texure backwards</summary>
 	KB_CycleBackward,
 	///<summary>Default: o</summary>
-	///<summary>Toggle if the placed texure has collisions</summary>
-	KB_ToggleCollision,
-	///<summary>Default: tab</summary>
-	///<summary>Toggle if the placed texure is an objects</summary>
+	///<summary>Toggle if the objects are being placeds</summary>
 	KB_ToggleObject,
+	///<summary>Default: tab</summary>
+	///<summary>Toggle if the placed texure has collision</summary>
+	KB_ToggleCollision,
 	///<summary>Default: c</summary>
 	///<summary>Toggle to show the collision debug overlay</summary>
 	KB_CollisionDebug,
@@ -154,7 +151,6 @@ static const char* BindingNames[] {
 	"right",
 	"jump",
 	"walk",
-	"stop",
 	//Game
 	"attack",
 	"attack_secondary",
@@ -163,17 +159,17 @@ static const char* BindingNames[] {
 	"pause",
 	//Level Editer
 	"editor_toggle",
-	"editor_toggle_and_pause"
-	"editor_pause"
+	"editor_toggle_and_pause",
+	"editor_pause",
 	"editor_cycle_forward",
 	"editor_cycle_backward",
 	"editor_object_toggle",
 	"editor_collision_toggle",
 	"editor_collision_debug",
-	"editor_line_of_sight_debug"
-	"editor_pan_left"
-	"editor_pan_right"
-	"editor_pan_up"
+	"editor_line_of_sight_debug",
+	"editor_pan_left",
+	"editor_pan_right",
+	"editor_pan_up",
 	"editor_pan_down"
 };
 
@@ -183,7 +179,6 @@ static const char* DefaultBindings[] {
 	"d",
 	"space",
 	"shift",
-	nullptr,
 	//Game
 	"left_mouse",
 	"right_mouse",
@@ -199,10 +194,10 @@ static const char* DefaultBindings[] {
 	"o",
 	"tab",
 	"c",
-	"z"
-	"left"
-	"right"
-	"up"
+	"z",
+	"left",
+	"right",
+	"up",
 	"down"
 };
 

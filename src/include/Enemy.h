@@ -11,7 +11,12 @@ enum AI_State {
 
 class Enemy : public GameObject {
 private:
+	double bullet_time;
 public:
 	AI_State State;
+	virtual void Update(double DeltaTime) final;
+};
+
+class Bullet : public GameObject {
 	virtual void Update(double DeltaTime) final;
 };

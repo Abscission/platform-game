@@ -12,6 +12,7 @@
 #include "Utility.h"
 #include "MemoryManager.h"
 #include "LogManager.h"
+#include "GameLayer.h"
 
 Level::Level() {
 	Chunks = (Chunk**)MemoryManager::AllocateMemory(sizeof(Chunk*) * UINT16_MAX);
@@ -297,7 +298,7 @@ void Level::DespawnEntity(GameObject * Object) {
 	//Entities.Remove(Object);
 }
 
-void Level::DrawChunk(Renderer* Renderer, u16 X, u16 Y) {
+void Level::DrawChunk(u16 X, u16 Y) {
 	Chunk* C = GetChunk(X, Y);
 
 	if (C == nullptr) {
@@ -307,7 +308,7 @@ void Level::DrawChunk(Renderer* Renderer, u16 X, u16 Y) {
 	for (register uP x = 0; x < 16; x++) {
 		for (register uP y = 0; y < 16; y++) {
 			if (C->Grid[y * 16 + x].Texture != NULL) {
-				Renderer->DrawSprite(&Sprites[C->Grid[y * 16 + x].Texture], 0, 0, 32, 32, 32 * (16 * X + x), 32 * (16 * Y + y), false);
+				G.renderer->DrawSprite(&Sprites[C->Grid[y * 16 + x].Texture], 0, 0, 32, 32, 32 * (16 * X + x), 32 * (16 * Y + y), false);
 			}
 		}
 	}
@@ -343,7 +344,7 @@ void Level::FloodFill(Chunk * C, u16 LocalX, u16 LocalY, GridSquare ToFill, Grid
 	if (LocalY != 15) FloodFill(C, LocalX, LocalY + 1, ToFill, Target);
 }
 
-void Level::DrawChunkCollisionGeometry(Renderer * Renderer, u16 X, u16 Y){
+void Level::DrawChunkCollisionGeometry(u16 X, u16 Y){
 	Chunk* C = GetChunk(X, Y);
 
 	if (C == nullptr) {
@@ -351,7 +352,7 @@ void Level::DrawChunkCollisionGeometry(Renderer * Renderer, u16 X, u16 Y){
 	}
 
 	for (auto R : *C->Geometry) {
-		Renderer->DrawRectangleBlendWS(R.X + 2, R.Y + 2, R.W - 4, R.H - 4, rgba(255, 0, 255, 128));
+		G.renderer->DrawRectangleBlendWS(R.X + 2, R.Y + 2, R.W - 4, R.H - 4, rgba(255, 0, 255, 128));
 	}
 }
 

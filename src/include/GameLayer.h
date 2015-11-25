@@ -17,6 +17,7 @@ struct GameGlobals {
 	Font* font;
 	Font* font_italic;
 	bool debuglos;
+	bool debugcollisions;
 	bool editing;
 	bool GUIOpen;
 	screen LastScreen;

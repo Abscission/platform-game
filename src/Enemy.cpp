@@ -61,6 +61,7 @@ void Enemy::Update(double DeltaTime) {
 		}
 	}
 
+
 	switch (State) {
 	case AI_ALERT:
 		//If the ai can see the player, it should become aggressive
@@ -74,6 +75,16 @@ void Enemy::Update(double DeltaTime) {
 	
 		//If the AI is aggroed on the player
 
+		if (GetTickCount() - bullet_time > 1000) {
+			bullet_time = GetTickCount();
+
+			GameObject* Bullet = new GameObject;
+			Bullet->LoadSprite("Assets/assets.aaf", 0);
+			G.level->SpawnEntity(Bullet, Position.X, Position.Y);
+			Bullet->Velocity = Offset * 1000;
+			Bullet->gravity = false;
+		}
+	
 		//If the ai can no longer see the player, it should become alert
 		if (!CanSeePlayer) {
 			State = AI_ALERT;
@@ -97,4 +108,8 @@ void Enemy::Update(double DeltaTime) {
 
 	//Update the base GameObject class to handle physics etc.
 	GameObject::Update(DeltaTime);
+}
+
+void Bullet::Update(double DeltaTime) {
+	
 }

@@ -19,6 +19,7 @@ protected:
 	Vector2 TargetVelocity;
 
 public:
+	bool gravity = true;
 	bool destroy = false;
 
 	Vector2 Position;

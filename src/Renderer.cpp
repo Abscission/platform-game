@@ -29,6 +29,16 @@ LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPARAM lPa
 		ShouldClose = true;
 		return 0;
 
+	//Increase the processes priority, if the game is in the foreground
+	case WM_SETFOCUS:
+		SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
+		break;
+
+	//Lower the process priority if the game is now in the background
+	case WM_KILLFOCUS:
+		SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
+		break;
+
 	//Otherwise, have the Default Window Proceedure deal with it
 	default:
 		return DefWindowProc(Window, Message, wParam, lParam);
@@ -194,7 +204,7 @@ bool Renderer::OpenWindow(int Width, int Height, char* Title){
 	
 	//Set up the ClientRect
 	RECT WindowRect = { 0, 0, Width, Height };
-	AdjustWindowRect(&WindowRect, WindowStyle, false);
+	AdjustWindowRectEx(&WindowRect, WindowStyle, false, WS_EX_OVERLAPPEDWINDOW);
 
 	//Create the Window
 	this->Window = CreateWindowExA(WS_EX_OVERLAPPEDWINDOW, "JasonWindowClassName", Title, WindowStyle, 0, 0, WindowRect.right, WindowRect.bottom, 0, 0, Instance, 0);
@@ -260,15 +270,15 @@ bool Renderer::Initialize() {
 	SetCameraPosition({ 0, 0 });
 
 	//Get the graphics config file
-	ConfigFile GraphicsConfig("config/Graphics.ini");
+	ConfigFile GraphicsConfig("config/graphics.ini");
 
 	//Get the "Fullscreen" key, default to 1
-	std::string sFullscreen = GraphicsConfig.Get("Fullscreen", "1");
+	std::string sFullscreen = GraphicsConfig.Get("fullscreen", "1");
 	Config.Fullscreen = sFullscreen != "0";
 
 	//Get the Resolution
-	std::string sRenderResX = GraphicsConfig.Get("RenderResolutionX");
-	std::string sRenderResY = GraphicsConfig.Get("RenderResolutionY");
+	std::string sRenderResX = GraphicsConfig.Get("resolution_x");
+	std::string sRenderResY = GraphicsConfig.Get("resolution_y");
 
 	if (sRenderResX != "") {
 		//If the resolution is set, then parse it
@@ -297,7 +307,7 @@ bool Renderer::Initialize() {
 		EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, (LPARAM)&Monitors);
 
 		//Read which monitor to use from the config, default to the primary
-		int Monitor = std::atoi(GraphicsConfig.Get("Monitor", std::to_string(Monitors.Primary)).c_str());
+		int Monitor = std::atoi(GraphicsConfig.Get("monitor", std::to_string(Monitors.Primary)).c_str());
 
 		//Get the monitornifo for the selected monitor
 		MONITORINFO MonitorInfo;
@@ -319,14 +329,14 @@ bool Renderer::Initialize() {
 	}
 
 	//Save the resolution determined
-	GraphicsConfig.Set("RenderResolutionX", std::to_string(Config.RenderResX));
-	GraphicsConfig.Set("RenderResolutionY", std::to_string(Config.RenderResY));
+	GraphicsConfig.Set("resolution_x", std::to_string(Config.RenderResX));
+	GraphicsConfig.Set("resolution_y", std::to_string(Config.RenderResY));
 
 	//Set up the bytes per pixel value
 	Config.BPP = 4;
 
 	//Open the Window, and set the Device context and Module Handle
-	this->OpenWindow(Config.WindowResX, Config.WindowResY, "Title");
+	this->OpenWindow(Config.WindowResX, Config.WindowResY, "Platform Game");
 	this->DeviceContext = GetWindowDC(this->Window);
 	this->Instance = GetModuleHandle(NULL);
 
@@ -372,6 +382,8 @@ bool Renderer::Initialize() {
 	//this is the clear color
 	u32 color = rgba(99, 148, 255, 255);
 	SetClearColor(color);
+
+	SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
 
 	return 0;
 }

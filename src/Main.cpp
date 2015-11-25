@@ -63,13 +63,6 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	Ariali.Load("assets/arial.aaf", 1);
 	G.font_italic = &Ariali;
 
-	char test [] = { 'A', 'S', 'd', '0', '=', 0 };
-
-	toLower(test);
-
-	GlobalLog.WriteF("%s", test);
-
-
 	//Create a platform layer
 	GameLayer PlatformLayer;
 	PlatformLayer.Initialize();
@@ -111,10 +104,6 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 	std::vector<IVec2> ChunksToDraw;
 
 	level->SpawnEntity(G.player, 512 * 32, 512);
-
-#ifdef _DEBUG
-	Test();
-#endif
 
 	float FontTimer = 0;
 
@@ -375,7 +364,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 				//And draw all the chunks
 #pragma loop(hint_parallel(8))
 				for (register uP i = 0; i < ChunksToDraw.size(); i++) {
-					level->DrawChunk(&Renderer, ChunksToDraw[i].X, ChunksToDraw[i].Y);
+					level->DrawChunk(ChunksToDraw[i].X, ChunksToDraw[i].Y);
 				}
 
 				//Draw the entities too
@@ -384,7 +373,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 				}
 
 				//Some toggles
-				if (InputManager::Get().GetKeyDown(VK_F2)) G.editing = !G.editing;
+				if (Bindings.GetKeyDown(KB_Editor)) G.editing = !G.editing;
 				if (InputManager::Get().GetKeyDown(VK_ESCAPE) && (!G.GUIOpen || PauseMenu)) {
 					PauseMenu = !PauseMenu;
 					G.GUIOpen = !G.GUIOpen;
@@ -452,7 +441,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 									switch (SelectedEntity) {
 									case ENTITY_ENEMY:
 										P = new Enemy();
-										P->LoadSprite("assets/assets.aaf", 0);
+										P->LoadSprite("assets/assets.aaf", 7);
 										break;
 									case ENTITY_FLAG:
 										P = new EndFlag();
@@ -468,7 +457,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 										G.player = new Player();
 										G.player->LoadSprite("assets/assets.aaf", 0);
-										ResizeSprite(G.player->Spr, 64);
+										ResizeSprite(G.player->Spr, 64, 48);
 										P = (GameObject*)G.player;
 										break;
 									default:
@@ -552,7 +541,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 					}
 
 					//More toggles
-					if (InputManager::Get().GetKeyDown('O')) PlacingPickups = !PlacingPickups;
+					if (Bindings.GetKeyDown(KB_ToggleObject)) PlacingPickups = !PlacingPickups;
 					if (InputManager::Get().GetKeyDown('Q')) {
 						if (PlacingPickups) {
 							SelectedEntity = (EntityType)(SelectedEntity - 1);
@@ -567,22 +556,22 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 						}
 						else if (SelectedSprite < NumSprites - 1) SelectedSprite++;
 					}
-					if (InputManager::Get().GetKeyDown('Z')) G.debuglos = !G.debuglos;
-					if (InputManager::Get().GetKeyDown(VK_TAB)) Collision = Collision == 0 ? COLLIDE_ALL : 0;
-					if (InputManager::Get().GetKeyDown('C')) DrawGeometry = !DrawGeometry;
+					if (Bindings.GetKeyDown(KB_LineOfSightDebug)) G.debuglos = !G.debuglos;
+					if (Bindings.GetKeyDown(KB_ToggleCollision)) Collision = Collision == 0 ? COLLIDE_ALL : 0;
+					if (Bindings.GetKeyDown(KB_CollisionDebug)) G.debugcollisions= !G.debugcollisions;
 					if (InputManager::Get().GetKeyDown('S')) {
 						if (InputManager::Get().GetKeyState(VK_CONTROL)) {
 							TestForm.Enabled = true;
 						}
 					}
-					if (InputManager::Get().GetKeyDown('P')) Paused = !Paused;
+					if (InputManager::Get().GetKeyDown(KB_Pause)) Paused = !Paused;
 
 
 
 					//Draw the chunk geometry if requestsed, by looping over all the chunks and calling their DrawChunkCollisionGeometry method
-					if (DrawGeometry) {
+					if (G.debugcollisions) {
 						for (auto C : ChunksToDraw) {
-							level->DrawChunkCollisionGeometry(&Renderer, C.X, C.Y);
+							level->DrawChunkCollisionGeometry(C.X, C.Y);
 						}
 					}
 
@@ -594,7 +583,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 						Sprite Spr;
 						switch (SelectedEntity) {
 						case ENTITY_ENEMY:
-							Spr.Load("assets/assets.aaf", 0);
+							Spr.Load("assets/assets.aaf", 7);
 							break;
 						case ENTITY_FLAG:
 							Spr.Load("assets/assets.aaf", 2, 4);

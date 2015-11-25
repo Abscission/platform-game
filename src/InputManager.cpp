@@ -18,7 +18,7 @@ bool InputManager::GetKeyState(unsigned char Key){
 }
 
 bool InputManager::GetKeyDown(unsigned char Key){
-	return (KeyStateCurrent[Key] & 0xF0) != 0 &! (KeyStatePrevious[Key] & 0xF0) != 0; //If the key is down, but wasn't last frame
+	return ((KeyStateCurrent[Key] & 0xF0) != 0) &! ((KeyStatePrevious[Key] & 0xF0) != 0); //If the key is down, but wasn't last frame
 }
 
 bool InputManager::GetKeyUp(unsigned char Key){
@@ -37,6 +37,7 @@ MouseState InputManager::GetMouseState(HWND Window){
 
 	return { CursorPos.x, CursorPos.y, btn1, btn2 };
 }
+
 
 bool InputManager::IsControllerConnected() {
 	XINPUT_STATE ControllerState;
@@ -79,7 +80,7 @@ KeyBinds::KeyBinds(){
 	ConfigFile ControlsFile("config/bindings.ini");
 
 	for (int i = 0; i < KB_Length; i++) {
-		if (DefaultBindings[i])
+		if (DefaultBindings[i] != nullptr)
 			PrimaryBindings[i] = get_vk_code(ControlsFile.Get(BindingNames[i], DefaultBindings[i]));
 		else
 			PrimaryBindings[i] = get_vk_code(ControlsFile.Get(BindingNames[i]));
@@ -97,7 +98,7 @@ bool KeyBinds::GetKey(Binding KB){
 
 bool KeyBinds::GetKeyUp(Binding KB){
 	InputManager& IM = InputManager::Get();
-	return IM.GetKeyUp(PrimaryBindings[KB] || IM.GetKeyUp(AltBindings[KB]));
+	return IM.GetKeyUp(PrimaryBindings[KB]) || IM.GetKeyUp(AltBindings[KB]);
 }
 
 bool KeyBinds::GetKeyDown(Binding KB){

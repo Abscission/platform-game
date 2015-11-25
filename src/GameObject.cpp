@@ -55,13 +55,15 @@ void GameObject::Update(double DeltaTime) {
 	Rect Hitbox = { Position.X, Position.Y, (float)Spr->Width, (float)Spr->Height };
 
 	//Apply gravity 
-	if (isGrounded) {
-		TargetVelocity.Y = 0;
-	}
-	else {
-		TargetVelocity.Y += 2000;
-		if (TargetVelocity.Y > 10000) {
-			TargetVelocity.Y = 10000;
+	if (gravity) {
+		if (isGrounded) {
+			TargetVelocity.Y = 0;
+		}
+		else {
+			TargetVelocity.Y += 2000;
+			if (TargetVelocity.Y > 10000) {
+				TargetVelocity.Y = 10000;
+			}
 		}
 	}
 
@@ -140,6 +142,7 @@ void GameObject::Update(double DeltaTime) {
 
 void GameObject::Draw(Renderer* renderer) {
 	renderer->DrawSprite(Spr, 0, 0, Spr->Width, Spr->Height, (int)(Position.X), (int)(Position.Y), true);
+	if (G.debugcollisions) renderer->DrawRectangleBlendWS((int)(Position.X), (int)(Position.Y), Spr->Width, Spr->Height, rgba(128, 20, 80, 1));
 }
 
 Pickup::Pickup() {
