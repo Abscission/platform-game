@@ -73,6 +73,10 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 
 	G.renderer = &Renderer;
 
+	//ConfigFile Testing
+	ConfigFile test("abc/deftest.cfg");
+
+
 	AssetFile Mario("assets/assets.aaf");
 
 	G.player = new Player();
@@ -209,10 +213,11 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 		InputManager::Get().Update();
 		ControllerState Controller = InputManager::Get().GetControllerState();
 		MSPrevious = MS;
-		MS = InputManager::Get().GetMouseState(Renderer.Window);
+		MS = InputManager::Get().GetMouseDown(Renderer.Window);
 		iRect MouseRect{ MS.x, MS.y, 1, 1 };
 
 		iRect Screen = { 0, 0, Renderer.Config.RenderResX, Renderer.Config.RenderResY };
+		double ButtonPressed = 0;
 
 		switch (G.Screen) {
 
@@ -231,6 +236,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 				else if (CheckCollisionAABB(OptionsHitbox, { (float)MS.x, (float)MS.y, 1.f, 1.f })) {
 					G.Screen = OPTIONS_MENU;
 					G.LastScreen = MAIN_MENU;
+
 				}
 				else if (CheckCollisionAABB(ExitHitbox, { (float)MS.x, (float)MS.y, 1.f, 1.f })) GameRunning = false;
 			}
@@ -239,8 +245,8 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 		case OPTIONS_MENU: {
 			Crosshair = true;
 
-			Arial.RenderString(40, 40, "Options", 72, 0xffffff);
-
+			Arial.RenderString(40, Screen.H / 28, "Options", 72, 0xffffff);
+			iRect BackHitbox = Arial.RenderString(40, Screen.H - 92, "Back", 32, 0xffffff);
 			Arial.RenderString(Screen.W / 4, 120, "Resolution", 36, 0xffffff);
 
 			Renderer.DrawRectangle(Screen.W / 4 + 300, 117, 400, 36, 0xffffff);
@@ -248,6 +254,11 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE PreviousInstance, LPSTR, int) {
 			Renderer.DrawRectangleBlend(Screen.W / 4 + 300 + 200 - ResolutionRect.W / 2, ResolutionRect.Y, ResolutionRect.W, ResolutionRect.H, 0x22000000);
 			Arial.RenderString(Screen.W / 4 + 300 + 200 - ResolutionRect.W / 2, 122, "1680 x 1050", 32);
 
+			if (MS.Btn1) {
+				if (CheckCollisionAABB(BackHitbox, { (float)MS.x, (float)MS.y, 1.f, 1.f })) {
+					G.Screen = G.LastScreen;
+				}
+			}
 			if (InputManager::Get().GetKeyDown(VK_ESCAPE)) G.Screen = G.LastScreen;
 
 		} break;

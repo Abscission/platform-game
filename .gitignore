@@ -199,4 +199,5 @@ BuildNumber
 norify.sh
 assets/assets.aaf
 assets/
+config/
 TestLog.txt

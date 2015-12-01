@@ -69,6 +69,8 @@ public:
 
 	///<summary>Find out where the mouse cursor is and if a mouse button is pressed</summary>
 	MouseState GetMouseState(HWND Window);
+	///<summary>Find out where the mouse cursor is and if a mouse button has been pressed this frame</summary>
+	MouseState GetMouseDown(HWND Window);
 };
 
 enum Binding {

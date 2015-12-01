@@ -38,6 +38,18 @@ MouseState InputManager::GetMouseState(HWND Window){
 	return { CursorPos.x, CursorPos.y, btn1, btn2 };
 }
 
+MouseState InputManager::GetMouseDown(HWND Window) {
+	POINT CursorPos;
+	GetCursorPos(&CursorPos);
+	ScreenToClient(Window, &CursorPos);
+	
+	//Has the left or right mouse button just been pressed
+	bool btn1 = GetKeyDown(VK_LBUTTON);
+	bool btn2 = GetKeyDown(VK_RBUTTON);
+
+	return{ CursorPos.x, CursorPos.y, btn1, btn2 };
+}
+
 
 bool InputManager::IsControllerConnected() {
 	XINPUT_STATE ControllerState;

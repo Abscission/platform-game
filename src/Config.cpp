@@ -2,6 +2,7 @@
 //Copyright (c) 2015 Jason Light
 //License: MIT
 
+#include <Windows.h>
 #include "Config.h"
 #include <fstream>
 #include "Types.h"
@@ -10,11 +11,21 @@
 bool ConfigFile::Load(std::string Filename) {
 	std::ifstream FileStream;
 	FileStream.open(Filename, std::fstream::in);
+	
+	char Dir[64];
+	char Dir2[64];
+	_splitpath_s(Filename.c_str(), 0, 0, Dir, 64, 0, 0, 0, 0);
+	CreateDirectory(Dir, 0);
 
 	std::string Line, Key, Val;
+	int LineNumb = 0;
 
 	while (std::getline(FileStream, Line)) {
+		LineNumb++;
+		
 		if (Line[0] == '#') continue;
+		//if (Line[0] == '#') {
+		//}
 
 		u64 Delimiter = Line.find("="); // resolutionx=1920 => 11
 		if (Delimiter == std::string::npos) {
@@ -83,6 +94,7 @@ bool ConfigFile::Set(std::string Key, std::string Val){
 	Save(Filename);
 	return true;
 }
+
 
 char get_vk_code(std::string key) {
 	const static std::map <std::string, char> keys{
